@@ -1,39 +1,41 @@
 <div class="w-72 bg-gradient-to-b from-indigo-900 to-indigo-700 text-white flex flex-col shadow-2xl">
 
     <div class="p-6 text-center border-b border-purple-500/30">
-    <a href="{{ route('admin.dashboard') }}"
-       class="text-2xl font-bold tracking-widest 
+        <a href="{{ route('admin.dashboard') }}"
+            class="text-2xl font-bold tracking-widest 
               bg-gradient-to-r from-purple-400 to-blue-500
               bg-clip-text text-transparent
               hover:scale-105 transition">
-        SMART STORE
-    </a>
-</div>
+            SMART STORE
+        </a>
+    </div>
 
     <nav class="flex-1 p-4 space-y-2 text-sm">
 
         <a href="{{ route('admin.dashboard') }}"
-           class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
+            class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
             📊 <span>Dashboard</span>
         </a>
 
-        <a href="#"
-           class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
-            📱 <span>Products</span>
+        
+        <a href="{{ route('products.index') }}"
+            class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-cyan-500/20 
+            {{ request()->routeIs('products.*') ? 'bg-cyan-500/20 text-cyan-400' : '' }}">
+            📱 Products
         </a>
 
         <a href="#"
-           class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
+            class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
             🗂 <span>Categories</span>
         </a>
 
         <a href="#"
-           class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
+            class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
             🛒 <span>Orders</span>
         </a>
 
         <a href="#"
-           class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
+            class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
             👥 <span>Users</span>
         </a>
 
