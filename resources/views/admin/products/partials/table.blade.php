@@ -7,8 +7,12 @@
             <th>
                 <form method="GET" id="filterCategory">
                     <select name="category_id"
-                        onchange="document.getElementById('filterCategory').submit()"
-                        style="background:transparent;border:none;color:white;">
+                        onchange="this.form.submit()"
+                        class="bg-gray-900 text-white 
+           border border-gray-600 
+           rounded px-3 py-1 text-sm
+           focus:outline-none focus:ring-2 focus:ring-cyan-400
+           hover:bg-gray-800 transition">
                         <option value="">Danh mục</option>
                         @foreach($categories as $cat)
                         <option value="{{ $cat->id }}"
@@ -26,8 +30,12 @@
             <th>
                 <form method="GET" id="filterBrand">
                     <select name="brand_id"
-                        onchange="document.getElementById('filterBrand').submit()"
-                        style="background:transparent;border:none;color:white;">
+                        onchange="this.form.submit()"
+                        class="bg-gray-900 text-white 
+           border border-gray-600 
+           rounded px-3 py-1 text-sm
+           focus:outline-none focus:ring-2 focus:ring-cyan-400
+           hover:bg-gray-800 transition">
                         <option value="">Thương hiệu</option>
                         @foreach($brands as $brand)
                         <option value="{{ $brand->id }}"
@@ -45,27 +53,31 @@
                 Giá <span id="priceIcon">⇅</span>
             </th>
             <th class="p-3">Tồn kho</th>
-             {{-- STATUS FILTER --}}
-        <th>
-            <form method="GET" id="filterStatus">
-                <select name="status"
-                    onchange="this.form.submit()"
-                    style="background:transparent;border:none;color:white;">
-                    <option value="">Trạng thái</option>
-                    <option value="0"
-                        {{ request('status') == '0' ? 'selected' : '' }}>
-                        Đang bán
-                    </option>
-                    <option value="1"
-                        {{ request('status') == '1' ? 'selected' : '' }}>
-                        Ngừng bán
-                    </option>
-                </select>
+            {{-- STATUS FILTER --}}
+            <th>
+                <form method="GET" id="filterStatus">
+                    <select name="status"
+                        onchange="this.form.submit()"
+                        class="bg-gray-900 text-white 
+           border border-gray-600 
+           rounded px-3 py-1 text-sm
+           focus:outline-none focus:ring-2 focus:ring-cyan-400
+           hover:bg-gray-800 transition">
+                        <option value="">Trạng thái</option>
+                        <option value="0"
+                            {{ request('status') == '0' ? 'selected' : '' }}>
+                            Đang bán
+                        </option>
+                        <option value="1"
+                            {{ request('status') == '1' ? 'selected' : '' }}>
+                            Ngừng bán
+                        </option>
+                    </select>
 
-                <input type="hidden" name="category_id" value="{{ request('category_id') }}">
-                <input type="hidden" name="brand_id" value="{{ request('brand_id') }}">
-            </form>
-        </th>
+                    <input type="hidden" name="category_id" value="{{ request('category_id') }}">
+                    <input type="hidden" name="brand_id" value="{{ request('brand_id') }}">
+                </form>
+            </th>
             <th class="p-3">Hành động</th>
         </tr>
     </thead>
@@ -76,14 +88,12 @@
 
             <td class="p-3">{{ $product->id }}</td>
 
-            <td class="p-3">
+            <td>
                 @if($product->thumbnail)
-                <img src="{{ asset('storage/'.$product->thumbnail) }}"
-                    class="w-12 h-12 rounded object-cover">
+                <img src="{{ asset('storage/' . $product->thumbnail) }}"
+                    class="w-24 h-24 object-cover rounded-lg border">
                 @else
-                <div class="w-12 h-12 bg-gray-700 rounded flex items-center justify-center text-xs">
-                    N/A
-                </div>
+                Không có ảnh
                 @endif
             </td>
 
@@ -111,7 +121,7 @@
                 @endif
             </td>
 
-            <td>
+            <td class="text-center">
                 {{ $product->variants->sum('stock') }}
             </td>
 

@@ -49,6 +49,7 @@ Route::prefix('admin')->group(function () {
         // Logout
         Route::post('/logout', [AuthController::class, 'logout'])
             ->name('admin.logout');
+        Route::post('/products/import', [ProductController::class, 'import'])
+            ->name('products.import');
     });
-
 });

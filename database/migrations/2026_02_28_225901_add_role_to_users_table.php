@@ -13,7 +13,7 @@ return new class extends Migration
         if (!Schema::hasColumn('users', 'role')) {
             $table->string('role')->default('customer')->after('password');
         }
-
+        
         // Kiểm tra nếu cột 'status' chưa tồn tại
         if (!Schema::hasColumn('users', 'status')) {
             $table->boolean('status')->default(1)->after('role');
