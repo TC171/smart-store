@@ -17,25 +17,24 @@
             📊 <span>Dashboard</span>
         </a>
 
-        
+
         <a href="{{ route('products.index') }}"
             class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-cyan-500/20 
             {{ request()->routeIs('products.*') ? 'bg-cyan-500/20 text-cyan-400' : '' }}">
             📱 Products
         </a>
 
-        <a href="#"
-            class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
+        <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
             🗂 <span>Categories</span>
         </a>
 
-        <a href="#"
-            class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
-            🛒 <span>Orders</span>
+        <a href="{{ route('orders.index') }}"
+            class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-cyan-500/20
+   {{ request()->routeIs('orders.*') ? 'bg-cyan-500/20 text-cyan-400' : '' }}">
+            🛒 Orders
         </a>
 
-        <a href="#"
-            class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
+        <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/20 transition">
             👥 <span>Users</span>
         </a>
 

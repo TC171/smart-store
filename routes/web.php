@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\OrderController;
 
 Route::prefix('admin')->group(function () {
 
@@ -37,7 +38,8 @@ Route::prefix('admin')->group(function () {
 
         // Categories
         Route::resource('categories', CategoryController::class);
-
+        // Orders
+       Route::resource('orders', OrderController::class)->only(['index','show','update']);
         // Profile
         Route::view('/profile', 'admin.profile')
             ->name('admin.profile');
