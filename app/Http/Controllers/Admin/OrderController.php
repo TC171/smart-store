@@ -10,9 +10,8 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::query()
-            ->with(['user', 'payment'])
-            ->withCount('items')
+        $query = Order::with(['user', 'payment'])
+            ->withCount(['items'])
             ->latest('created_at');
 
         // FILTER STATUS
@@ -25,26 +24,24 @@ class OrderController extends Controller
             $query->where('payment_status', $request->payment_status);
         }
 
-        // SEARCH (mã đơn / shipping_name / shipping_phone / user)
+        // SEARCH
         if ($request->filled('q')) {
             $q = trim($request->q);
-
             $query->where(function ($sub) use ($q) {
                 $sub->where('order_number', 'like', "%{$q}%")
                     ->orWhere('shipping_name', 'like', "%{$q}%")
-                    ->orWhere('shipping_phone', 'like', "%{$q}%")
-                    ->orWhereHas('user', function ($u) use ($q) {
-                        $u->where('name', 'like', "%{$q}%")
-                          ->orWhere('email', 'like', "%{$q}%");
-                    });
+                    ->orWhere('shipping_phone', 'like', "%{$q}%");
             });
         }
 
         $orders = $query->paginate(10)->withQueryString();
 
-        // AJAX -> trả partial
+        // AJAX => trả JSON gồm table + pagination
         if ($request->ajax()) {
-            return view('admin.orders.partials.table', compact('orders'))->render();
+            return response()->json([
+                'table' => view('admin.orders.partials.table', compact('orders'))->render(),
+                'pagination' => view('admin.orders.partials.pagination', compact('orders'))->render(),
+            ]);
         }
 
         return view('admin.orders.index', compact('orders'));
