@@ -39,7 +39,8 @@ Route::prefix('admin')->group(function () {
         // Categories
         Route::resource('categories', CategoryController::class);
         // Orders
-        Route::resource('orders', OrderController::class);
+             // Orders
+        Route::resource('orders', OrderController::class)->only(['index', 'show', 'update']);
         // Profile
         Route::view('/profile', 'admin.profile')
             ->name('admin.profile');

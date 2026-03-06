@@ -76,6 +76,6 @@ function animate() {
 
 animate();
 </script>
-
+@stack('scripts')
 </body>
 </html>

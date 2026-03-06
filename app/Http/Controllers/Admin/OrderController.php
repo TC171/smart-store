@@ -5,38 +5,42 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::with(['user', 'payment'])
-            ->withCount(['items'])
+        $query = Order::query()
+            ->with(['user', 'payment'])
+            ->withCount('items')
             ->latest('created_at');
 
-        // FILTER STATUS
+        // Lọc theo trạng thái đơn
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // FILTER PAYMENT STATUS
+        // Lọc theo trạng thái thanh toán
+        // Theo DB bạn gửi thì payment_status nằm ở bảng orders
         if ($request->filled('payment_status')) {
             $query->where('payment_status', $request->payment_status);
         }
 
-        // SEARCH
+        // Tìm kiếm theo mã đơn / tên người nhận / số điện thoại
         if ($request->filled('q')) {
-            $q = trim($request->q);
-            $query->where(function ($sub) use ($q) {
-                $sub->where('order_number', 'like', "%{$q}%")
-                    ->orWhere('shipping_name', 'like', "%{$q}%")
-                    ->orWhere('shipping_phone', 'like', "%{$q}%");
+            $keyword = trim($request->q);
+
+            $query->where(function ($sub) use ($keyword) {
+                $sub->where('order_number', 'like', "%{$keyword}%")
+                    ->orWhere('shipping_name', 'like', "%{$keyword}%")
+                    ->orWhere('shipping_phone', 'like', "%{$keyword}%");
             });
         }
 
         $orders = $query->paginate(10)->withQueryString();
 
-        // AJAX => trả JSON gồm table + pagination
+        // AJAX
         if ($request->ajax()) {
             return response()->json([
                 'table' => view('admin.orders.partials.table', compact('orders'))->render(),
@@ -56,10 +60,19 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|in:pending,confirmed,shipping,completed,cancelled,refunded',
+            'status' => ['required', Rule::in([
+                'pending',
+                'confirmed',
+                'shipping',
+                'completed',
+                'cancelled',
+                'refunded',
+            ])],
         ]);
 
-        $order->update(['status' => $request->status]);
+        $order->update([
+            'status' => $request->status,
+        ]);
 
         return back()->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
     }
