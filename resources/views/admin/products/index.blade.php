@@ -83,4 +83,22 @@ function loadProducts() {
         document.getElementById('tableContainer').innerHTML = data;
     });
 }
+
+function toggleStatus(productId, button) {
+    fetch("{{ url('/admin/products') }}/" + productId + "/toggle-status", {
+        method: 'PATCH',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // Reload the table to update status display
+            loadProducts();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
 </script>

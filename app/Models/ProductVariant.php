@@ -2,12 +2,35 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductVariant extends Model
 {
-    use HasFactory;
 
-    protected $fillable = ['product_id', 'sku', 'price', 'sale_price', 'stock'];  // Các thuộc tính của product variant
+    protected $fillable = [
+        'product_id',
+        'color',
+        'storage',
+        'ram',
+        'price',
+        'stock',
+        'sku',
+        'image',
+        'status'
+    ];
+
+    protected $casts = [
+        'status' => 'boolean',
+    ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function inventoryHistories()
+    {
+        return $this->hasMany(InventoryHistory::class);
+    }
+
 }

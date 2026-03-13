@@ -32,7 +32,8 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'sale_price' => 'decimal:2',
-        'is_featured' => 'boolean'
+        'is_featured' => 'boolean',
+        'status' => 'boolean',
     ];
 
     /*
@@ -60,4 +61,5 @@ class Product extends Model
     {
         return $this->hasMany(ProductImage::class);
     }
+    
 }

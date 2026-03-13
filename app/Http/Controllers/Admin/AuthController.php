@@ -24,14 +24,14 @@ class AuthController extends Controller
 
             $request->session()->regenerate();
 
-            if (Auth::user()->role !== 'admin') {
-                Auth::logout();
-                return back()->withErrors([
-                    'email' => 'Bạn không có quyền truy cập Admin.'
-                ]);
-            }
+            $user = Auth::user();
 
-            return redirect()->route('admin.dashboard');
+            // Redirect based on role
+            if (in_array($user->role, ['admin', 'staff'])) {
+                return redirect()->route('admin.dashboard');
+            } else {
+                return redirect()->route('customer.dashboard');
+            }
         }
 
         return back()->withErrors([

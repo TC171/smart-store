@@ -64,12 +64,12 @@
            focus:outline-none focus:ring-2 focus:ring-cyan-400
            hover:bg-gray-800 transition">
                         <option value="">Trạng thái</option>
-                        <option value="0"
-                            {{ request('status') == '0' ? 'selected' : '' }}>
-                            Đang bán
-                        </option>
                         <option value="1"
                             {{ request('status') == '1' ? 'selected' : '' }}>
+                            Đang bán
+                        </option>
+                        <option value="0"
+                            {{ request('status') == '0' ? 'selected' : '' }}>
                             Ngừng bán
                         </option>
                     </select>
@@ -126,7 +126,7 @@
             </td>
 
             <td class="p-3">
-                @if($product->status == 'active')
+                @if($product->status)
                 <span class="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded">
                     Đang bán
                 </span>
@@ -138,21 +138,35 @@
             </td>
 
             <td class="p-3 flex gap-2">
-                <a href="{{ route('products.edit', $product->id) }}"
-                    class="text-yellow-400 hover:underline">
-                    Sửa
-                </a>
 
-                <form action="{{ route('products.destroy', $product->id) }}"
-                    method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <button class="text-red-500 hover:underline"
-                        onclick="return confirm('Bạn có chắc muốn xoá sản phẩm này?')">
-                        Xoá
-                    </button>
-                </form>
-            </td>
+<button onclick="toggleStatus({{ $product->id }}, this)"
+    class="text-blue-400 hover:underline {{ $product->status ? 'text-blue-400' : 'text-gray-400' }}">
+    {{ $product->status ? 'Tắt' : 'Bật' }}
+</button>
+
+<a href="{{ route('products.show', $product->id) }}"
+class="text-green-400 hover:underline">
+Xem
+</a>
+
+<a href="{{ route('products.edit', $product->id) }}"
+class="text-yellow-400 hover:underline">
+Sửa
+</a>
+
+
+<form action="{{ route('products.destroy', $product->id) }}"
+method="POST">
+@csrf
+@method('DELETE')
+
+<button class="text-red-500 hover:underline"
+onclick="return confirm('Bạn có chắc muốn xoá sản phẩm này?')">
+Xoá
+</button>
+
+</form>
+</td>
 
         </tr>
         @endforeach

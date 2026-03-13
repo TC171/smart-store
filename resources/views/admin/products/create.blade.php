@@ -57,16 +57,6 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-2">
-                Giá
-            </label>
-            <input type="number"
-                name="price"
-                class="w-full bg-gray-800 text-white border border-gray-700 
-                          rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500">
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-300 mb-2">
                 Hình ảnh
             </label>
             <input type="file"
@@ -74,6 +64,87 @@
                 class="w-full text-gray-300 file:bg-cyan-500 
                           file:text-black file:px-4 file:py-2 
                           file:rounded-lg file:border-0">
+        </div>
+
+        {{-- BIẾN THỂ --}}
+        <div class="border-t border-gray-700 pt-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-cyan-400">Biến thể sản phẩm</h3>
+                <a href="{{ route('product-attributes.index') }}"
+                   class="text-sm text-cyan-400 hover:text-cyan-300 underline">
+                    Quản lý thuộc tính
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        Màu sắc
+                    </label>
+                    <select name="colors[]" multiple
+                        class="w-full bg-gray-800 text-white border border-gray-700
+                                  rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500"
+                        size="4">
+                        @foreach($colors as $color)
+                            <option value="{{ $color->value }}">{{ $color->value }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-400 mt-1">Giữ Ctrl để chọn nhiều</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        Bộ nhớ
+                    </label>
+                    <select name="storages[]" multiple
+                        class="w-full bg-gray-800 text-white border border-gray-700
+                                  rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500"
+                        size="4">
+                        @foreach($storages as $storage)
+                            <option value="{{ $storage->value }}">{{ $storage->value }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-400 mt-1">Giữ Ctrl để chọn nhiều</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        RAM
+                    </label>
+                    <select name="rams[]" multiple
+                        class="w-full bg-gray-800 text-white border border-gray-700
+                                  rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500"
+                        size="4">
+                        @foreach($rams as $ram)
+                            <option value="{{ $ram->value }}">{{ $ram->value }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-400 mt-1">Giữ Ctrl để chọn nhiều</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 mt-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        Giá mặc định
+                    </label>
+                    <input type="number"
+                        name="default_price"
+                        step="0.01"
+                        class="w-full bg-gray-800 text-white border border-gray-700 
+                                  rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        Tồn kho mặc định
+                    </label>
+                    <input type="number"
+                        name="default_stock"
+                        class="w-full bg-gray-800 text-white border border-gray-700 
+                                  rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500">
+                </div>
+            </div>
         </div>
 
         <div class="flex justify-end">

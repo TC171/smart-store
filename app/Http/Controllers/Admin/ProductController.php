@@ -72,8 +72,11 @@ class ProductController extends Controller
     {
         $categories = Category::all();
         $brands = Brand::all();
+        $colors = \App\Models\ProductAttribute::where('type', 'color')->orderBy('sort_order')->get();
+        $storages = \App\Models\ProductAttribute::where('type', 'storage')->orderBy('sort_order')->get();
+        $rams = \App\Models\ProductAttribute::where('type', 'ram')->orderBy('sort_order')->get();
 
-        return view('admin.products.create', compact('categories', 'brands'));
+        return view('admin.products.create', compact('categories', 'brands', 'colors', 'storages', 'rams'));
     }
 
     public function store(Request $request)
@@ -82,6 +85,11 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required',
             'brand_id' => 'required',
+            'colors' => 'nullable|string',
+            'storages' => 'nullable|string',
+            'rams' => 'nullable|string',
+            'default_price' => 'nullable|numeric|min:0',
+            'default_stock' => 'nullable|integer|min:0',
         ]);
 
         $slug = Str::slug($request->name);
@@ -97,7 +105,7 @@ class ProductController extends Controller
             $imagePath = $request->file('image')->store('products', 'public');
         }
 
-        Product::create([
+        $product = Product::create([
             'name' => $request->name,
             'slug' => $slug,
             'category_id' => $request->category_id,
@@ -105,6 +113,39 @@ class ProductController extends Controller
             'thumbnail' => $imagePath ?? null,
             'status' => 1
         ]);
+
+        // Tạo variants nếu có input
+        if ($request->colors && $request->storages && $request->rams) {
+            $colors = $request->colors;
+            $storages = $request->storages;
+            $rams = $request->rams;
+
+            foreach ($colors as $color) {
+                foreach ($storages as $storage) {
+                    foreach ($rams as $ram) {
+                        $baseSku = $this->generateSku($product, $color, $storage, $ram);
+                        $sku = $baseSku;
+                        $counter = 1;
+
+                        // Đảm bảo SKU unique
+                        while (\App\Models\ProductVariant::where('sku', $sku)->exists()) {
+                            $sku = $baseSku . '-' . $counter;
+                            $counter++;
+                        }
+
+                        \App\Models\ProductVariant::create([
+                            'product_id' => $product->id,
+                            'sku' => $sku,
+                            'color' => $color,
+                            'storage' => $storage,
+                            'ram' => $ram,
+                            'price' => $request->default_price ?? 0,
+                            'stock' => $request->default_stock ?? 0,
+                        ]);
+                    }
+                }
+            }
+        }
 
         return redirect()->route('products.index')
             ->with('success', 'Thêm sản phẩm thành công');
@@ -115,59 +156,60 @@ class ProductController extends Controller
         $product = Product::with('variants')->findOrFail($id);
         $categories = Category::all();
         $brands = Brand::all();
+        $colors = \App\Models\ProductAttribute::where('type', 'color')->orderBy('sort_order')->get();
+        $storages = \App\Models\ProductAttribute::where('type', 'storage')->orderBy('sort_order')->get();
+        $rams = \App\Models\ProductAttribute::where('type', 'ram')->orderBy('sort_order')->get();
 
         return view('admin.products.edit', compact(
             'product',
             'categories',
-            'brands'
+            'brands',
+            'colors',
+            'storages',
+            'rams'
         ));
     }
 
     public function update(Request $request, $id)
-{
-    $product = Product::with('variants')->findOrFail($id);
+    {
+        $product = Product::with('variants')->findOrFail($id);
 
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'price' => 'required|numeric|min:0',
-    ]);
-
-    // Cập nhật slug nếu đổi tên
-    $slug = Str::slug($request->name);
-
-    if (
-        Product::where('slug', $slug)
-        ->where('id', '!=', $product->id)
-        ->exists()
-    ) {
-        return back()
-            ->withErrors(['name' => 'Sản phẩm này đã tồn tại'])
-            ->withInput();
-    }
-
-    // Upload ảnh mới nếu có
-    if ($request->hasFile('image')) {
-        $imagePath = $request->file('image')->store('products', 'public');
-        $product->thumbnail = $imagePath;
-    }
-
-    $product->update([
-        'name' => $request->name,
-        'slug' => $slug,
-        'category_id' => $request->category_id,
-        'brand_id' => $request->brand_id,
-    ]);
-
-    // Update variant đầu tiên
-    if ($product->variants->first()) {
-        $product->variants->first()->update([
-            'price' => $request->price,
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required',
+            'brand_id' => 'required',
         ]);
-    }
 
-    return redirect()->route('products.index')
-        ->with('success', 'Cập nhật thành công');
-}
+        // Cập nhật slug nếu đổi tên
+        $slug = Str::slug($request->name);
+
+        if (
+            Product::where('slug', $slug)
+            ->where('id', '!=', $product->id)
+            ->exists()
+        ) {
+            return back()
+                ->withErrors(['name' => 'Sản phẩm này đã tồn tại'])
+                ->withInput();
+        }
+
+        // Upload ảnh mới nếu có
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+            $product->thumbnail = $imagePath;
+        }
+
+        $product->update([
+            'name' => $request->name,
+            'slug' => $slug,
+            'category_id' => $request->category_id,
+            'brand_id' => $request->brand_id,
+            'status' => $request->status ?? $product->status,
+        ]);
+
+        return redirect()->route('products.show', $product->id)
+            ->with('success', 'Cập nhật thành công');
+    }
 
     public function destroy(Product $product)
     {
@@ -182,5 +224,45 @@ class ProductController extends Controller
         Excel::import(new ProductsImport, $request->file('file'));
 
         return back()->with('success', 'Import thành công');
+    }
+    public function show($id)
+    {
+        $product = Product::with([
+            'category',
+            'brand',
+            'variants'
+        ])->findOrFail($id);
+
+        $minPrice = $product->variants->min('price');
+        $maxPrice = $product->variants->max('price');
+        $totalStock = $product->variants->sum('stock');
+
+        return view('admin.products.show', compact(
+            'product',
+            'minPrice',
+            'maxPrice',
+            'totalStock'
+        ));
+    }
+
+    public function toggleStatus(Product $product)
+    {
+        $product->update(['status' => !$product->status]);
+
+        return response()->json([
+            'success' => true,
+            'status' => $product->status,
+            'message' => $product->status ? 'Đã kích hoạt sản phẩm' : 'Đã ngừng kinh doanh sản phẩm'
+        ]);
+    }
+
+    private function generateSku($product, $color, $storage, $ram)
+    {
+        $productCode = strtoupper(substr($product->slug, 0, 5));
+        $colorCode = strtoupper(substr($color, 0, 3));
+        $storageCode = str_replace(['GB', 'TB'], '', $storage);
+        $ramCode = str_replace('GB', '', $ram);
+
+        return $productCode . '-' . $colorCode . '-' . $storageCode . '-' . $ramCode;
     }
 }
