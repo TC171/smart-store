@@ -9,5 +9,19 @@ class Brand extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug']; // Thêm các trường cần thiết
+    protected $fillable = [
+        'name',
+        'slug',
+        'logo',
+        'description',
+        'website',
+        'country',
+        'status',
+        'meta_title',
+        'meta_description',
+    ];
+
+    protected $casts = [
+        'status' => 'boolean',
+    ];
 }

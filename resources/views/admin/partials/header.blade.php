@@ -32,6 +32,18 @@
                 👤 Profile
             </a>
 
+            @if(in_array(auth()->user()->role, ['admin', 'staff']))
+                <a href="{{ route('admin.dashboard') }}"
+                   class="block px-5 py-3 hover:bg-purple-600/20 transition">
+                    🏠 Admin Dashboard
+                </a>
+            @else
+                <a href="{{ route('customer.dashboard') }}"
+                   class="block px-5 py-3 hover:bg-purple-600/20 transition">
+                    🏠 Customer Dashboard
+                </a>
+            @endif
+
             <a href="{{ route('admin.password') }}"
                class="block px-5 py-3 hover:bg-purple-600/20 transition">
                 🔐 Change Password

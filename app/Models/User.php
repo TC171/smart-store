@@ -21,6 +21,16 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'phone',
+        'avatar',
+        'gender',
+        'date_of_birth',
+        'address',
+        'city',
+        'country',
+        'postal_code',
+        'status',
     ];
 
     /**
@@ -44,5 +54,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function inventoryHistories()
+    {
+        return $this->hasMany(InventoryHistory::class);
     }
 }
