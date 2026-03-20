@@ -11,15 +11,19 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware) {
-    $middleware->redirectGuestsTo(function () {
-        return route('admin.login');
-    });
 
-    $middleware->alias([
-        'admin' => \App\Http\Middleware\AdminMiddleware::class,
-    ]);
-})
+    ->withMiddleware(function (Middleware $middleware) {
+
+        // ❌ BỎ cái redirectGuestsTo này đi
+        // vì nó làm frontend redirect về admin
+
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'customer' => \App\Http\Middleware\IsCustumer::class, // ✅ thêm dòng này
+        ]);
+    })
+
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    ->create();
