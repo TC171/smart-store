@@ -117,11 +117,21 @@ Route::middleware(['auth', 'customer'])
 | FRONTEND ROUTES
 |--------------------------------------------------------------------------
 */
-
+use App\Http\Controllers\Frontend\CategoryController as FrontCategoryController;
 // Public (chưa login vẫn vào được)
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
+ 
+
+Route::get('/category/{slug}', 
+    [FrontCategoryController::class, 'show']
+)->name('category.show');
 Route::get('/product/{slug}', [FrontProductController::class, 'show'])->name('product.show');
+Route::get('/categories-ui', function () {
+    return view('frontend.categories');
+});
+
+
 
 /*
 |--------------------------------------------------------------------------
