@@ -28,10 +28,10 @@
             <div>
                 <h4 class="font-semibold text-white mb-4">Thông tin</h4>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="hover:text-white">Về chúng tôi</a></li>
-                    <li><a href="#" class="hover:text-white">Chính sách bảo hành</a></li>
-                    <li><a href="#" class="hover:text-white">Chính sách đổi trả</a></li>
-                    <li><a href="#" class="hover:text-white">Liên hệ</a></li>
+                    <li><a href="{{ route('page.about') }}" class="hover:text-white">Về chúng tôi</a></li>
+                    <li><a href="{{ route('page.warranty') }}" class="hover:text-white">Chính sách bảo hành</a></li>
+                    <li><a href="{{ route('page.return-policy') }}" class="hover:text-white">Chính sách đổi trả</a></li>
+                    <li><a href="{{ route('page.contact') }}" class="hover:text-white">Liên hệ</a></li>
                 </ul>
             </div>
 
@@ -39,8 +39,8 @@
             <div>
                 <h4 class="font-semibold text-white mb-4">Liên hệ</h4>
                 <p class="text-sm">Hotline: <span class="text-white font-medium">1900 1234</span></p>
-                <p class="text-sm mt-1">Email: support@smartstore.vn</p>
-                <p class="text-sm mt-4">Hà Nội • TP.HCM • Đà Nẵng</p>
+                <p class="text-sm mt-1">Email: nguyenductinh08092005@gmail.com</p>
+                <p class="text-sm mt-4">Cao đẳng FPT, Trịnh Văn Bô, Nam Từ Liêm, Hà Nội</p>
             </div>
         </div>
 
