@@ -284,7 +284,114 @@
         </style>
 
 
-    
+    {{-- ================= CATEGORY PRODUCT SECTIONS ================= --}}
+<section class="space-y-10" data-aos="fade-up">
+
+    {{-- Điện thoại --}}
+    <div class="bg-white rounded-3xl p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h2 class="text-2xl font-bold">📱 Điện thoại</h2>
+                <p class="text-sm text-gray-500">Những mẫu điện thoại đáng chú ý dành cho bạn</p>
+            </div>
+
+            <a href="{{ route('category.products', 'dien-thoai') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-orange-200 text-orange-500 font-semibold hover:bg-orange-50 transition">
+                Xem thêm
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+            @forelse($phoneProducts as $product)
+                @include('frontend.components.product-card', ['product' => $product])
+            @empty
+                <p class="col-span-full text-gray-500">Chưa có sản phẩm điện thoại</p>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- Laptop --}}
+    <div class="bg-white rounded-3xl p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h2 class="text-2xl font-bold">💻 Laptop</h2>
+                <p class="text-sm text-gray-500">Các dòng laptop nổi bật cho học tập và công việc</p>
+            </div>
+
+            <a href="{{ route('category.products', 'laptop') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-orange-200 text-orange-500 font-semibold hover:bg-orange-50 transition">
+                Xem thêm
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+            @forelse($laptopProducts as $product)
+                @include('frontend.components.product-card', ['product' => $product])
+            @empty
+                <p class="col-span-full text-gray-500">Chưa có sản phẩm laptop</p>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- Máy tính bảng --}}
+    <div class="bg-white rounded-3xl p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h2 class="text-2xl font-bold">📟 Máy tính bảng</h2>
+                <p class="text-sm text-gray-500">Thiết bị gọn nhẹ cho học tập, giải trí và làm việc</p>
+            </div>
+
+            <a href="{{ route('category.products', 'may-tinh-bang') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-orange-200 text-orange-500 font-semibold hover:bg-orange-50 transition">
+                Xem thêm
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+            @forelse($tabletProducts as $product)
+                @include('frontend.components.product-card', ['product' => $product])
+            @empty
+                <p class="col-span-full text-gray-500">Chưa có sản phẩm máy tính bảng</p>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- Phụ kiện --}}
+    <div class="bg-white rounded-3xl p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h2 class="text-2xl font-bold">🎧 Phụ kiện</h2>
+                <p class="text-sm text-gray-500">Tai nghe, sạc, cáp và các phụ kiện cần thiết</p>
+            </div>
+
+            <a href="{{ route('category.products', 'phu-kien') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-orange-200 text-orange-500 font-semibold hover:bg-orange-50 transition">
+                Xem thêm
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+            @forelse($accessoryProducts as $product)
+                @include('frontend.components.product-card', ['product' => $product])
+            @empty
+                <p class="col-span-full text-gray-500">Chưa có sản phẩm phụ kiện</p>
+            @endforelse
+        </div>
+    </div>
+
+</section>
 
 
         {{-- ================= NEWSLETTER ================= --}}
