@@ -35,6 +35,7 @@ use App\Http\Controllers\Frontend\CustomerOrderController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ProductController as FrontProductController;
 use App\Http\Controllers\Frontend\CategoryController as FrontCategoryController;
+use App\Http\Controllers\Frontend\PageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -118,6 +119,16 @@ Route::middleware('auth:web')->group(function () {
 });
 
 Route::get('/tim-kiem', [HomeController::class, 'search'])->name('search');
+
+/*
+|--------------------------------------------------------------------------
+| INFORMATION PAGES
+|--------------------------------------------------------------------------
+*/
+Route::get('/ve-chung-toi', [PageController::class, 'about'])->name('page.about');
+Route::get('/chinh-sach-bao-hanh', [PageController::class, 'warranty'])->name('page.warranty');
+Route::get('/chinh-sach-doi-tra', [PageController::class, 'returnPolicy'])->name('page.return-policy');
+Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
 
 /*
 |--------------------------------------------------------------------------
