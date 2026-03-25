@@ -18,8 +18,16 @@
 
         {{-- ================= HERO ================= --}}
         @if ($banners->count())
-            <div x-data="{ active: 0, paused: false }" x-init="setInterval(() => { if (!paused) active = (active + 1) % {{ $banners->count() }} }, 4000)" @mouseenter="paused = true" @mouseleave="paused = false"
-                class="relative h-96 md:h-[500px] rounded-3xl overflow-hidden shadow-2xl" data-aos="fade-down">
+            <div x-data="{
+                    active: 0,
+                    paused: false,
+                    total: {{ $banners->count() }},
+                    prev() { this.active = (this.active - 1 + this.total) % this.total },
+                    next() { this.active = (this.active + 1) % this.total }
+                }"
+                x-init="setInterval(() => { if (!paused) next() }, 4000)"
+                @mouseenter="paused = true" @mouseleave="paused = false"
+                class="relative h-96 md:h-[500px] rounded-3xl overflow-hidden shadow-2xl group" data-aos="fade-down">
 
                 @foreach ($banners as $index => $banner)
                     <img src="{{ url('/storage/' . $banner->image) }}"
@@ -28,21 +36,35 @@
                         loading="lazy">
                 @endforeach
 
-                <div class="absolute inset-0 bg-black/50"></div>
 
-                {{-- Content --}}
-                <div class="absolute bottom-10 left-10 text-white z-10 max-w-xl" data-aos="fade-up">
-                    <h1 class="text-4xl md:text-6xl font-bold mb-4">
-                        Siêu Sale <span class="text-orange-400">50%</span>
-                    </h1>
-                    <p class="mb-6 text-lg opacity-90">
-                        Mua ngay hôm nay để nhận ưu đãi lớn
-                    </p>
-                    <a href="{{ route('products.featured') }}"
-                        class="bg-orange-500 px-6 py-3 rounded-xl font-bold hover:bg-orange-600">
-                        Mua ngay
-                    </a>
+                {{-- Nút mũi tên TRÁI --}}
+                <button @click="prev()"
+                    class="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-lg text-gray-800 hover:bg-orange-500 hover:text-white transition-all duration-300 hover:scale-110">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                {{-- Nút mũi tên PHẢI --}}
+                <button @click="next()"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-lg text-gray-800 hover:bg-orange-500 hover:text-white transition-all duration-300 hover:scale-110">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+
+                {{-- Dot indicators --}}
+                <div class="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+                    @foreach ($banners as $index => $banner)
+                        <button @click="active = {{ $index }}"
+                            class="h-3 rounded-full transition-all duration-300 shadow"
+                            :class="active === {{ $index }} ? 'bg-orange-500 w-8' : 'bg-white w-3 hover:bg-orange-300'">
+                        </button>
+                    @endforeach
                 </div>
+
+
+
 
             </div>
         @endif

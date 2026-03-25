@@ -16,7 +16,7 @@
 
     @include('frontend.partials.header')
 
-    <main class="mt-4 min-h-screen">
+    <main class="mt-20 min-h-screen">
         @yield('content')
     </main>
 
