@@ -13,70 +13,111 @@
             duration: 800,
             once: true
         });
-    });
+    </script>
 
-    function productSlider() {
-        return {
-            scrollAmount: 320,
-            scrollLeft() {
-                this.$refs.slider.scrollBy({
-                    left: -this.scrollAmount,
-                    behavior: 'smooth'
-                });
-            },
-            scrollRight() {
-                this.$refs.slider.scrollBy({
-                    left: this.scrollAmount,
-                    behavior: 'smooth'
-                });
-            }
-        }
-    }
-</script>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-10 py-8 bg-gradient-to-b from-gray-50 to-white">
 
-<style>
-    .no-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
+        {{-- ================= HERO ================= --}}
+        @if ($banners->count())
+            <div x-data="{
+                    active: 0,
+                    paused: false,
+                    total: {{ $banners->count() }},
+                    prev() { this.active = (this.active - 1 + this.total) % this.total },
+                    next() { this.active = (this.active + 1) % this.total }
+                }"
+                x-init="setInterval(() => { if (!paused) next() }, 4000)"
+                @mouseenter="paused = true" @mouseleave="paused = false"
+                class="relative h-96 md:h-[500px] rounded-3xl overflow-hidden shadow-2xl group" data-aos="fade-down">
 
-    .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-</style>
+                @foreach ($banners as $index => $banner)
+                    <img src="{{ url('/storage/' . $banner->image) }}"
+                        class="absolute inset-0 w-full h-full object-cover transition-all duration-700"
+                        :class="active === {{ $index }} ? 'opacity-100 scale-100' : 'opacity-0 scale-110'"
+                        loading="lazy">
+                @endforeach
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-10 py-8 bg-gradient-to-b from-gray-50 to-white">
 
-    {{-- ================= HERO ================= --}}
-    @if ($banners->count())
-        <div x-data="{ active: 0, paused: false }"
-             x-init="setInterval(() => { if (!paused) active = (active + 1) % {{ $banners->count() }} }, 4000)"
-             @mouseenter="paused = true"
-             @mouseleave="paused = false"
-             class="relative h-96 md:h-[500px] rounded-3xl overflow-hidden shadow-2xl"
-             data-aos="fade-down">
+                {{-- Nút mũi tên TRÁI --}}
+                <button @click="prev()"
+                    class="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-lg text-gray-800 hover:bg-orange-500 hover:text-white transition-all duration-300 hover:scale-110">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
 
-            @foreach ($banners as $index => $banner)
-                <img src="{{ asset('storage/' . $banner->image) }}"
-                     class="absolute inset-0 w-full h-full object-cover transition-all duration-700"
-                     :class="active === {{ $index }} ? 'opacity-100 scale-100' : 'opacity-0 scale-110'"
-                     loading="lazy"
-                     alt="{{ $banner->title ?? 'Banner' }}">
-            @endforeach
+                {{-- Nút mũi tên PHẢI --}}
+                <button @click="next()"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-lg text-gray-800 hover:bg-orange-500 hover:text-white transition-all duration-300 hover:scale-110">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
 
-            <div class="absolute inset-0 bg-black/50"></div>
+                {{-- Dot indicators --}}
+                <div class="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+                    @foreach ($banners as $index => $banner)
+                        <button @click="active = {{ $index }}"
+                            class="h-3 rounded-full transition-all duration-300 shadow"
+                            :class="active === {{ $index }} ? 'bg-orange-500 w-8' : 'bg-white w-3 hover:bg-orange-300'">
+                        </button>
+                    @endforeach
+                </div>
 
-            <div class="absolute bottom-10 left-10 text-white z-10 max-w-xl" data-aos="fade-up">
-                <h1 class="text-4xl md:text-6xl font-bold mb-4">
-                    Siêu Sale <span class="text-orange-400">50%</span>
-                </h1>
-                <p class="mb-6 text-lg opacity-90">
-                    Mua ngay hôm nay để nhận ưu đãi lớn
-                </p>
-                <a href="{{ route('products.featured') }}"
-                   class="bg-orange-500 px-6 py-3 rounded-xl font-bold hover:bg-orange-600 transition">
-                    Mua ngay
-                </a>
+
+
+
+            </div>
+        @endif
+
+
+        {{-- ================= CATEGORY ================= --}}
+        <section data-aos="fade-up">
+            <div class="bg-white rounded-3xl p-6 shadow-xl">
+
+                <h2 class="text-2xl font-bold mb-6">Danh mục nổi bật</h2>
+
+                <div class="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-4">
+
+                    @forelse($featuredCategories as $cat)
+                        <a href="{{ route('category.products', $cat->slug) }}" class="text-center group">
+
+                            <div
+                                class="w-20 h-20 mx-auto rounded-2xl bg-gray-100 flex items-center justify-center group-hover:bg-orange-100 transition">
+                                @if ($cat->image)
+                                    <img src="{{ asset('storage/' . $cat->image) }}"
+                                        class="w-12 h-12 object-cover rounded-lg">
+                                @else
+                                    <span class="font-bold text-gray-600">
+                                        {{ strtoupper(substr($cat->name, 0, 2)) }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            <p class="text-sm mt-2 font-semibold">{{ $cat->name }}</p>
+
+                        </a>
+
+                    @empty
+                        <p>Không có danh mục</p>
+                    @endforelse
+
+                </div>
+            </div>
+        </section>
+
+   {{-- ================= COUPONS ================= --}}
+<section data-aos="fade-up">
+    <div class="bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-gray-100">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+            <div>
+                <p class="text-orange-500 font-semibold text-sm uppercase tracking-wider">Ưu đãi hôm nay</p>
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-900">🎁 Mã giảm giá nổi bật</h2>
+                <p class="text-gray-500 mt-1">Sao chép mã để áp dụng khi thanh toán và tiết kiệm hơn cho đơn hàng của bạn.</p>
+            </div>
+
+            <div class="text-sm text-gray-400">
+                Chọn mã phù hợp với đơn hàng của bạn
             </div>
         </div>
     @endif
