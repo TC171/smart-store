@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 13, 2026 at 04:21 AM
+-- Generation Time: Mar 25, 2026 at 04:25 AM
 -- Server version: 8.0.30
--- PHP Version: 8.3.6
+-- PHP Version: 8.2.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -61,7 +61,8 @@ CREATE TABLE `banners` (
 --
 
 INSERT INTO `banners` (`id`, `title`, `image`, `link`, `position`, `sort_order`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'tiêu đề', 'banners/8xW6O7VsXuQPd00Iqd83B7GQB3Mbe7zuUNHTkKJD.png', 'https://google.com', 'header', 1, 1, '2026-03-13 02:38:37', '2026-03-13 02:38:37');
+(1, 'tiêu đề', 'banners/8xW6O7VsXuQPd00Iqd83B7GQB3Mbe7zuUNHTkKJD.png', 'https://google.com', 'header', 1, 1, '2026-03-13 02:38:37', '2026-03-13 02:38:37'),
+(4, '3.', 'banners/5lvkBNqR7Ex9DPmWAvmOWp1oPvXhTgKokx6aiWMA.png', NULL, 'header', 0, 1, '2026-03-21 12:53:36', '2026-03-21 12:53:36');
 
 -- --------------------------------------------------------
 
@@ -103,8 +104,8 @@ INSERT INTO `brands` (`id`, `name`, `slug`, `logo`, `description`, `website`, `c
 --
 
 CREATE TABLE `cache` (
-  `key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `value` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `value` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `expiration` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -115,8 +116,8 @@ CREATE TABLE `cache` (
 --
 
 CREATE TABLE `cache_locks` (
-  `key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `owner` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `owner` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `expiration` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -183,10 +184,10 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `name`, `slug`, `description`, `image`, `icon`, `parent_id`, `is_featured`, `status`, `sort_order`, `meta_title`, `meta_description`, `meta_keywords`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 'Điện thoại', 'dien-thoai', NULL, NULL, NULL, NULL, 1, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-06 09:46:05', NULL),
-(2, 'Laptop', 'laptop', NULL, NULL, NULL, NULL, 1, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-13 02:45:54', NULL),
-(3, 'Máy tính bảng', 'may-tinh-bang', NULL, NULL, NULL, NULL, 0, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL),
-(4, 'Phụ kiện', 'phu-kien', NULL, NULL, NULL, NULL, 0, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL),
+(1, 'Điện thoại', 'dien-thoai', NULL, 'categories/T3hEmh5ViJgWEuVZZKDo6N3m7p9sBvBRUC4Cvleg.png', NULL, NULL, 1, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-21 12:44:30', NULL),
+(2, 'Laptop', 'laptop', NULL, 'categories/SuOwbAXQfPd8I8KqTnBH5WEwKjkLeyEii22yPWuo.jpg', NULL, NULL, 1, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-24 02:57:59', NULL),
+(3, 'Máy tính bảng', 'may-tinh-bang', NULL, 'categories/JFOql8b3bmLCSFmyj2Ey0gQ9XRm2VG6nEvXAShU0.jpg', NULL, NULL, 1, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-24 02:58:20', NULL),
+(4, 'Phụ kiện', 'phu-kien', NULL, 'categories/KTIgsedXtQ6QiI6nYlwhcBkaKiQhhybqEgZk7JdC.jpg', NULL, NULL, 1, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-24 02:58:33', NULL),
 (5, 'Đồng hồ thông minh', 'dong-ho', NULL, NULL, NULL, NULL, 0, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-05 18:56:38', '2026-03-05 18:56:38');
 
 -- --------------------------------------------------------
@@ -227,11 +228,11 @@ INSERT INTO `coupons` (`id`, `code`, `type`, `value`, `min_order_amount`, `max_d
 
 CREATE TABLE `failed_jobs` (
   `id` bigint UNSIGNED NOT NULL,
-  `uuid` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `connection` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `queue` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `exception` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `uuid` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `connection` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `queue` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `exception` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `failed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -281,8 +282,8 @@ INSERT INTO `inventory_history` (`id`, `product_variant_id`, `type`, `quantity`,
 
 CREATE TABLE `jobs` (
   `id` bigint UNSIGNED NOT NULL,
-  `queue` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `queue` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `attempts` tinyint UNSIGNED NOT NULL,
   `reserved_at` int UNSIGNED DEFAULT NULL,
   `available_at` int UNSIGNED NOT NULL,
@@ -296,13 +297,13 @@ CREATE TABLE `jobs` (
 --
 
 CREATE TABLE `job_batches` (
-  `id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `total_jobs` int NOT NULL,
   `pending_jobs` int NOT NULL,
   `failed_jobs` int NOT NULL,
-  `failed_job_ids` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `options` mediumtext COLLATE utf8mb4_unicode_ci,
+  `failed_job_ids` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `options` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `cancelled_at` int DEFAULT NULL,
   `created_at` int NOT NULL,
   `finished_at` int DEFAULT NULL
@@ -316,7 +317,7 @@ CREATE TABLE `job_batches` (
 
 CREATE TABLE `migrations` (
   `id` int UNSIGNED NOT NULL,
-  `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `migration` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -432,8 +433,8 @@ INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `product_variant_id`,
 --
 
 CREATE TABLE `password_reset_tokens` (
-  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -464,11 +465,11 @@ CREATE TABLE `payments` (
 
 CREATE TABLE `personal_access_tokens` (
   `id` bigint UNSIGNED NOT NULL,
-  `tokenable_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tokenable_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `tokenable_id` bigint UNSIGNED NOT NULL,
-  `name` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `abilities` text COLLATE utf8mb4_unicode_ci,
+  `name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `abilities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `last_used_at` timestamp NULL DEFAULT NULL,
   `expires_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -505,27 +506,36 @@ CREATE TABLE `products` (
   `meta_keywords` text,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  `deleted_at` timestamp NULL DEFAULT NULL
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `price` decimal(15,2) DEFAULT NULL,
+  `sale_price` decimal(15,2) DEFAULT NULL,
+  `stock` int DEFAULT '0',
+  `has_variants` tinyint(1) DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`id`, `name`, `slug`, `short_description`, `description`, `category_id`, `brand_id`, `thumbnail`, `warranty_months`, `weight`, `length`, `width`, `height`, `is_featured`, `is_new`, `status`, `view_count`, `sold_count`, `meta_title`, `meta_description`, `meta_keywords`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 'iPhone 15 Pro Max', 'iphone-15-pro-max', 'iPhone cao cấp', 'Mô tả iPhone', 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL),
-(2, 'Samsung Galaxy S24', 'galaxy-s24', 'Flagship Samsung', 'Mô tả S24', 1, 2, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-02 15:23:59', '2026-03-02 15:23:59'),
-(3, 'Dell XPS 15', 'dell-xps-15', 'Laptop cao cấp', 'Mô tả XPS', 2, 3, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL),
-(4, 'Xiaomi Pad 6', 'xiaomi-pad-6', 'Tablet mạnh mẽ', 'Mô tả Pad 6', 3, 4, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL),
-(5, 'Asus ROG Phone 8', 'rog-phone-8', 'Gaming phone', 'Mô tả ROG', 1, 5, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL),
-(6, '1', '1', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:02:25', '2026-03-02 21:31:20', '2026-03-02 21:31:20'),
-(7, '2', '2', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:03:14', '2026-03-02 21:31:17', '2026-03-02 21:31:17'),
-(8, '3', '3', NULL, NULL, 1, 1, 'products/htIjzqLhT9ZOiU0cB8SqAXN8hLrJFSd4HAC8j0SZ.png', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:08:31', '2026-03-02 21:31:11', '2026-03-02 21:31:11'),
-(9, '4', '4', NULL, NULL, 1, 1, 'products/ZTxHqZApvm2Ecbzfbc1RYdfjj7d8hbc6JuJhTxDz.jpg', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:08:57', '2026-03-02 21:31:07', '2026-03-02 21:31:07'),
-(11, 'iPhone 16 Pro Max', 'iphone-16-pro-max', NULL, NULL, 1, 1, 'products/r7xEFSsEh5mmUcQUxBR7Jf2mwhZgzXx8uGEnKp8v.png', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:30:57', '2026-03-13 02:44:25', NULL),
-(12, '5', '5', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:33:26', '2026-03-05 18:57:11', '2026-03-05 18:57:11'),
-(13, '7', '7', NULL, NULL, 1, 1, 'products/zFKSX0lNDsfhxV6qOqTBSB4XjRwM6scVlhov6CcY.png', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:37:39', '2026-03-05 18:57:08', '2026-03-05 18:57:08'),
-(14, '6', '6', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:53:47', '2026-03-05 17:34:24', '2026-03-05 17:34:24');
+INSERT INTO `products` (`id`, `name`, `slug`, `short_description`, `description`, `category_id`, `brand_id`, `thumbnail`, `warranty_months`, `weight`, `length`, `width`, `height`, `is_featured`, `is_new`, `status`, `view_count`, `sold_count`, `meta_title`, `meta_description`, `meta_keywords`, `created_at`, `updated_at`, `deleted_at`, `price`, `sale_price`, `stock`, `has_variants`) VALUES
+(1, 'iPhone 15 Pro Max', 'iphone-15-pro-max', 'iPhone cao cấp', 'Chiếc smartphone mới nhất từ Samsung ra mắt vào tháng 03/2026 mang đến sự kết hợp hoàn hảo giữa hiệu năng mạnh mẽ, thiết kế cao cấp và công nghệ hiện đại, đáp ứng tốt mọi nhu cầu từ công việc đến giải trí.\r\n\r\nVề hiệu năng, máy được trang bị vi xử lý Exynos 1680 8 nhân với cấu trúc gồm 1 nhân xung nhịp 2.9 GHz, 3 nhân 2.6 GHz và 4 nhân 1.95 GHz, giúp xử lý mượt mà mọi tác vụ từ cơ bản đến nâng cao. Đi kèm là GPU Xclipse 550 mang lại khả năng đồ họa ấn tượng, hỗ trợ tốt chơi game và xử lý hình ảnh. Máy có RAM 8 GB và bộ nhớ trong 128 GB (khả dụng khoảng 113 GB), đủ không gian lưu trữ dữ liệu thoải mái.\r\n\r\nVề màn hình, thiết bị sở hữu tấm nền Super AMOLED Plus kích thước lớn 6.7 inch, độ phân giải Full HD+ (1080 x 2340 Pixels), tần số quét 120 Hz cho trải nghiệm hiển thị mượt mà. Độ sáng tối đa lên đến 1900 nits giúp hiển thị rõ ràng ngay cả dưới ánh sáng mạnh. Màn hình được bảo vệ bởi kính cường lực Corning Gorilla Glass Victus+, tăng độ bền và khả năng chống trầy xước.\r\n\r\nHệ thống camera là điểm nhấn nổi bật với cụm 3 camera sau gồm camera chính 50 MP, camera phụ 12 MP và 5 MP, hỗ trợ nhiều tính năng như chống rung quang học (OIS), chụp đêm, HDR, AI Camera, quay video 4K 30fps và quay siêu chậm. Camera trước 12 MP đáp ứng tốt nhu cầu selfie và gọi video với các tính năng làm đẹp, HDR và chụp chân dung AI.\r\n\r\nThiết bị chạy trên hệ điều hành Android 16 mới nhất, mang lại trải nghiệm mượt mà và nhiều tính năng thông minh. Ngoài ra, máy còn hỗ trợ đầy đủ các kết nối hiện đại như 5G, Wi-Fi 6E, Bluetooth 6.0, NFC và định vị đa hệ thống.\r\n\r\nVề pin, máy được trang bị viên pin dung lượng 5000 mAh, hỗ trợ sạc nhanh 45W với công nghệ Super Fast Charging 2.0, giúp rút ngắn thời gian sạc và kéo dài thời gian sử dụng.\r\n\r\nThiết kế của máy mang phong cách nguyên khối cao cấp với khung kim loại và mặt lưng kính Gorilla Glass Victus+, vừa sang trọng vừa bền bỉ. Máy có độ mỏng chỉ 6.9 mm và trọng lượng 179 g, tạo cảm giác cầm nắm thoải mái. Đồng thời, thiết bị đạt chuẩn kháng nước, bụi IP68, giúp yên tâm sử dụng trong nhiều điều kiện khác nhau.\r\n\r\nNgoài ra, máy còn tích hợp nhiều tiện ích như mở khóa vân tay dưới màn hình, nhận diện khuôn mặt, hỗ trợ 2 SIM (Nano SIM + eSIM), cùng khả năng giải trí đa phương tiện mạnh mẽ.', 1, 1, 'products/8j2DPeiDScq86c9UKsh9uHaknPGAZGRRR2tsRRN4.jpg', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-25 03:46:20', NULL, NULL, NULL, 0, 0),
+(2, 'Samsung Galaxy S24', 'galaxy-s24', 'Flagship Samsung', 'Mô tả S24', 1, 2, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-02 15:23:59', '2026-03-02 15:23:59', NULL, NULL, 0, 0),
+(3, 'Dell XPS 15', 'dell-xps-15', 'Laptop cao cấp', 'Mô tả XPS', 2, 3, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL, NULL, NULL, 0, 0),
+(4, 'Xiaomi Pad 6', 'xiaomi-pad-6', 'Tablet mạnh mẽ', 'Mô tả Pad 6', 3, 4, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL, NULL, NULL, 0, 0),
+(5, 'Asus ROG Phone 8', 'rog-phone-8', 'Gaming phone', 'Mô tả ROG', 1, 5, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL, NULL, NULL, 0, 0),
+(6, '1', '1', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:02:25', '2026-03-02 21:31:20', '2026-03-02 21:31:20', NULL, NULL, 0, 0),
+(7, '2', '2', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:03:14', '2026-03-02 21:31:17', '2026-03-02 21:31:17', NULL, NULL, 0, 0),
+(8, '3', '3', NULL, NULL, 1, 1, 'products/htIjzqLhT9ZOiU0cB8SqAXN8hLrJFSd4HAC8j0SZ.png', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:08:31', '2026-03-02 21:31:11', '2026-03-02 21:31:11', NULL, NULL, 0, 0),
+(9, '4', '4', NULL, NULL, 1, 1, 'products/ZTxHqZApvm2Ecbzfbc1RYdfjj7d8hbc6JuJhTxDz.jpg', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:08:57', '2026-03-02 21:31:07', '2026-03-02 21:31:07', NULL, NULL, 0, 0),
+(11, 'iPhone 16 Pro Max', 'iphone-16-pro-max', NULL, NULL, 1, 1, 'products/r7xEFSsEh5mmUcQUxBR7Jf2mwhZgzXx8uGEnKp8v.png', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:30:57', '2026-03-13 02:44:25', NULL, NULL, NULL, 0, 0),
+(12, '5', '5', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:33:26', '2026-03-05 18:57:11', '2026-03-05 18:57:11', NULL, NULL, 0, 0),
+(13, '7', '7', NULL, NULL, 1, 1, 'products/zFKSX0lNDsfhxV6qOqTBSB4XjRwM6scVlhov6CcY.png', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:37:39', '2026-03-05 18:57:08', '2026-03-05 18:57:08', NULL, NULL, 0, 0),
+(14, '6', '6', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:53:47', '2026-03-05 17:34:24', '2026-03-05 17:34:24', NULL, NULL, 0, 0),
+(15, 'abc', 'abc', NULL, NULL, 1, 1, 'products/RhjbaAlCk17ESilYk6wlR5dskDLLEyvgBwLKXa0T.jpg', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-21 13:07:17', '2026-03-21 13:07:17', NULL, NULL, NULL, 0, 0),
+(16, '123', '123', NULL, NULL, 1, 2, 'products/y05X85f6zJJLJvVeI0IxoGovdT2R01usDt31Fp41.png', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-24 04:00:28', '2026-03-24 13:14:11', NULL, NULL, NULL, 0, 0),
+(17, 'abcd', 'abcd', NULL, NULL, 2, 2, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-24 11:34:50', '2026-03-25 03:53:01', NULL, NULL, NULL, 0, 0),
+(19, '121323', '121323', NULL, NULL, 1, 1, 'products/SNkdLcDra3ytr644TTkD1cLuQhSLEmAwxwOP8tRr.jpg', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-24 13:35:21', '2026-03-25 03:53:03', NULL, NULL, NULL, 0, 0),
+(20, '4534656', '4534656', NULL, NULL, 1, 1, 'products/yCfMhSVtPzK3mMoK1CeBz618oYvL5wZ4SB9gIiaH.jpg', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-25 03:52:06', '2026-03-25 03:53:17', NULL, NULL, NULL, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -535,8 +545,8 @@ INSERT INTO `products` (`id`, `name`, `slug`, `short_description`, `description`
 
 CREATE TABLE `product_attributes` (
   `id` bigint UNSIGNED NOT NULL,
-  `type` enum('color','storage','ram') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `value` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` enum('color','storage','ram') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `value` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `sort_order` int NOT NULL DEFAULT '0',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -547,14 +557,6 @@ CREATE TABLE `product_attributes` (
 --
 
 INSERT INTO `product_attributes` (`id`, `type`, `value`, `sort_order`, `created_at`, `updated_at`) VALUES
-(1, 'color', 'Đen', 1, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
-(2, 'color', 'Trắng', 2, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
-(3, 'color', 'Xanh dương', 3, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
-(4, 'color', 'Đỏ', 4, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
-(5, 'color', 'Xanh lá', 5, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
-(6, 'color', 'Vàng', 6, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
-(7, 'color', 'Tím', 7, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
-(8, 'color', 'Hồng', 8, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
 (9, 'storage', '64GB', 1, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
 (10, 'storage', '128GB', 2, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
 (11, 'storage', '256GB', 3, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
@@ -567,7 +569,9 @@ INSERT INTO `product_attributes` (`id`, `type`, `value`, `sort_order`, `created_
 (18, 'ram', '12GB', 4, '2026-03-13 02:51:40', '2026-03-13 02:51:40'),
 (19, 'ram', '16GB', 5, '2026-03-13 02:51:40', '2026-03-13 02:51:40'),
 (20, 'ram', '32GB', 6, '2026-03-13 02:51:40', '2026-03-13 02:51:40'),
-(21, 'storage', '32GB', 1, '2026-03-13 03:03:03', '2026-03-13 03:03:16');
+(21, 'storage', '32GB', 1, '2026-03-13 03:03:03', '2026-03-13 03:03:16'),
+(22, 'color', 'Red', 0, '2026-03-24 13:44:20', '2026-03-24 13:44:20'),
+(23, 'color', 'Black', 0, '2026-03-24 13:44:30', '2026-03-24 13:44:30');
 
 -- --------------------------------------------------------
 
@@ -650,10 +654,8 @@ INSERT INTO `product_variants` (`id`, `product_id`, `sku`, `barcode`, `color`, `
 (10, 1, 'IP15-BLACK-8GB-256GB', NULL, 'Black', '128GB', '16GB', NULL, NULL, NULL, NULL, NULL, NULL, '15000000.00', NULL, NULL, 2, 0, 1000, NULL, NULL, 1, '2026-03-05 15:05:34', '2026-03-05 17:47:39', NULL),
 (13, 1, 'IPHON-BLA-128-8', NULL, 'black', '128', '8', NULL, NULL, NULL, NULL, NULL, NULL, '15000.00', NULL, NULL, 10, 0, 1000, NULL, NULL, 1, '2026-03-05 20:29:51', '2026-03-05 20:29:51', NULL),
 (14, 1, 'IPH-BLA-258-8', NULL, 'black', '258', '8', NULL, NULL, NULL, NULL, NULL, NULL, '15000.00', NULL, NULL, 5, 0, 1000, NULL, NULL, 1, '2026-03-06 08:16:30', '2026-03-06 08:16:30', NULL),
-(16, 11, 'IPHON-BLA-128-8-1', NULL, 'Black', '128GB', '8GB', NULL, NULL, NULL, NULL, NULL, NULL, '150000000.00', NULL, NULL, 10, 0, 1000, NULL, NULL, 1, '2026-03-06 08:38:27', '2026-03-06 14:54:03', NULL),
 (17, 11, 'IPHON-BLA-128-12', NULL, 'Black', '128GB', '12GB', NULL, NULL, NULL, NULL, NULL, NULL, '1.00', NULL, NULL, 1, 0, 1000, NULL, NULL, 1, '2026-03-06 08:38:27', '2026-03-06 08:38:27', NULL),
 (18, 11, 'IPHON-BLA-258-8', NULL, 'Black', '258GB', '8GB', NULL, NULL, NULL, NULL, NULL, NULL, '1.00', NULL, NULL, 0, 0, 1000, NULL, NULL, 1, '2026-03-06 08:38:27', '2026-03-13 03:18:54', NULL),
-(19, 11, 'IPHON-BLA-258-12', NULL, 'Black', '258GB', '12GB', NULL, NULL, NULL, NULL, NULL, NULL, '1.00', NULL, NULL, 1, 0, 1000, NULL, NULL, 1, '2026-03-06 08:38:27', '2026-03-06 08:38:27', NULL),
 (20, 11, 'IPHON-BLU-128-8', NULL, 'Blue', '128GB', '8GB', NULL, NULL, NULL, NULL, NULL, NULL, '1.00', NULL, NULL, 1, 0, 1000, NULL, NULL, 1, '2026-03-06 08:38:27', '2026-03-06 08:38:27', NULL),
 (21, 11, 'IPHON-BLU-128-12', NULL, 'Blue', '128GB', '12GB', NULL, NULL, NULL, NULL, NULL, NULL, '1.00', NULL, NULL, 1, 0, 1000, NULL, NULL, 1, '2026-03-06 08:38:27', '2026-03-06 08:38:27', NULL),
 (22, 11, 'IPHON-BLU-258-8', NULL, 'Blue', '258GB', '8GB', NULL, NULL, NULL, NULL, NULL, NULL, '1.00', NULL, NULL, 1, 0, 1000, NULL, NULL, 1, '2026-03-06 08:38:27', '2026-03-06 08:38:27', NULL),
@@ -664,10 +666,12 @@ INSERT INTO `product_variants` (`id`, `product_id`, `sku`, `barcode`, `color`, `
 (27, 11, 'IPHON-PIN-258-12', NULL, 'Pink', '258GB', '12GB', NULL, NULL, NULL, NULL, NULL, NULL, '1.00', NULL, NULL, 1, 0, 1000, NULL, NULL, 1, '2026-03-06 08:38:27', '2026-03-06 08:38:27', NULL),
 (28, 1, 'IPHON-BLA-128gb-8gb', NULL, 'black', '128gb', '8gb', NULL, NULL, NULL, NULL, NULL, NULL, '5.00', NULL, NULL, 0, 0, 1000, NULL, NULL, 1, '2026-03-06 08:57:01', '2026-03-13 03:18:54', NULL),
 (29, 4, 'XIAOM-BLU-512gb-12gb', NULL, 'blue', '512gb', '12gb', NULL, NULL, NULL, NULL, NULL, NULL, '5.00', NULL, NULL, 2, 0, 1000, NULL, NULL, 1, '2026-03-06 09:00:15', '2026-03-13 03:18:54', NULL),
-(30, 11, 'IPHON-RED-128gb-8gb', NULL, 'red', '128gb', '8gb', NULL, NULL, NULL, NULL, NULL, NULL, '0.00', NULL, NULL, 0, 0, 1000, NULL, NULL, 1, '2026-03-06 14:53:15', '2026-03-06 14:53:15', NULL),
 (31, 11, 'IPHON-RED-128gb-12gb', NULL, 'red', '128gb', '12gb', NULL, NULL, NULL, NULL, NULL, NULL, '0.00', NULL, NULL, 0, 0, 1000, NULL, NULL, 1, '2026-03-06 14:53:15', '2026-03-06 14:53:15', NULL),
-(32, 11, 'IPHON-WHI-128gb-8gb', NULL, 'white', '128gb', '8gb', NULL, NULL, NULL, NULL, NULL, NULL, '0.00', NULL, NULL, 0, 0, 1000, NULL, NULL, 1, '2026-03-06 14:53:15', '2026-03-06 14:53:15', NULL),
-(33, 11, 'IPHON-WHI-128gb-12gb', NULL, 'white', '128gb', '12gb', NULL, NULL, NULL, NULL, NULL, NULL, '0.00', NULL, NULL, 0, 0, 1000, NULL, NULL, 1, '2026-03-06 14:53:15', '2026-03-06 14:53:15', NULL);
+(33, 11, 'IPHON-WHI-128gb-12gb', NULL, 'white', '128gb', '12gb', NULL, NULL, NULL, NULL, NULL, NULL, '0.00', NULL, NULL, 0, 0, 1000, NULL, NULL, 1, '2026-03-06 14:53:15', '2026-03-06 14:53:15', NULL),
+(36, 1, 'IPHON-BLA-32-4', NULL, 'Black', '32GB', '4GB', NULL, NULL, NULL, NULL, NULL, NULL, '1000000.00', NULL, NULL, 2, 0, 1000, NULL, NULL, 1, '2026-03-24 13:45:05', '2026-03-24 13:45:05', NULL),
+(37, 1, 'IPHON-RED-32-4', NULL, 'Red', '32GB', '4GB', NULL, NULL, NULL, NULL, NULL, NULL, '2000000.00', NULL, NULL, 3, 0, 1000, NULL, NULL, 1, '2026-03-24 13:45:05', '2026-03-24 13:45:05', NULL),
+(38, 15, 'ABC-BLA-32-4', NULL, 'Black', '32GB', '4GB', NULL, NULL, NULL, NULL, NULL, NULL, '2000000.00', NULL, NULL, 2, 0, 1000, NULL, NULL, 1, '2026-03-24 13:45:44', '2026-03-24 13:45:44', NULL),
+(39, 15, 'ABC-RED-32-4', NULL, 'Red', '32GB', '4GB', NULL, NULL, NULL, NULL, NULL, NULL, '5000000.00', NULL, NULL, 3, 0, 1000, NULL, NULL, 1, '2026-03-24 13:45:44', '2026-03-24 13:46:51', NULL);
 
 -- --------------------------------------------------------
 
@@ -694,11 +698,11 @@ CREATE TABLE `reviews` (
 --
 
 CREATE TABLE `sessions` (
-  `id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `user_id` bigint UNSIGNED DEFAULT NULL,
-  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `user_agent` text COLLATE utf8mb4_unicode_ci,
-  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `last_activity` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -707,7 +711,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('eDkADW0SxsyF8C5yjlGoXhclQa0sY7Ne6eM1K9gu', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoieGpKNllnYldzUHlSNkYweWtuNzEySjkyNUxnb2dqbHJRbXZOZk5hUCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDU6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9pbnZlbnRvcnktaGlzdG9yeSI7czo1OiJyb3V0ZSI7czoyMzoiaW52ZW50b3J5LWhpc3RvcnkuaW5kZXgiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1773375371);
+('2fT1sHGpeRtCwh9yVrEF526DRmRBITID8LQDJAvX', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'YTo2OntzOjY6Il90b2tlbiI7czo0MDoiYnd4Vlk5ZlNnUW1lQW5jbTBHVk1GOHhPcDZXbFM2ZWlxM3duTUVBMCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi92YXJpYW50cy8zOC9lZGl0IjtzOjU6InJvdXRlIjtzOjE5OiJhZG1pbi52YXJpYW50cy5lZGl0Ijt9czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozNzoiaHR0cDovLzEyNy4wLjAuMTo4MDAwL2FkbWluL2Rhc2hib2FyZCI7fXM6NTI6ImxvZ2luX2FkbWluXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTtzOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo2ODt9', 1774410873);
 
 -- --------------------------------------------------------
 
@@ -778,7 +782,10 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `ro
 (3, 'Customer 2', 'customer2@example.com', NULL, '$2y$12$jj4NH5FeIMj.u9ULlei2oepwCNbaPxPIVvvATfPEwnuhRMA.cREfG', 'customer', '0123456782', NULL, NULL, NULL, 'Address 2', 'Hanoi', 'Vietnam', NULL, 1, NULL, NULL, '2026-03-13 03:18:23', '2026-03-13 03:18:23', NULL),
 (4, 'Customer 3', 'customer3@example.com', NULL, '$2y$12$J10o8welXcEapad00Syitu4eGDsMNi7eCc8F1lbzV.JOEQsaO8SHy', 'customer', '0123456783', NULL, NULL, NULL, 'Address 3', 'Hanoi', 'Vietnam', NULL, 1, NULL, NULL, '2026-03-13 03:18:23', '2026-03-13 03:18:23', NULL),
 (5, 'Customer 4', 'customer4@example.com', NULL, '$2y$12$Jl9y/ZWi4T5KPxUi75BXnevsPy8M/FfG8390zmZRleX/gvHIjfus6', 'customer', '0123456784', NULL, NULL, NULL, 'Address 4', 'Hanoi', 'Vietnam', NULL, 1, NULL, NULL, '2026-03-13 03:18:24', '2026-03-13 03:18:24', NULL),
-(6, 'Customer 5', 'customer5@example.com', NULL, '$2y$12$gNcV1Xxy4t.k8lh4h2nUOuJbAFwl401B7wLYr1X/TTcaJeQVZYMfu', 'customer', '0123456785', NULL, NULL, NULL, 'Address 5', 'Hanoi', 'Vietnam', NULL, 1, NULL, NULL, '2026-03-13 03:18:25', '2026-03-13 03:18:25', NULL);
+(6, 'Customer 5', 'customer5@example.com', NULL, '$2y$12$gNcV1Xxy4t.k8lh4h2nUOuJbAFwl401B7wLYr1X/TTcaJeQVZYMfu', 'customer', '0123456785', NULL, NULL, NULL, 'Address 5', 'Hanoi', 'Vietnam', NULL, 1, NULL, NULL, '2026-03-13 03:18:25', '2026-03-13 03:18:25', NULL),
+(68, 'abc', 'abc@gmail.com', NULL, '$2y$12$vL9CiXi6SgEFrgEPRw3e9uZuddqJ3MJjk7RyIKi/zbFFMHYPFjFMu', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, '2026-03-20 12:02:31', '2026-03-20 12:02:31', NULL),
+(69, 'abcd', 'abcd@gmail.com', NULL, '$2y$12$lyn.QtOal.WRN/Ha5gwGt.Uwj7/zW8qOhC9HEqzLWCdDXnJa0LY.i', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, '2026-03-20 14:45:20', '2026-03-20 14:45:20', NULL),
+(70, 'Admin Audit', 'admin.audit@example.com', NULL, '$2y$12$mJ1sOwAOd2OS8A.8QTjp9.ox.l993YqpNpulmrOba5DigtBG93aeq', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, '2026-03-24 08:55:58', '2026-03-24 08:55:58', NULL);
 
 -- --------------------------------------------------------
 
@@ -962,6 +969,7 @@ ALTER TABLE `personal_access_tokens`
 ALTER TABLE `products`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `slug` (`slug`),
+  ADD UNIQUE KEY `slug_2` (`slug`),
   ADD KEY `category_id` (`category_id`),
   ADD KEY `brand_id` (`brand_id`);
 
@@ -1060,7 +1068,7 @@ ALTER TABLE `admin_logs`
 -- AUTO_INCREMENT for table `banners`
 --
 ALTER TABLE `banners`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `brands`
@@ -1144,13 +1152,13 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `product_attributes`
 --
 ALTER TABLE `product_attributes`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `product_images`
@@ -1168,7 +1176,7 @@ ALTER TABLE `product_specifications`
 -- AUTO_INCREMENT for table `product_variants`
 --
 ALTER TABLE `product_variants`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `reviews`
@@ -1192,7 +1200,7 @@ ALTER TABLE `stock_histories`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT for table `user_addresses`
