@@ -45,10 +45,7 @@
             @endif
         </div>
 
-        <!-- Wishlist Heart -->
-        <button class="absolute top-3 right-3 w-12 h-12 bg-white/90 hover:bg-white backdrop-blur-sm rounded-2xl shadow-xl flex items-center justify-center text-gray-600 hover:text-red-500 hover:scale-110 transition-all duration-300 z-20 group/wish" onclick="event.preventDefault(); toggleWishlist({{ $product->id }})">
-            <i class="far fa-heart text-lg group-hover/wish:scale-110"></i>
-        </button>
+       
 
         <!-- Stock Ring Indicator -->
         <div class="absolute bottom-3 right-3 w-16 h-6 bg-emerald-500/90 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg z-20">
@@ -88,7 +85,7 @@
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star-half-alt"></i>
             </div>
-            <span class="text-sm text-gray-500 font-medium">(4.8)</span>
+            
             <span class="text-xs text-gray-400 ml-auto">•</span>
             <span class="text-xs text-gray-500">
                 {{ $product->sold_count ?? 0 }}+ bán
