@@ -5,7 +5,7 @@
 <div class="p-6">
     <h1 class="text-2xl font-bold text-white mb-6">Thêm thuộc tính sản phẩm</h1>
 
-    <form action="{{ route('product-attributes.store') }}"
+    <form action="{{ route('admin.product-attributes.store') }}"
           method="POST"
           class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6 max-w-md">
 
@@ -64,7 +64,7 @@
                 Thêm
             </button>
 
-            <a href="{{ route('product-attributes.index', ['type' => request('type', 'color')]) }}"
+            <a href="{{ route('admin.product-attributes.index', ['type' => request('type', 'color')]) }}"
                class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg">
                 Hủy
             </a>

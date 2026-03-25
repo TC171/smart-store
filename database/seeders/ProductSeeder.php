@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\Category;
-use App\Models\Brand;
+use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
 {
@@ -27,8 +27,8 @@ class ProductSeeder extends Seeder
         for ($i = 1; $i <= 5; $i++) {
             // Tạo sản phẩm
             $product = Product::create([
-                'name' => 'iPhone Test ' . $i,
-                'slug' => 'iphone-test-' . $i,
+                'name' => 'iPhone Test '.$i,
+                'slug' => 'iphone-test-'.$i,
                 'category_id' => $category->id,
                 'brand_id' => $brand->id,
                 'status' => 1,
@@ -37,7 +37,7 @@ class ProductSeeder extends Seeder
             // Tạo biến thể cho sản phẩm
             ProductVariant::create([
                 'product_id' => $product->id,
-                'sku' => 'IPT' . $i,
+                'sku' => 'IPT'.$i,
                 'price' => 20000000,
                 'sale_price' => 18000000,
                 'stock' => 50,

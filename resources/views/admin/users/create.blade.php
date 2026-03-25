@@ -8,7 +8,7 @@
         Thêm Tài khoản
     </h1>
 
-    <form action="{{ route('users.store') }}" method="POST"
+    <form action="{{ route('admin.users.store') }}" method="POST"
         class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
 
         @csrf
@@ -119,7 +119,7 @@
 
         {{-- Buttons --}}
         <div class="flex justify-end gap-4">
-            <a href="{{ route('users.index') }}"
+            <a href="{{ route('admin.users.index') }}"
                class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">
                 Hủy
             </a>

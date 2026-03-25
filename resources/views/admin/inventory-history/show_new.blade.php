@@ -6,7 +6,7 @@
 
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-white">Chi tiết lịch sử kho #{{ $inventoryHistory->id }}</h1>
-        <a href="{{ route('inventory-history.index') }}"
+        <a href="{{ route('admin.inventory-history.index') }}"
            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
             ← Quay lại
         </a>

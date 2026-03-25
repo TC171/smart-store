@@ -17,8 +17,8 @@ class AdminController extends Controller
         $query = User::whereIn('role', ['admin', 'staff']);
 
         if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%')
+                ->orWhere('email', 'like', '%'.$request->search.'%');
         }
 
         if ($request->role && in_array($request->role, ['admin', 'staff'])) {
@@ -65,7 +65,7 @@ class AdminController extends Controller
             'status' => $request->status,
         ]);
 
-        return redirect()->route('admins.index')
+        return redirect()->route('admin.admins.index')
             ->with('success', 'Tạo tài khoản quản trị thành công');
     }
 
@@ -74,7 +74,7 @@ class AdminController extends Controller
      */
     public function show(User $admin)
     {
-        if (!in_array($admin->role, ['admin', 'staff'])) {
+        if (! in_array($admin->role, ['admin', 'staff'])) {
             abort(404);
         }
 
@@ -86,7 +86,7 @@ class AdminController extends Controller
      */
     public function edit(User $admin)
     {
-        if (!in_array($admin->role, ['admin', 'staff'])) {
+        if (! in_array($admin->role, ['admin', 'staff'])) {
             abort(404);
         }
 
@@ -98,13 +98,13 @@ class AdminController extends Controller
      */
     public function update(Request $request, User $admin)
     {
-        if (!in_array($admin->role, ['admin', 'staff'])) {
+        if (! in_array($admin->role, ['admin', 'staff'])) {
             abort(404);
         }
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $admin->id,
+            'email' => 'required|email|unique:users,email,'.$admin->id,
             'phone' => 'nullable|string|max:20',
             'role' => 'required|in:admin,staff',
             'status' => 'required|boolean',
@@ -112,7 +112,7 @@ class AdminController extends Controller
 
         $admin->update($request->only(['name', 'email', 'phone', 'role', 'status']));
 
-        return redirect()->route('admins.index')
+        return redirect()->route('admin.admins.index')
             ->with('success', 'Cập nhật tài khoản quản trị thành công');
     }
 
@@ -121,7 +121,7 @@ class AdminController extends Controller
      */
     public function destroy(User $admin)
     {
-        if (!in_array($admin->role, ['admin', 'staff'])) {
+        if (! in_array($admin->role, ['admin', 'staff'])) {
             abort(404);
         }
 
@@ -131,7 +131,7 @@ class AdminController extends Controller
 
         $admin->delete();
 
-        return redirect()->route('admins.index')
+        return redirect()->route('admin.admins.index')
             ->with('success', 'Xóa tài khoản quản trị thành công');
     }
 }

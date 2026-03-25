@@ -2,23 +2,53 @@
 
 @section('content')
 
-<h2>Chi tiết sản phẩm</h2>
+<div class="max-w-4xl mx-auto p-6">
 
-<div style="border:1px solid #ccc; padding:20px;">
-    <h3>{{ $product->name }}</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-    <p>Giá: {{ number_format($product->price) }}đ</p>
+        <!-- Ảnh sản phẩm -->
+        <div>
+            @if($product->thumbnail)
+                <img src="{{ asset('storage/' . $product->thumbnail) }}"
+                     class="w-full h-96 object-cover rounded-lg shadow-lg">
+            @else
+                <div class="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <span class="text-gray-500">Không có ảnh</span>
+                </div>
+            @endif
+        </div>
 
-    <p>Mô tả:</p>
-    <div>
-        {{ $product->description }}
+        <!-- Thông tin sản phẩm -->
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ $product->name }}</h1>
+
+            <div class="mb-4">
+                <span class="text-2xl font-bold text-red-600">
+                    {{ number_format($product->variants->min('price')) }}đ
+                </span>
+                @if($product->variants->min('price') != $product->variants->max('price'))
+                    <span class="text-lg text-gray-500 ml-2">
+                        - {{ number_format($product->variants->max('price')) }}đ
+                    </span>
+                @endif
+            </div>
+
+            <div class="mb-6">
+                <h3 class="font-semibold mb-2">Mô tả:</h3>
+                <div class="text-gray-700">
+                    {{ $product->description ?? 'Chưa có mô tả' }}
+                </div>
+            </div>
+
+            <button onclick="openVariantModal()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold">
+                Thêm vào giỏ hàng
+            </button>
+        </div>
+
     </div>
-    <button onclick="openVariantModal()">
-    Thêm vào giỏ hàng
-</button>
-</form>
-</div>
 
+</div>
 
 @endsection
 
@@ -34,7 +64,7 @@
             <option value="">-- Chọn --</option>
             @foreach($product->variants as $variant)
                 <option value="{{ $variant->id }}">
-                    {{ $variant->name }} - {{ number_format($variant->price) }}đ
+                    {{ trim(($variant->color ?? '') . ' ' . ($variant->storage ?? '') . ' ' . ($variant->ram ?? '')) }} - {{ number_format($variant->price) }}đ
                 </option>
             @endforeach
         </select>

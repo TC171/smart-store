@@ -15,11 +15,11 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check()) {
+        if (! auth('admin')->check()) {
             return redirect()->route('admin.login');
         }
 
-        if (!in_array(auth()->user()->role, ['admin', 'staff'])) {
+        if (! in_array(auth('admin')->user()->role, ['admin', 'staff'])) {
             abort(403, 'Bạn không có quyền truy cập trang này');
         }
 

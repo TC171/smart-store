@@ -1,174 +1,198 @@
-<table class="w-full text-white">
-    <thead class="bg-gray-800 text-gray-300 text-sm uppercase">
-        <tr>
-            <th class="p-3">ID</th>
-            <th class="p-3">Hình ảnh</th>
-            <th class="p-3">Tên sản phẩm</th>
-            <th>
-                <form method="GET" id="filterCategory">
-                    <select name="category_id"
-                        onchange="this.form.submit()"
-                        class="bg-gray-900 text-white 
-           border border-gray-600 
-           rounded px-3 py-1 text-sm
-           focus:outline-none focus:ring-2 focus:ring-cyan-400
-           hover:bg-gray-800 transition">
-                        <option value="">Danh mục</option>
-                        @foreach($categories as $cat)
-                        <option value="{{ $cat->id }}"
-                            {{ request('category_id') == $cat->id ? 'selected' : '' }}>
-                            {{ $cat->name }}
-                        </option>
-                        @endforeach
-                    </select>
+<div class="bg-gray-900 rounded-xl shadow-lg overflow-hidden">
 
-                    {{-- Giữ các filter khác nếu có --}}
-                    <input type="hidden" name="brand_id" value="{{ request('brand_id') }}">
-                    <input type="hidden" name="status" value="{{ request('status') }}">
-                </form>
-            </th>
-            <th>
-                <form method="GET" id="filterBrand">
-                    <select name="brand_id"
-                        onchange="this.form.submit()"
-                        class="bg-gray-900 text-white 
-           border border-gray-600 
-           rounded px-3 py-1 text-sm
-           focus:outline-none focus:ring-2 focus:ring-cyan-400
-           hover:bg-gray-800 transition">
-                        <option value="">Thương hiệu</option>
-                        @foreach($brands as $brand)
-                        <option value="{{ $brand->id }}"
-                            {{ request('brand_id') == $brand->id ? 'selected' : '' }}>
-                            {{ $brand->name }}
-                        </option>
-                        @endforeach
-                    </select>
+    {{-- TOP BAR --}}
+    <div class="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-gray-700">
 
-                    <input type="hidden" name="category_id" value="{{ request('category_id') }}">
-                    <input type="hidden" name="status" value="{{ request('status') }}">
-                </form>
-            </th>
-            <th class="p-3 cursor-pointer" id="sortPrice">
-                Giá <span id="priceIcon">⇅</span>
-            </th>
-            <th class="p-3">Tồn kho</th>
-            {{-- STATUS FILTER --}}
-            <th>
-                <form method="GET" id="filterStatus">
-                    <select name="status"
-                        onchange="this.form.submit()"
-                        class="bg-gray-900 text-white 
-           border border-gray-600 
-           rounded px-3 py-1 text-sm
-           focus:outline-none focus:ring-2 focus:ring-cyan-400
-           hover:bg-gray-800 transition">
-                        <option value="">Trạng thái</option>
-                        <option value="1"
-                            {{ request('status') == '1' ? 'selected' : '' }}>
-                            Đang bán
-                        </option>
-                        <option value="0"
-                            {{ request('status') == '0' ? 'selected' : '' }}>
-                            Ngừng bán
-                        </option>
-                    </select>
+        {{-- SEARCH --}}
+        <form method="GET" class="flex gap-2 w-full md:w-auto">
+            <input type="text" name="search" value="{{ request('search') }}"
+                placeholder="🔍 Tìm sản phẩm..."
+                class="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 
+                focus:ring-2 focus:ring-indigo-500 w-full md:w-64">
 
-                    <input type="hidden" name="category_id" value="{{ request('category_id') }}">
-                    <input type="hidden" name="brand_id" value="{{ request('brand_id') }}">
-                </form>
-            </th>
-            <th class="p-3">Hành động</th>
-        </tr>
-    </thead>
+            <button class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-white">
+                Tìm
+            </button>
+        </form>
 
-    <tbody>
-        @foreach($products as $product)
-        <tr class="border-b border-gray-700 hover:bg-gray-800 transition">
+        {{-- FILTER --}}
+        <form method="GET" class="flex gap-2 flex-wrap">
 
-            <td class="p-3">{{ $product->id }}</td>
+            <select name="category_id" onchange="this.form.submit()"
+                class="bg-gray-800 text-white px-3 py-2 rounded border border-gray-700">
+                <option value="">Danh mục</option>
+                @foreach($categories as $cat)
+                <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+                    {{ $cat->name }}
+                </option>
+                @endforeach
+            </select>
 
-            <td>
-                @if($product->thumbnail)
-                <img src="{{ asset('storage/' . $product->thumbnail) }}"
-                    class="w-24 h-24 object-cover rounded-lg border">
-                @else
-                Không có ảnh
-                @endif
-            </td>
+            <select name="brand_id" onchange="this.form.submit()"
+                class="bg-gray-800 text-white px-3 py-2 rounded border border-gray-700">
+                <option value="">Thương hiệu</option>
+                @foreach($brands as $brand)
+                <option value="{{ $brand->id }}" {{ request('brand_id') == $brand->id ? 'selected' : '' }}>
+                    {{ $brand->name }}
+                </option>
+                @endforeach
+            </select>
 
-            <td class="p-3 font-semibold">
-                {{ $product->name }}
-            </td>
+            <select name="status" onchange="this.form.submit()"
+                class="bg-gray-800 text-white px-3 py-2 rounded border border-gray-700">
+                <option value="">Trạng thái</option>
+                <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Đang bán</option>
+                <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Ngừng</option>
+            </select>
 
-            <td class="p-3">
-                {{ $product->category->name ?? '-' }}
-            </td>
+        </form>
+    </div>
 
-            <td class="p-3">
-                {{ $product->brand->name ?? '-' }}
-            </td>
+    {{-- TABLE --}}
+    <div class="overflow-x-auto">
+        <table class="w-full text-white text-sm">
 
-            @php
-            $variant = $product->variants->first();
-            @endphp
+            {{-- HEADER --}}
+            <thead class="bg-gray-800 text-gray-300 uppercase text-xs sticky top-0 z-10">
+                <tr>
+                    <th class="p-3">ID</th>
+                    <th class="p-3">Sản phẩm</th>
+                    <th class="p-3">Danh mục</th>
+                    <th class="p-3">Brand</th>
+                    <th class="p-3">
+                        <a href="{{ request()->fullUrlWithQuery([
+                            'sort' => 'price',
+                            'direction' => request('direction') == 'asc' ? 'desc' : 'asc'
+                        ]) }}">
+                            Giá 💸
+                        </a>
+                    </th>
+                    <th class="p-3 text-center">Kho</th>
+                    <th class="p-3 text-center">Trạng thái</th>
+                    <th class="p-3 text-center">Hành động</th>
+                </tr>
+            </thead>
 
-            <td>
-                @if($variant)
-                {{ number_format($variant->sale_price ?? $variant->price, 0, ',', '.') }} ₫
-                @else
-                0 ₫
-                @endif
-            </td>
+            {{-- BODY --}}
+            <tbody>
+                @forelse($products as $product)
 
-            <td class="text-center">
-                {{ $product->variants->sum('stock') }}
-            </td>
+                @php
+                // Lấy biến thể đầu tiên (nếu có)
+                $variant = $product->variants->first();
+                $price = $variant?->price ?? 0;
+                $sale = $variant?->sale_price ?? 0;
+                $stock = $product->variants->sum('stock') ?? 0;
+                @endphp
 
-            <td class="p-3">
-                @if($product->status)
-                <span class="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded">
-                    Đang bán
-                </span>
-                @else
-                <span class="px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded">
-                    Ngừng bán
-                </span>
-                @endif
-            </td>
+                <tr class="border-b border-gray-700 hover:bg-gray-800/70 transition">
 
-            <td class="p-3 flex gap-2">
+                    <td class="p-3 text-gray-400">#{{ $product->id }}</td>
 
-<button onclick="toggleStatus({{ $product->id }}, this)"
-    class="text-blue-400 hover:underline {{ $product->status ? 'text-blue-400' : 'text-gray-400' }}">
-    {{ $product->status ? 'Tắt' : 'Bật' }}
-</button>
+                    {{-- PRODUCT --}}
+                    <td class="p-3">
+                        <div class="flex items-center gap-3">
+                            <img src="{{ $product->thumbnail ? asset('storage/'.$product->thumbnail) : 'https://via.placeholder.com/80' }}"
+                                class="w-14 h-14 rounded-lg object-cover border border-gray-700">
 
-<a href="{{ route('products.show', $product->id) }}"
-class="text-green-400 hover:underline">
-Xem
-</a>
+                            <div>
+                                <div class="font-semibold text-white">
+                                    {{ $product->name }}
+                                </div>
+                                <div class="text-xs text-gray-400">
+                                    {{ $product->variants->count() }} biến thể
+                                </div>
+                            </div>
+                        </div>
+                    </td>
 
-<a href="{{ route('products.edit', $product->id) }}"
-class="text-yellow-400 hover:underline">
-Sửa
-</a>
+                    <td class="p-3">{{ $product->category->name ?? '-' }}</td>
+                    <td class="p-3">{{ $product->brand->name ?? '-' }}</td>
 
+                    {{-- PRICE --}}
+                    <td class="p-3">
+                        @if($sale && $sale > 0)
+                        <div class="text-red-400 font-semibold text-sm">
+                            {{ number_format($sale, 0, ',', '.') }} ₫
+                        </div>
+                        <div class="text-gray-500 line-through text-xs">
+                            {{ number_format($price, 0, ',', '.') }} ₫
+                        </div>
+                        @else
+                        <div class="font-semibold text-white">
+                            {{ number_format($price, 0, ',', '.') }} ₫
+                        </div>
+                        @endif
+                    </td>
 
-<form action="{{ route('products.destroy', $product->id) }}"
-method="POST">
-@csrf
-@method('DELETE')
+                    {{-- STOCK --}}
+                    <td class="text-center font-semibold">
+                        @if($stock > 0)
+                        <span class="text-green-400">{{ $stock }}</span>
+                        @else
+                        <span class="text-red-400">Hết hàng</span>
+                        @endif
+                    </td>
 
-<button class="text-red-500 hover:underline"
-onclick="return confirm('Bạn có chắc muốn xoá sản phẩm này?')">
-Xoá
-</button>
+                    {{-- STATUS --}}
+                    <td class="text-center">
+                        @if($product->status)
+                        <span class="px-3 py-1 text-xs rounded-full bg-green-500/20 text-green-400">
+                            ● Đang bán
+                        </span>
+                        @else
+                        <span class="px-3 py-1 text-xs rounded-full bg-red-500/20 text-red-400">
+                            ● Ngừng
+                        </span>
+                        @endif
+                    </td>
 
-</form>
-</td>
+                    {{-- ACTION --}}
+                    <td class="p-3">
+                        <div class="flex justify-center gap-2">
 
-        </tr>
-        @endforeach
-    </tbody>
-</table>
+                            <button onclick="toggleStatus({{ $product->id }}, this)"
+                                class="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
+                                🔄
+                            </button>
+
+                            <a href="{{ route('admin.products.show', $product->id) }}"
+                                class="bg-gray-700 hover:bg-green-600 p-2 rounded-lg">
+                                👁
+                            </a>
+
+                            <a href="{{ route('admin.products.edit', $product->id) }}"
+                                class="bg-gray-700 hover:bg-yellow-500 p-2 rounded-lg">
+                                ✏️
+                            </a>
+
+                            <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST">
+                                @csrf @method('DELETE')
+                                <button onclick="return confirm('Xoá sản phẩm?')"
+                                    class="bg-gray-700 hover:bg-red-600 p-2 rounded-lg">
+                                    🗑
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+
+                </tr>
+
+                @empty
+                <tr>
+                    <td colspan="8" class="text-center p-6 text-gray-400">
+                        Không có sản phẩm
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    {{-- PAGINATION --}}
+    <div class="p-4 border-t border-gray-700">
+        {{ $products->withQueryString()->links() }}
+    </div>
+
+</div>

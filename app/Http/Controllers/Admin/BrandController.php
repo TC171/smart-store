@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class BrandController extends Controller
 {
@@ -63,7 +63,7 @@ class BrandController extends Controller
 
         Brand::create($data);
 
-        return redirect()->route('brands.index')
+        return redirect()->route('admin.brands.index')
             ->with('success', 'Thêm thương hiệu thành công');
     }
 
@@ -75,7 +75,7 @@ class BrandController extends Controller
     public function update(Request $request, Brand $brand)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:brands,name,' . $brand->id,
+            'name' => 'required|string|max:255|unique:brands,name,'.$brand->id,
             'description' => 'nullable|string',
             'website' => 'nullable|url',
             'country' => 'nullable|string|max:100',
@@ -110,7 +110,7 @@ class BrandController extends Controller
 
         $brand->update($data);
 
-        return redirect()->route('brands.index')
+        return redirect()->route('admin.brands.index')
             ->with('success', 'Cập nhật thương hiệu thành công');
     }
 

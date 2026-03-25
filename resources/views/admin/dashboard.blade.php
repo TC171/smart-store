@@ -58,7 +58,7 @@
                     p-8 rounded-2xl shadow-xl">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-semibold">Đơn Hàng Gần Đây</h2>
-                <a href="{{ route('orders.index') }}" class="text-purple-400 hover:text-purple-300 text-sm">Xem tất cả →</a>
+                <a href="{{ route('admin.orders.index') }}" class="text-purple-400 hover:text-purple-300 text-sm">Xem tất cả →</a>
             </div>
 
             <div class="space-y-3 max-h-96 overflow-y-auto">

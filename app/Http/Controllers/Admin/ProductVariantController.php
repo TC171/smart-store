@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\ProductVariant;
 use App\Models\Product;
+use App\Models\ProductVariant;
+use Illuminate\Http\Request;
 
 class ProductVariantController extends Controller
 {
-
     public function index()
     {
         $variants = ProductVariant::with('product')->latest()->paginate(10);
@@ -61,7 +60,7 @@ class ProductVariantController extends Controller
 
             // Đảm bảo SKU unique
             while (ProductVariant::where('sku', $sku)->exists()) {
-                $sku = $baseSku . '-' . $counter;
+                $sku = $baseSku.'-'.$counter;
                 $counter++;
             }
 
@@ -74,12 +73,13 @@ class ProductVariantController extends Controller
                 'stock' => $variantData['stock'],
                 'sku' => $sku,
                 'image' => $imagePath,
-                'status' => 1
+                'status' => 1,
             ]);
         }
 
-        return redirect()->route('products.show', $product->id)->with('success', 'Đã tạo ' . count($request->variants) . ' biến thể');
+        return redirect()->route('admin.products.show', $product->id)->with('success', 'Đã tạo '.count($request->variants).' biến thể');
     }
+
     public function destroy($id)
     {
         $variant = ProductVariant::findOrFail($id);
@@ -87,9 +87,10 @@ class ProductVariantController extends Controller
         $variant->delete();
 
         return redirect()
-            ->route('variants.index')
+            ->route('admin.variants.index')
             ->with('success', 'Xóa biến thể thành công');
     }
+
     public function edit($id)
     {
         $variant = ProductVariant::findOrFail($id);
@@ -101,6 +102,7 @@ class ProductVariantController extends Controller
 
         return view('admin.variants.edit', compact('variant', 'colors', 'storages', 'rams'));
     }
+
     public function update(Request $request, $id)
     {
         $variant = ProductVariant::findOrFail($id);
@@ -131,9 +133,10 @@ class ProductVariantController extends Controller
         $variant->update($updateData);
 
         return redirect()
-            ->route('variants.index')
+            ->route('admin.variants.index')
             ->with('success', 'Cập nhật biến thể thành công');
     }
+
     private function generateSku($product, $color, $storage, $ram)
     {
         $productCode = strtoupper(substr($product->slug, 0, 5));
@@ -144,6 +147,6 @@ class ProductVariantController extends Controller
 
         $ramCode = str_replace('GB', '', $ram);
 
-        return $productCode . '-' . $colorCode . '-' . $storageCode . '-' . $ramCode;
+        return $productCode.'-'.$colorCode.'-'.$storageCode.'-'.$ramCode;
     }
 }

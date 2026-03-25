@@ -18,7 +18,15 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->text('short_description')->nullable();
             $table->string('thumbnail')->nullable();
+            $table->decimal('price', 12, 2)->nullable();
+            $table->decimal('sale_price', 12, 2)->nullable();
+            $table->integer('stock')->default(0);
+            $table->unsignedBigInteger('sold_count')->default(0);
             $table->boolean('status')->default(true);
+            $table->boolean('is_featured')->default(false);
+            $table->boolean('is_new')->default(false);
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
             $table->foreignId('brand_id')->constrained()->cascadeOnDelete();
             $table->softDeletes();

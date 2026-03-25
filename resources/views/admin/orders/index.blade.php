@@ -126,7 +126,7 @@
                     </td>
 
                     <td class="px-6 py-4">
-                        <a href="{{ route('orders.show', $order) }}"
+                        <a href="{{ route('admin.orders.show', $order) }}"
                            class="text-cyan-500 hover:text-cyan-400 text-sm font-medium">
                             Xem chi tiết
                         </a>

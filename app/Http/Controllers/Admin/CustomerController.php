@@ -17,8 +17,8 @@ class CustomerController extends Controller
         $query = User::where('role', 'customer');
 
         if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%')
+                ->orWhere('email', 'like', '%'.$request->search.'%');
         }
 
         if ($request->status !== null && $request->status !== '') {
@@ -72,7 +72,7 @@ class CustomerController extends Controller
             'status' => $request->status,
         ]);
 
-        return redirect()->route('customers.index')
+        return redirect()->route('admin.customers.index')
             ->with('success', 'Tạo tài khoản khách hàng thành công');
     }
 
@@ -111,7 +111,7 @@ class CustomerController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $customer->id,
+            'email' => 'required|email|unique:users,email,'.$customer->id,
             'phone' => 'nullable|string|max:20',
             'gender' => 'nullable|in:male,female,other',
             'date_of_birth' => 'nullable|date',
@@ -124,10 +124,10 @@ class CustomerController extends Controller
 
         $customer->update($request->only([
             'name', 'email', 'phone', 'gender', 'date_of_birth',
-            'address', 'city', 'country', 'postal_code', 'status'
+            'address', 'city', 'country', 'postal_code', 'status',
         ]));
 
-        return redirect()->route('customers.index')
+        return redirect()->route('admin.customers.index')
             ->with('success', 'Cập nhật tài khoản khách hàng thành công');
     }
 
@@ -142,7 +142,7 @@ class CustomerController extends Controller
 
         $customer->delete();
 
-        return redirect()->route('customers.index')
+        return redirect()->route('admin.customers.index')
             ->with('success', 'Xóa tài khoản khách hàng thành công');
     }
 }

@@ -5,12 +5,12 @@
     <h1 class="text-2xl font-bold text-white">Quản lý sản phẩm</h1>
 
     <div class="flex gap-3">
-        <a href="{{ route('products.create') }}"
+        <a href="{{ route('admin.products.create') }}"
             class="bg-cyan-500 hover:bg-cyan-600 text-black px-4 py-2 rounded-lg">
             + Thêm sản phẩm
         </a>
 
-        <form action="{{ route('products.import') }}" 
+        <form action="{{ route('admin.products.import') }}" 
               method="POST" 
               enctype="multipart/form-data"
               class="flex items-center gap-2">
@@ -73,7 +73,7 @@ document.getElementById('filterStatus').addEventListener('change', function(){
 function loadProducts() {
     let query = new URLSearchParams(filters).toString();
 
-    fetch("{{ route('products.index') }}?" + query, {
+    fetch("{{ route('admin.products.index') }}?" + query, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
         }
@@ -95,8 +95,13 @@ function toggleStatus(productId, button) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            // Reload the table to update status display
-            loadProducts();
+            // Cập nhật nút trạng thái trực tiếp
+            let statusCell = button.closest('tr').querySelector('td:nth-child(7)');
+            if (data.status) {
+                statusCell.innerHTML = `<span class="px-3 py-1 text-xs rounded-full bg-green-500/20 text-green-400">● Đang bán</span>`;
+            } else {
+                statusCell.innerHTML = `<span class="px-3 py-1 text-xs rounded-full bg-red-500/20 text-red-400">● Ngừng</span>`;
+            }
         }
     })
     .catch(error => console.error('Error:', error));

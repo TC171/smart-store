@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Orders\UpdateOrderPaymentStatusRequest;
+use App\Http\Requests\Admin\Orders\UpdateOrderStatusRequest;
 use App\Models\InventoryHistory;
 use App\Models\Order;
 use App\Models\ProductVariant;
@@ -12,6 +14,8 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Order::class);
+
         $query = Order::with('user', 'items');
 
         if ($request->status) {
@@ -23,11 +27,11 @@ class OrderController extends Controller
         }
 
         if ($request->search) {
-            $query->where('order_number', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('user', function($q) {
-                      $q->where('name', 'like', '%' . request('search') . '%')
-                        ->orWhere('email', 'like', '%' . request('search') . '%');
-                  });
+            $query->where('order_number', 'like', '%'.$request->search.'%')
+                ->orWhereHas('user', function ($q) {
+                    $q->where('name', 'like', '%'.request('search').'%')
+                        ->orWhere('email', 'like', '%'.request('search').'%');
+                });
         }
 
         $orders = $query->latest()->paginate(10);
@@ -37,15 +41,16 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load('user', 'items');
+        $this->authorize('view', $order);
+
+        $order->load(['user', 'items', 'items.variant']);
+
         return view('admin.orders.show', compact('order'));
     }
 
-    public function updateStatus(Request $request, Order $order)
+    public function updateStatus(UpdateOrderStatusRequest $request, Order $order)
     {
-        $request->validate([
-            'status' => 'required|in:pending,confirmed,shipping,completed,cancelled,refunded',
-        ]);
+        $this->authorize('update', $order);
 
         $oldStatus = $order->status;
         $order->update(['status' => $request->status]);
@@ -70,7 +75,7 @@ class OrderController extends Controller
                         'reference_type' => 'order',
                         'reference_id' => $order->id,
                         'notes' => "Trả hàng từ đơn hàng #{$order->order_number}",
-                        'user_id' => auth()->id(),
+                        'user_id' => auth('admin')->id(),
                     ]);
                 }
             }
@@ -79,11 +84,9 @@ class OrderController extends Controller
         return back()->with('success', 'Cập nhật trạng thái đơn hàng thành công');
     }
 
-    public function updatePaymentStatus(Request $request, Order $order)
+    public function updatePaymentStatus(UpdateOrderPaymentStatusRequest $request, Order $order)
     {
-        $request->validate([
-            'payment_status' => 'required|in:unpaid,paid,refunded',
-        ]);
+        $this->authorize('update', $order);
 
         $order->update(['payment_status' => $request->payment_status]);
 
@@ -92,12 +95,15 @@ class OrderController extends Controller
 
     public function destroy(Order $order)
     {
+        $this->authorize('delete', $order);
+
         if ($order->status !== 'cancelled') {
             return back()->with('error', 'Chỉ có thể xóa đơn hàng đã hủy');
         }
 
         $order->delete();
-        return redirect()->route('orders.index')
+
+        return redirect()->route('admin.orders.index')
             ->with('success', 'Xóa đơn hàng thành công');
     }
 }

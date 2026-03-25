@@ -1,138 +1,182 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
 | ADMIN CONTROLLERS
 |--------------------------------------------------------------------------
 */
-use App\Http\Controllers\Admin\AuthController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\BrandController;
-use App\Http\Controllers\Admin\ProductVariantController;
-use App\Http\Controllers\Admin\ProductAttributeController;
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\InventoryHistoryController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\ProductAttributeController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\CustomerController;
-use App\Http\Controllers\Admin\InventoryHistoryController;
 
 /*
 |--------------------------------------------------------------------------
 | FRONTEND CONTROLLERS
 |--------------------------------------------------------------------------
 */
+use App\Http\Controllers\Frontend\AuthController as FrontAuthController;
+use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\Frontend\CustomerOrderController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ProductController as FrontProductController;
-use App\Http\Controllers\Frontend\AuthController as FrontAuthController;
+use App\Http\Controllers\Frontend\CategoryController as FrontCategoryController;
 
 /*
 |--------------------------------------------------------------------------
 | ADMIN ROUTES
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->group(function () {
+Route::prefix('admin')->name('admin.')->group(function () {
 
-    Route::middleware('guest')->group(function () {
-        Route::get('/login', [AuthController::class, 'showLogin'])->name('admin.login');
-        Route::post('/login', [AuthController::class, 'login'])->name('admin.login.post');
+    Route::middleware('guest:admin')->group(function () {
+        Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
     });
 
-    Route::middleware(['auth', 'admin'])->group(function () {
+    Route::middleware(['auth:admin', 'admin'])->group(function () {
 
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::resource('products', ProductController::class);
         Route::patch('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus');
+        Route::post('products/import', [ProductController::class, 'import'])->name('products.import');
 
-        Route::resource('categories', CategoryController::class);
+        Route::resource('categories', AdminCategoryController::class);
         Route::resource('brands', BrandController::class);
         Route::resource('banners', BannerController::class);
         Route::delete('banners/{banner}/image', [BannerController::class, 'deleteImage'])->name('banners.image-delete');
 
-        Route::resource('coupons', CouponController::class);
-        Route::resource('product-attributes', ProductAttributeController::class);
-        Route::resource('variants', ProductVariantController::class);
+        Route::resource('coupons', CouponController::class)->except(['show']);
+        Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
+        Route::post('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::post('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
 
-        Route::resource('orders', OrderController::class);
-        Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-        Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
-
-        Route::resource('inventory-history', InventoryHistoryController::class);
-
-        Route::resource('reviews', ReviewController::class);
+        Route::resource('users', UserController::class)->except(['show']);
+        Route::resource('customers', CustomerController::class);
+        Route::resource('reviews', ReviewController::class)->only(['index', 'destroy']);
         Route::post('reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
         Route::post('reviews/{review}/reject', [ReviewController::class, 'reject'])->name('reviews.reject');
-
-        Route::resource('users', UserController::class);
+        Route::resource('variants', ProductVariantController::class)->except(['show']);
+        Route::resource('product-attributes', ProductAttributeController::class)->except(['show']);
+        Route::resource('inventory-history', InventoryHistoryController::class)->except(['edit', 'update']);
         Route::resource('admins', AdminController::class);
-        Route::resource('customers', CustomerController::class);
+        Route::view('profile', 'admin.profile')->name('profile');
+        Route::view('password', 'admin.password')->name('password');
 
-        Route::view('/profile', 'admin.profile')->name('admin.profile');
-        Route::view('/change-password', 'admin.password')->name('admin.password');
-
-        Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
-
-        Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
+        Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
     });
 });
 
 /*
 |--------------------------------------------------------------------------
-| CUSTOMER ROUTES (CHỈ CUSTOMER ĐƯỢC VÀO)
+| CUSTOMER ROUTES
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'customer'])
+Route::middleware(['auth:web', 'customer'])
     ->prefix('customer')
     ->name('customer.')
     ->group(function () {
 
-        Route::get('/dashboard', fn() => view('customer.dashboard'))->name('dashboard');
+        Route::get('/dashboard', fn () => view('customer.dashboard'))->name('dashboard');
 
-        Route::get('/profile', fn() => view('customer.profile'))->name('profile');
+        Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
+        Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
 
-        Route::get('/orders', function () {
-            $orders = auth()->user()->orders()->latest()->paginate(10);
-            return view('customer.orders', compact('orders'));
-        })->name('orders');
-
-        Route::get('/orders/{order}', function (\App\Models\Order $order) {
-            if ($order->user_id !== auth()->id()) abort(403);
-            $order->load('items.variant.product');
-            return view('customer.order-detail', compact('order'));
-        })->name('order.detail');
-
-        // logout user
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
     });
 
 /*
 |--------------------------------------------------------------------------
-| FRONTEND ROUTES
+| FRONTEND PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
-
-// Public (chưa login vẫn vào được)
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
-Route::get('/product/{slug}', [FrontProductController::class, 'show'])->name('product.show');
+Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
+Route::get('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
+Route::middleware('auth:web')->group(function () {
+    Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
+    Route::post('/checkout', [CartController::class, 'placeOrder'])->name('checkout.store');
+});
+
+Route::get('/tim-kiem', [HomeController::class, 'search'])->name('search');
 
 /*
 |--------------------------------------------------------------------------
-| AUTH USER (KHÔNG LOGIN MỚI VÀO ĐƯỢC)
+| CATEGORY ROUTE (FIX CHÍNH)
 |--------------------------------------------------------------------------
 */
-Route::middleware('guest')->group(function () {
+Route::get('/danh-muc/{slug}', [FrontCategoryController::class, 'products'])
+    ->name('category.products');
+
+/*
+|--------------------------------------------------------------------------
+| PRODUCT ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::get('/san-pham/{slug}', [FrontProductController::class, 'show'])
+    ->name('product.detail');
+
+Route::get('/san-pham-noi-bat', [FrontProductController::class, 'featured'])
+    ->name('products.featured');
+
+/*
+|--------------------------------------------------------------------------
+| AUTH (GUEST)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('guest:web')->group(function () {
 
     Route::get('/login', [FrontAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [FrontAuthController::class, 'login'])->name('login.post');
 
     Route::get('/register', [FrontAuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [FrontAuthController::class, 'register'])->name('register.post');
+});
+
+/*
+|--------------------------------------------------------------------------
+| API SEARCH
+|--------------------------------------------------------------------------
+*/
+Route::get('/api/search', function (Request $request) {
+
+    $q = $request->get('q');
+
+    if (!$q) return [];
+
+    return \App\Models\Product::query()
+        ->with('variants')
+        ->where('status', 1)
+        ->where('name', 'like', "%{$q}%")
+        ->limit(6)
+        ->get()
+        ->map(function ($product) {
+
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'price' => optional($product->variants->min('price')),
+                'image' => $product->image ? asset($product->image) : asset('images/no-image.jpg'),
+            ];
+        });
 });

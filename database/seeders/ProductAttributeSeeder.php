@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ProductAttributeSeeder extends Seeder
@@ -13,15 +12,15 @@ class ProductAttributeSeeder extends Seeder
     public function run(): void
     {
         $colors = [
-            'Đen', 'Trắng', 'Xanh dương', 'Đỏ', 'Xanh lá', 'Vàng', 'Tím', 'Hồng'
+            'Đen', 'Trắng', 'Xanh dương', 'Đỏ', 'Xanh lá', 'Vàng', 'Tím', 'Hồng',
         ];
 
         $storages = [
-            '64GB', '128GB', '256GB', '512GB', '1TB', '2TB'
+            '64GB', '128GB', '256GB', '512GB', '1TB', '2TB',
         ];
 
         $rams = [
-            '4GB', '6GB', '8GB', '12GB', '16GB', '32GB'
+            '4GB', '6GB', '8GB', '12GB', '16GB', '32GB',
         ];
 
         foreach ($colors as $index => $color) {

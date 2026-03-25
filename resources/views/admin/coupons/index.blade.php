@@ -6,7 +6,7 @@
 
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-white">Danh sách Mã giảm giá</h1>
-        <a href="{{ route('coupons.create') }}"
+        <a href="{{ route('admin.coupons.create') }}"
            class="bg-cyan-500 hover:bg-cyan-600 text-black px-4 py-2 rounded-lg font-semibold">
             + Thêm Mã giảm giá
         </a>
@@ -99,12 +99,12 @@
 
                     <td class="px-6 py-4">
                         <div class="flex gap-3">
-                            <a href="{{ route('coupons.edit', $coupon) }}"
+                            <a href="{{ route('admin.coupons.edit', $coupon) }}"
                                class="text-cyan-500 hover:text-cyan-400 text-sm font-medium">
                                 Sửa
                             </a>
 
-                            <form action="{{ route('coupons.destroy', $coupon) }}" method="POST"
+                            <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST"
                                   onsubmit="return confirm('Xác nhận xoá mã giảm giá này?')"
                                   class="inline">
                                 @csrf
@@ -130,7 +130,7 @@
     @else
     <div class="text-center py-12 bg-gray-900 rounded-xl">
         <p class="text-gray-400 text-lg">Chưa có mã giảm giá nào</p>
-        <a href="{{ route('coupons.create') }}"
+        <a href="{{ route('admin.coupons.create') }}"
            class="mt-4 inline-block bg-cyan-500 hover:bg-cyan-600 text-black px-6 py-2 rounded-lg font-semibold">
             Tạo mã giảm giá
         </a>

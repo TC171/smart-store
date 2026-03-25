@@ -25,6 +25,7 @@ class BannerController extends Controller
     public function create()
     {
         $positions = ['header', 'footer', 'sidebar', 'popup'];
+
         return view('admin.banners.create', compact('positions'));
     }
 
@@ -39,6 +40,10 @@ class BannerController extends Controller
         ]);
 
         $imagePath = $request->file('image')->store('banners', 'public');
+        // Also copy to public/storage for immediate access
+        $file = $request->file('image');
+        $filename = basename($imagePath);
+        $file->move(public_path('storage/banners'), $filename);
 
         Banner::create([
             'title' => $request->title,
@@ -49,13 +54,14 @@ class BannerController extends Controller
             'sort_order' => $request->sort_order ?? 0,
         ]);
 
-        return redirect()->route('banners.index')
+        return redirect()->route('admin.banners.index')
             ->with('success', 'Thêm banner thành công');
     }
 
     public function edit(Banner $banner)
     {
         $positions = ['header', 'footer', 'sidebar', 'popup'];
+
         return view('admin.banners.edit', compact('banner', 'positions'));
     }
 
@@ -80,13 +86,22 @@ class BannerController extends Controller
         if ($request->hasFile('image')) {
             if ($banner->image) {
                 Storage::disk('public')->delete($banner->image);
+                // Also delete from public/storage
+                $oldFile = public_path('storage/'.$banner->image);
+                if (file_exists($oldFile)) {
+                    unlink($oldFile);
+                }
             }
             $data['image'] = $request->file('image')->store('banners', 'public');
+            // Also copy to public/storage for immediate access
+            $file = $request->file('image');
+            $filename = basename($data['image']);
+            $file->move(public_path('storage/banners'), $filename);
         }
 
         $banner->update($data);
 
-        return redirect()->route('banners.index')
+        return redirect()->route('admin.banners.index')
             ->with('success', 'Cập nhật banner thành công');
     }
 
@@ -94,6 +109,11 @@ class BannerController extends Controller
     {
         if ($banner->image) {
             Storage::disk('public')->delete($banner->image);
+            // Also delete from public/storage
+            $oldFile = public_path('storage/'.$banner->image);
+            if (file_exists($oldFile)) {
+                unlink($oldFile);
+            }
         }
         $banner->delete();
 
@@ -104,6 +124,11 @@ class BannerController extends Controller
     {
         if ($banner->image) {
             Storage::disk('public')->delete($banner->image);
+            // Also delete from public/storage
+            $oldFile = public_path('storage/'.$banner->image);
+            if (file_exists($oldFile)) {
+                unlink($oldFile);
+            }
             $banner->update(['image' => null]);
         }
 

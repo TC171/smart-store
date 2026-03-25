@@ -15,38 +15,32 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
+        $credentials = $request->only('email', 'password');
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::guard('admin')->attempt($credentials)) {
 
-            $request->session()->regenerate();
+            $request->session()->regenerate(); // ⚠️ bắt buộc
 
-            $user = Auth::user();
+            $user = Auth::guard('admin')->user();
 
-            // Redirect based on role
-            if (in_array($user->role, ['admin', 'staff'])) {
-                return redirect()->route('admin.dashboard');
-            } else {
-                return redirect()->route('customer.dashboard');
+            if (! in_array($user->role, ['admin', 'staff'])) {
+                Auth::guard('admin')->logout();
+
+                return back()->with('error', 'Không đúng quyền admin');
             }
+
+            return redirect()->route('admin.dashboard');
         }
 
-        return back()->withErrors([
-            'email' => 'Email hoặc mật khẩu không đúng.'
-        ]);
+        return back()->with('error', 'Sai tài khoản hoặc mật khẩu');
     }
 
     public function logout(Request $request)
     {
-        Auth::guard('web')->logout(); // logout đúng guard
+        Auth::guard('admin')->logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $request->session()->forget('login_admin'); // hoặc key riêng
 
         return redirect()->route('admin.login');
     }
-
 }

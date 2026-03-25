@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\ProductAttribute;
+use Illuminate\Http\Request;
 
 class ProductAttributeController extends Controller
 {
@@ -24,6 +24,7 @@ class ProductAttributeController extends Controller
     public function create()
     {
         $types = ['color' => 'Màu sắc', 'storage' => 'Dung lượng', 'ram' => 'RAM'];
+
         return view('admin.product-attributes.create', compact('types'));
     }
 
@@ -42,13 +43,14 @@ class ProductAttributeController extends Controller
 
         ProductAttribute::create($request->only(['type', 'value', 'sort_order']));
 
-        return redirect()->route('product-attributes.index', ['type' => $request->type])
+        return redirect()->route('admin.product-attributes.index', ['type' => $request->type])
             ->with('success', 'Thêm thuộc tính thành công');
     }
 
     public function edit(ProductAttribute $productAttribute)
     {
         $types = ['color' => 'Màu sắc', 'storage' => 'Dung lượng', 'ram' => 'RAM'];
+
         return view('admin.product-attributes.edit', compact('productAttribute', 'types'));
     }
 
@@ -70,7 +72,7 @@ class ProductAttributeController extends Controller
 
         $productAttribute->update($request->only(['type', 'value', 'sort_order']));
 
-        return redirect()->route('product-attributes.index', ['type' => $request->type])
+        return redirect()->route('admin.product-attributes.index', ['type' => $request->type])
             ->with('success', 'Cập nhật thuộc tính thành công');
     }
 

@@ -31,7 +31,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-500">Tổng đơn hàng</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ auth()->user()->orders()->count() }}</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ $customerTotalOrders ?? auth()->user()->orders()->count() }}</p>
                     </div>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-500">Đơn hoàn thành</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ auth()->user()->orders()->where('status', 'completed')->count() }}</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ $customerCompletedOrders ?? auth()->user()->orders()->where('status', 'completed')->count() }}</p>
                     </div>
                 </div>
             </div>
@@ -59,7 +59,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-500">Tổng chi tiêu</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ number_format(auth()->user()->orders()->sum('total_amount')) }}₫</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ number_format($customerTotalSpent ?? auth()->user()->orders()->sum('total_amount')) }}₫</p>
                     </div>
                 </div>
             </div>

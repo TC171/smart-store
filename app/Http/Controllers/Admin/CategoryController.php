@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -71,11 +71,15 @@ class CategoryController extends Controller
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('categories', 'public');
+            // Also copy to public/storage for immediate access
+            $file = $request->file('image');
+            $filename = basename($data['image']);
+            $file->move(public_path('storage/categories'), $filename);
         }
 
         Category::create($data);
 
-        return redirect()->route('categories.index')
+        return redirect()->route('admin.categories.index')
             ->with('success', 'Thêm danh mục thành công');
     }
 
@@ -89,7 +93,7 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'name' => 'required|string|max:255|unique:categories,name,'.$category->id,
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'icon' => 'nullable|string|max:50',
@@ -128,13 +132,22 @@ class CategoryController extends Controller
             // Xóa ảnh cũ
             if ($category->image) {
                 Storage::disk('public')->delete($category->image);
+                // Also delete from public/storage
+                $oldFile = public_path('storage/'.$category->image);
+                if (file_exists($oldFile)) {
+                    unlink($oldFile);
+                }
             }
             $data['image'] = $request->file('image')->store('categories', 'public');
+            // Also copy to public/storage for immediate access
+            $file = $request->file('image');
+            $filename = basename($data['image']);
+            $file->move(public_path('storage/categories'), $filename);
         }
 
         $category->update($data);
 
-        return redirect()->route('categories.index')
+        return redirect()->route('admin.categories.index')
             ->with('success', 'Cập nhật danh mục thành công');
     }
 
@@ -142,6 +155,11 @@ class CategoryController extends Controller
     {
         if ($category->image) {
             Storage::disk('public')->delete($category->image);
+            // Also delete from public/storage
+            $oldFile = public_path('storage/'.$category->image);
+            if (file_exists($oldFile)) {
+                unlink($oldFile);
+            }
         }
 
         $category->delete();

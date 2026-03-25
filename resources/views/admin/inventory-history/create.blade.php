@@ -6,7 +6,7 @@
 
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-white">Cập nhật kho hàng</h1>
-        <a href="{{ route('inventory-history.index') }}"
+        <a href="{{ route('admin.inventory-history.index') }}"
            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
             ← Quay lại
         </a>
@@ -18,7 +18,7 @@
     </div>
     @endif
 
-    <form action="{{ route('inventory-history.store') }}" method="POST"
+    <form action="{{ route('admin.inventory-history.store') }}" method="POST"
         class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
 
         @csrf
@@ -84,7 +84,7 @@
 
         {{-- Buttons --}}
         <div class="flex justify-end gap-4">
-            <a href="{{ route('inventory-history.index') }}"
+            <a href="{{ route('admin.inventory-history.index') }}"
                class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">
                 Hủy
             </a>

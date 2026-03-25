@@ -9,7 +9,7 @@
             Quản lý thương hiệu
         </h1>
 
-        <a href="{{ route('brands.create') }}"
+        <a href="{{ route('admin.brands.create') }}"
             class="bg-cyan-500 hover:bg-cyan-600 text-black px-6 py-2 rounded-lg font-semibold">
             + Thêm thương hiệu
         </a>
@@ -74,10 +74,10 @@
                         </span>
                     </td>
                     <td class="p-4 flex gap-2">
-                        <a href="{{ route('brands.edit', $brand->id) }}"
+                        <a href="{{ route('admin.brands.edit', $brand->id) }}"
                             class="text-cyan-400 hover:text-cyan-300">Sửa</a>
 
-                        <form action="{{ route('brands.destroy', $brand->id) }}"
+                        <form action="{{ route('admin.brands.destroy', $brand->id) }}"
                               method="POST" class="inline">
                             @csrf
                             @method('DELETE')

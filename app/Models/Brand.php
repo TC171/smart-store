@@ -24,4 +24,9 @@ class Brand extends Model
     protected $casts = [
         'status' => 'boolean',
     ];
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
 }

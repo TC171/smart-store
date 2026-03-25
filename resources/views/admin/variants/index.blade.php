@@ -10,7 +10,7 @@
 Quản lý biến thể
 </h1>
 
-<a href="{{ route('variants.create') }}"
+<a href="{{ route('admin.variants.create') }}"
 class="bg-cyan-500 text-black px-4 py-2 rounded-lg">
 + Thêm biến thể
 </a>
@@ -80,12 +80,12 @@ class="bg-cyan-500 text-black px-4 py-2 rounded-lg">
 
 <td class="p-3 flex gap-2">
 
-<a href="{{ route('variants.edit',$variant->id) }}"
+<a href="{{ route('admin.variants.edit',$variant->id) }}"
 class="text-blue-500 hover:underline">
 Sửa
 </a>
 
-<form action="{{ route('variants.destroy', $variant->id) }}" 
+<form action="{{ route('admin.variants.destroy', $variant->id) }}" 
       method="POST">
 
     @csrf

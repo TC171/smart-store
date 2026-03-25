@@ -8,7 +8,7 @@
         Sửa danh mục
     </h1>
 
-    <form action="{{ route('categories.update', $category->id) }}"
+    <form action="{{ route('admin.categories.update', $category->id) }}"
         method="POST"
         enctype="multipart/form-data"
         class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
@@ -200,7 +200,7 @@
 
         {{-- Buttons --}}
         <div class="flex justify-end gap-4">
-            <a href="{{ route('categories.index') }}"
+            <a href="{{ route('admin.categories.index') }}"
                class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">
                 Hủy
             </a>

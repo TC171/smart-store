@@ -98,7 +98,7 @@ class InventoryHistoryController extends Controller
             ]);
         });
 
-        return redirect()->route('inventory-history.index')
+        return redirect()->route('admin.inventory-history.index')
             ->with('success', 'Cập nhật kho thành công');
     }
 
@@ -152,7 +152,7 @@ class InventoryHistoryController extends Controller
 
         $inventoryHistory->delete();
 
-        return redirect()->route('inventory-history.index')
+        return redirect()->route('admin.inventory-history.index')
             ->with('success', 'Xóa bản ghi kho thành công');
     }
 }

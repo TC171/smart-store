@@ -23,12 +23,12 @@ class Category extends Model
         'sort_order',
         'meta_title',
         'meta_description',
-        'meta_keywords'
+        'meta_keywords',
     ];
 
     protected $casts = [
         'is_featured' => 'boolean',
-        'status' => 'boolean'
+        'status' => 'boolean',
     ];
 
     /*

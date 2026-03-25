@@ -108,7 +108,7 @@
                     <td class="px-6 py-4">
                         <div class="flex gap-2">
                             @if (!$review->is_approved)
-                            <form action="{{ route('reviews.approve', $review) }}" method="POST" class="inline">
+                            <form action="{{ route('admin.reviews.approve', $review) }}" method="POST" class="inline">
                                 @csrf
                                 <button type="submit"
                                         class="text-green-500 hover:text-green-400 text-sm font-medium">
@@ -116,7 +116,7 @@
                                 </button>
                             </form>
 
-                            <form action="{{ route('reviews.reject', $review) }}" method="POST" class="inline">
+                            <form action="{{ route('admin.reviews.reject', $review) }}" method="POST" class="inline">
                                 @csrf
                                 <button type="submit"
                                         class="text-orange-500 hover:text-orange-400 text-sm font-medium">
@@ -125,7 +125,7 @@
                             </form>
                             @endif
 
-                            <form action="{{ route('reviews.destroy', $review) }}" method="POST"
+                            <form action="{{ route('admin.reviews.destroy', $review) }}" method="POST"
                                   onsubmit="return confirm('Xác nhận xoá đánh giá này?')"
                                   class="inline">
                                 @csrf

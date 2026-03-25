@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -23,45 +23,52 @@ class AuthController extends Controller
 
     // ===== LOGIN =====
     public function login(Request $request)
-{
-    $credentials = $request->only('email', 'password');
+    {
+        $credentials = $request->only('email', 'password');
 
-    // thêm điều kiện role = customer
-    $credentials['role'] = 'customer';
+        if (Auth::guard('web')->attempt($credentials)) {
 
-    if (Auth::attempt($credentials)) {
-        return redirect()->route('home');
+            $request->session()->regenerate(); // ⚠️ bắt buộc
+
+            $user = Auth::guard('web')->user();
+
+            if ($user->role !== 'customer') {
+                Auth::guard('web')->logout();
+
+                return back()->with('error', 'Không đúng quyền');
+            }
+
+            return redirect()->route('home');
+        }
+
+        return back()->with('error', 'Sai tài khoản hoặc mật khẩu');
     }
 
-    return back()->with('error', 'Sai tài khoản hoặc mật khẩu');
-}
-
     // ===== REGISTER =====
-   public function register(Request $request)
-{
-    $request->validate([
-        'name' => 'required|max:255',
-        'email' => 'required|email|unique:users',
-        'password' => 'required|min:6|confirmed',
-    ]);
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6|confirmed',
+        ]);
 
-    User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'role' => 'customer', // 🔥 bắt buộc
-    ]);
+        User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'customer', // 🔥 bắt buộc
+        ]);
 
-    return redirect()->route('login')->with('success', 'Đăng ký thành công');
-}
+        return redirect()->route('login')->with('success', 'Đăng ký thành công');
+    }
 
     // ===== LOGOUT =====
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('web')->logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $request->session()->forget('login_web');
 
         return redirect('/');
     }

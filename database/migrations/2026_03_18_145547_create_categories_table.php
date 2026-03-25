@@ -19,6 +19,12 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->string('icon')->nullable();
             $table->unsignedBigInteger('parent_id')->nullable();
+            $table->boolean('is_featured')->default(false);
+            $table->boolean('status')->default(true);
+            $table->integer('sort_order')->default(0);
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
+            $table->text('meta_keywords')->nullable();
             $table->foreign('parent_id')->references('id')->on('categories')->onDelete('cascade');
             $table->softDeletes();
             $table->timestamps();

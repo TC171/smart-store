@@ -26,7 +26,7 @@ class Product extends Model
         'status',
         'is_featured',
         'meta_title',
-        'meta_description'
+        'meta_description',
     ];
 
     protected $casts = [
@@ -57,9 +57,4 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
-    public function images()
-    {
-        return $this->hasMany(ProductImage::class);
-    }
-    
 }

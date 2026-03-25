@@ -24,7 +24,7 @@
 
             <p>Giá: {{ number_format($item['price']) }}đ</p>
 
-            <form action="/cart/update/{{ $id }}" method="POST">
+            <form action="{{ route('cart.update', $id) }}" method="POST">
                 @csrf
                 <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1">
                 <button type="submit">Cập nhật</button>
@@ -32,7 +32,7 @@
 
             <p>Tạm tính: {{ number_format($subtotal) }}đ</p>
 
-            <a href="/cart/remove/{{ $id }}" style="color:red;">
+            <a href="{{ route('cart.remove', $id) }}" style="color:red;">
                 Xóa
             </a>
 
@@ -41,7 +41,7 @@
     @endforeach
 
     <h3>Tổng tiền: {{ number_format($total) }}đ</h3>
-    <a href="/checkout">
+    <a href="{{ route('checkout.index') }}">
     <button>Thanh toán</button>
 </a>
 

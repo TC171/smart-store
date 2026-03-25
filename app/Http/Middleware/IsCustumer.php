@@ -13,7 +13,7 @@ class IsCustumer
     public function handle(Request $request, Closure $next)
     {
         // Nếu chưa login
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return redirect()->route('login');
         }
 

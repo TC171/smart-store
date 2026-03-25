@@ -8,7 +8,7 @@
         <h1 class="text-2xl font-bold text-white">
             Chi tiết đơn hàng #{{ $order->order_number }}
         </h1>
-        <a href="{{ route('orders.index') }}"
+        <a href="{{ route('admin.orders.index') }}"
            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
             Quay lại
         </a>
@@ -168,7 +168,7 @@
                 </p>
             </div>
 
-            <form action="{{ route('orders.updateStatus', $order) }}" method="POST" class="space-y-3">
+            <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="space-y-3">
                 @csrf
                 @method('PATCH')
 
@@ -209,7 +209,7 @@
                 </p>
             </div>
 
-            <form action="{{ route('orders.updatePaymentStatus', $order) }}" method="POST" class="space-y-3">
+            <form action="{{ route('admin.orders.updatePaymentStatus', $order) }}" method="POST" class="space-y-3">
                 @csrf
                 @method('PATCH')
 

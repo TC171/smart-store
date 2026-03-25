@@ -8,7 +8,6 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -26,6 +25,7 @@ class OrderSeeder extends Seeder
 
         if ($users->isEmpty() || $productVariants->isEmpty()) {
             $this->command->error('Không đủ dữ liệu để tạo đơn hàng. Vui lòng chạy các seeder khác trước.');
+
             return;
         }
 
@@ -95,7 +95,7 @@ class OrderSeeder extends Seeder
 
                 // Create order
                 $order = Order::create([
-                    'order_number' => 'ORD-' . date('Ymd') . '-' . str_pad($i, 3, '0', STR_PAD_LEFT),
+                    'order_number' => 'ORD-'.date('Ymd').'-'.str_pad($i, 3, '0', STR_PAD_LEFT),
                     'user_id' => $user->id,
                     'coupon_id' => $coupon ? $coupon->id : null,
                     'total_amount' => $totalAmount,

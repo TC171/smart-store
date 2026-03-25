@@ -4,7 +4,7 @@
     <h1 class="text-2xl font-bold text-white">Quản lý danh mục</h1>
 
     <div class="flex gap-3">
-        <a href="{{ route('categories.create') }}"
+        <a href="{{ route('admin.categories.create') }}"
            class="bg-cyan-500 hover:bg-cyan-600 text-black px-4 py-2 rounded-lg">
             + Thêm danh mục
         </a>

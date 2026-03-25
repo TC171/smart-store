@@ -3,20 +3,23 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Users\StoreUserRequest;
+use App\Http\Requests\Admin\Users\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', User::class);
+
         $query = User::query();
 
         if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%')
+                ->orWhere('email', 'like', '%'.$request->search.'%');
         }
 
         if ($request->role) {
@@ -34,19 +37,14 @@ class UserController extends Controller
 
     public function create()
     {
+        $this->authorize('create', User::class);
+
         return view('admin.users.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6|confirmed',
-            'phone' => 'nullable|string|max:20',
-            'role' => 'required|in:admin,staff,customer',
-            'status' => 'required|boolean',
-        ]);
+        $this->authorize('create', User::class);
 
         User::create([
             'name' => $request->name,
@@ -57,44 +55,37 @@ class UserController extends Controller
             'status' => $request->status,
         ]);
 
-        return redirect()->route('users.index')
+        return redirect()->route('admin.users.index')
             ->with('success', 'Thêm người dùng thành công');
     }
 
     public function edit(User $user)
     {
+        $this->authorize('update', $user);
+
         return view('admin.users.edit', compact('user'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:20',
-            'gender' => 'nullable|in:male,female,other',
-            'date_of_birth' => 'nullable|date',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:20',
-            'role' => 'required|in:admin,staff,customer',
-            'status' => 'required|boolean',
-        ]);
+        $this->authorize('update', $user);
 
         $user->update($request->only(['name', 'email', 'phone', 'gender', 'date_of_birth', 'address', 'city', 'country', 'postal_code', 'role', 'status']));
 
-        return redirect()->route('users.index')
+        return redirect()->route('admin.users.index')
             ->with('success', 'Cập nhật người dùng thành công');
     }
 
     public function destroy(User $user)
     {
-        if ($user->id === auth()->id()) {
+        $this->authorize('delete', $user);
+
+        if ($user->id === auth('admin')->id()) {
             return back()->with('error', 'Không thể xóa tài khoản của chính mình');
         }
 
         $user->delete();
+
         return back()->with('success', 'Xóa người dùng thành công');
     }
 }

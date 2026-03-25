@@ -8,7 +8,7 @@
         Thêm Banner
     </h1>
 
-    <form action="{{ route('banners.store') }}" method="POST" enctype="multipart/form-data"
+    <form action="{{ route('admin.banners.store') }}" method="POST" enctype="multipart/form-data"
         class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
 
         @csrf
@@ -105,7 +105,7 @@
 
         {{-- Buttons --}}
         <div class="flex justify-end gap-4">
-            <a href="{{ route('banners.index') }}"
+            <a href="{{ route('admin.banners.index') }}"
                class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">
                 Hủy
             </a>

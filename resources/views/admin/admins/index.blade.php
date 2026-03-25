@@ -6,7 +6,7 @@
 
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-white">Danh sách Quản trị viên & Nhân viên</h1>
-        <a href="{{ route('admins.create') }}"
+        <a href="{{ route('admin.admins.create') }}"
            class="bg-cyan-500 hover:bg-cyan-600 text-black px-4 py-2 rounded-lg font-semibold">
             + Thêm Quản trị viên/Nhân viên
         </a>
@@ -102,13 +102,13 @@
 
                     <td class="px-6 py-4">
                         <div class="flex gap-3">
-                            <a href="{{ route('admins.edit', $admin) }}"
+                            <a href="{{ route('admin.admins.edit', $admin) }}"
                                class="text-cyan-500 hover:text-cyan-400 text-sm font-medium">
                                 Sửa
                             </a>
 
                             @if (Auth::id() !== $admin->id)
-                            <form action="{{ route('admins.destroy', $admin) }}" method="POST"
+                            <form action="{{ route('admin.admins.destroy', $admin) }}" method="POST"
                                   onsubmit="return confirm('Xác nhận xoá tài khoản này?')"
                                   class="inline">
                                 @csrf

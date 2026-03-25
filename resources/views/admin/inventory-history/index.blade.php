@@ -6,7 +6,7 @@
 
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-white">Lịch sử kho hàng</h1>
-        <a href="{{ route('inventory-history.create') }}"
+        <a href="{{ route('admin.inventory-history.create') }}"
            class="bg-cyan-500 hover:bg-cyan-600 text-black px-4 py-2 rounded-lg font-semibold">
             + Cập nhật kho
         </a>
@@ -63,7 +63,7 @@
                         class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
                     Lọc
                 </button>
-                <a href="{{ route('inventory-history.index') }}"
+                <a href="{{ route('admin.inventory-history.index') }}"
                    class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
                     Xóa lọc
                 </a>
@@ -151,13 +151,13 @@
 
                     <td class="px-6 py-4">
                         <div class="flex gap-3 items-center">
-                            <a href="{{ route('inventory-history.show', $history) }}"
+                            <a href="{{ route('admin.inventory-history.show', $history) }}"
                                class="text-cyan-500 hover:text-cyan-400 text-sm font-medium">
                                 Xem
                             </a>
 
                             @if($history->reference_type === 'manual')
-                            <form action="{{ route('inventory-history.destroy', $history) }}" method="POST"
+                            <form action="{{ route('admin.inventory-history.destroy', $history) }}" method="POST"
                                   onsubmit="return confirm('Bạn có chắc muốn xóa bản ghi này? Số lượng kho sẽ bị hoàn lại!')"
                                   class="inline">
                                 @csrf

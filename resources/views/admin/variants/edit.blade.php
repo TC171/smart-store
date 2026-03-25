@@ -8,7 +8,7 @@
 Sửa biến thể
 </h1>
 
-<form action="{{ route('variants.update', $variant->id) }}" method="POST"
+<form action="{{ route('admin.variants.update', $variant->id) }}" method="POST"
 class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
 
 @csrf
@@ -24,7 +24,7 @@ class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
 <div>
     <label class="block text-sm font-medium text-gray-300 mb-2">
         RAM <span class="text-red-500">*</span>
-        <a href="{{ route('product-attributes.index', ['type' => 'ram']) }}"
+        <a href="{{ route('admin.product-attributes.index', ['type' => 'ram']) }}"
            class="text-xs text-cyan-400 hover:text-cyan-300 underline ml-2">
            Quản lý
         </a>
@@ -47,7 +47,7 @@ class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
 <div>
     <label class="block text-sm font-medium text-gray-300 mb-2">
         Bộ nhớ <span class="text-red-500">*</span>
-        <a href="{{ route('product-attributes.index', ['type' => 'storage']) }}"
+        <a href="{{ route('admin.product-attributes.index', ['type' => 'storage']) }}"
            class="text-xs text-cyan-400 hover:text-cyan-300 underline ml-2">
            Quản lý
         </a>
@@ -70,7 +70,7 @@ class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
 <div>
     <label class="block text-sm font-medium text-gray-300 mb-2">
         Màu sắc <span class="text-red-500">*</span>
-        <a href="{{ route('product-attributes.index', ['type' => 'color']) }}"
+        <a href="{{ route('admin.product-attributes.index', ['type' => 'color']) }}"
            class="text-xs text-cyan-400 hover:text-cyan-300 underline ml-2">
            Quản lý
         </a>
@@ -150,7 +150,7 @@ class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
 
 {{-- Buttons --}}
 <div class="flex justify-end gap-4">
-    <a href="{{ route('variants.index') }}"
+    <a href="{{ route('admin.variants.index') }}"
        class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">
         Hủy
     </a>

@@ -9,7 +9,7 @@
     <div class="mb-6">
         <div class="flex space-x-1 bg-gray-800 p-1 rounded-lg">
             @foreach($types as $key => $label)
-                <a href="{{ route('product-attributes.index', ['type' => $key]) }}"
+                <a href="{{ route('admin.product-attributes.index', ['type' => $key]) }}"
                    class="px-4 py-2 rounded-md text-sm font-medium transition
                           {{ $type == $key ? 'bg-cyan-500 text-black' : 'text-gray-300 hover:text-white' }}">
                     {{ $label }}
@@ -22,7 +22,7 @@
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-semibold text-white">{{ $types[$type] }}</h2>
 
-        <a href="{{ route('product-attributes.create') }}?type={{ $type }}"
+        <a href="{{ route('admin.product-attributes.create') }}?type={{ $type }}"
            class="bg-cyan-500 hover:bg-cyan-600 text-black px-4 py-2 rounded-lg font-semibold">
             + Thêm {{ strtolower($types[$type]) }}
         </a>
@@ -46,10 +46,10 @@
                     <td class="p-4">{{ $attribute->value }}</td>
                     <td class="p-4">{{ $attribute->sort_order }}</td>
                     <td class="p-4 flex gap-2">
-                        <a href="{{ route('product-attributes.edit', $attribute) }}"
+                        <a href="{{ route('admin.product-attributes.edit', $attribute) }}"
                            class="text-cyan-400 hover:text-cyan-300">Sửa</a>
 
-                        <form action="{{ route('product-attributes.destroy', $attribute) }}"
+                        <form action="{{ route('admin.product-attributes.destroy', $attribute) }}"
                               method="POST" class="inline">
                             @csrf
                             @method('DELETE')

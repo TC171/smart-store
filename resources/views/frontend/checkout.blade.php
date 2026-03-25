@@ -8,7 +8,7 @@
     <p style="color:red;">{{ session('error') }}</p>
 @endif
 
-<form action="/checkout" method="POST">
+<form action="{{ route('checkout.store') }}" method="POST">
     @csrf
 
     <div>

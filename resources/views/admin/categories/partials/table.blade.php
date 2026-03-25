@@ -3,6 +3,7 @@
     <thead class="bg-gray-800 text-gray-200">
         <tr>
             <th class="p-3">ID</th>
+            <th class="p-3">Hình ảnh</th>
             <th class="p-3">Tên danh mục</th>
             <th class="p-3">Slug</th>
             <th class="p-3">Danh mục cha</th>
@@ -16,6 +17,16 @@
         <tr class="border-b border-gray-800 hover:bg-gray-800">
 
             <td class="p-3">{{ $category->id }}</td>
+
+            <td class="p-3">
+                @if($category->image)
+                    <img src="{{ asset('storage/' . $category->image) }}"
+                         alt="{{ $category->name }}"
+                         class="w-12 h-12 object-cover rounded">
+                @else
+                    <span class="text-gray-400 text-sm">Không có</span>
+                @endif
+            </td>
 
             <td class="p-3 font-semibold text-white">
                 {{ $category->name }}
@@ -43,12 +54,12 @@
 
             <td class="p-3 flex justify-center gap-2">
 
-                <a href="{{ route('categories.edit',$category->id) }}"
+                <a href="{{ route('admin.categories.edit',$category->id) }}"
                    class="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 rounded">
                     Sửa
                 </a>
 
-                <form action="{{ route('categories.destroy',$category->id) }}"
+                <form action="{{ route('admin.categories.destroy',$category->id) }}"
                       method="POST"
                       onsubmit="return confirm('Xóa danh mục này?')">
 

@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductVariant extends Model
 {
-
     protected $fillable = [
         'product_id',
         'color',
@@ -16,7 +15,7 @@ class ProductVariant extends Model
         'stock',
         'sku',
         'image',
-        'status'
+        'status',
     ];
 
     protected $casts = [
@@ -32,5 +31,4 @@ class ProductVariant extends Model
     {
         return $this->hasMany(InventoryHistory::class);
     }
-
 }

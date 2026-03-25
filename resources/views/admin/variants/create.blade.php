@@ -8,7 +8,7 @@
 Thêm biến thể sản phẩm
 </h1>
 
-<form action="{{ route('variants.store') }}" method="POST"
+<form action="{{ route('admin.variants.store') }}" method="POST"
 class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
 
 @csrf
@@ -44,7 +44,7 @@ text-white rounded-lg px-4 py-2">
 
 <label class="block text-gray-300 mb-2">
 Màu sắc <span class="text-red-500">*</span>
-<a href="{{ route('product-attributes.index', ['type' => 'color']) }}"
+<a href="{{ route('admin.product-attributes.index', ['type' => 'color']) }}"
    class="text-xs text-cyan-400 hover:text-cyan-300 underline ml-2">
    Quản lý
 </a>
@@ -74,7 +74,7 @@ Chọn nhiều màu sắc (Ctrl+click)
 
 <label class="block text-gray-300 mb-2">
 Bộ nhớ <span class="text-red-500">*</span>
-<a href="{{ route('product-attributes.index', ['type' => 'storage']) }}"
+<a href="{{ route('admin.product-attributes.index', ['type' => 'storage']) }}"
    class="text-xs text-cyan-400 hover:text-cyan-300 underline ml-2">
    Quản lý
 </a>
@@ -104,7 +104,7 @@ Chọn nhiều dung lượng bộ nhớ (Ctrl+click)
 
 <label class="block text-gray-300 mb-2">
 RAM <span class="text-red-500">*</span>
-<a href="{{ route('product-attributes.index', ['type' => 'ram']) }}"
+<a href="{{ route('admin.product-attributes.index', ['type' => 'ram']) }}"
    class="text-xs text-cyan-400 hover:text-cyan-300 underline ml-2">
    Quản lý
 </a>

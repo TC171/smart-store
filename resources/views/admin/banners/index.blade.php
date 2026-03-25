@@ -9,7 +9,7 @@
             Quản lý Banner
         </h1>
 
-        <a href="{{ route('banners.create') }}"
+        <a href="{{ route('admin.banners.create') }}"
             class="bg-cyan-500 hover:bg-cyan-600 text-black px-6 py-2 rounded-lg font-semibold">
             + Thêm Banner
         </a>
@@ -54,10 +54,10 @@
                         </span>
                     </td>
                     <td class="p-4 flex gap-2">
-                        <a href="{{ route('banners.edit', $banner->id) }}"
+                        <a href="{{ route('admin.banners.edit', $banner->id) }}"
                             class="text-cyan-400 hover:text-cyan-300">Sửa</a>
 
-                        <form action="{{ route('banners.destroy', $banner->id) }}"
+                        <form action="{{ route('admin.banners.destroy', $banner->id) }}"
                               method="POST" class="inline">
                             @csrf
                             @method('DELETE')

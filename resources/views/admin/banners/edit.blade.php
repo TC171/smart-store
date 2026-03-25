@@ -8,7 +8,7 @@
         Chỉnh sửa Banner
     </h1>
 
-    <form action="{{ route('banners.update', $banner) }}" method="POST" enctype="multipart/form-data"
+    <form action="{{ route('admin.banners.update', $banner) }}" method="POST" enctype="multipart/form-data"
         class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
 
         @csrf
@@ -40,7 +40,7 @@
                          alt="{{ $banner->title }}"
                          class="w-32 h-24 object-cover rounded-lg border border-gray-700">
 
-                    <form action="{{ route('banners.image-delete', $banner) }}" method="POST"
+                    <form action="{{ route('admin.banners.image-delete', $banner) }}" method="POST"
                           class="absolute top-1 right-1">
                         @csrf
                         @method('DELETE')
@@ -131,7 +131,7 @@
 
         {{-- Buttons --}}
         <div class="flex justify-end gap-4">
-            <a href="{{ route('banners.index') }}"
+            <a href="{{ route('admin.banners.index') }}"
                class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">
                 Hủy
             </a>
