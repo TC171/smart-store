@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 
 /*
@@ -163,19 +164,49 @@ Route::get('/api/search', function (Request $request) {
 
     if (!$q) return [];
 
-    return \App\Models\Product::query()
-        ->with('variants')
+    $ascii = Str::ascii($q);
+
+    $products = \App\Models\Product::query()
+        ->with(['variants', 'category'])
         ->where('status', 1)
-        ->where('name', 'like', "%{$q}%")
+        ->where(function ($query) use ($q, $ascii) {
+            $query->where('name', 'like', "%{$q}%")
+                  ->orWhere('name', 'like', "%{$ascii}%")
+                  ->orWhere('slug', 'like', "%{$q}%")
+                  ->orWhere('slug', 'like', "%{$ascii}%");
+        })
         ->limit(6)
-        ->get()
+        ->get();
+
+    // Fallback: nếu không tìm thấy bằng tên, bám vào danh mục điện thoại, laptop ...
+    if ($products->isEmpty()) {
+        $products = \App\Models\Product::query()
+            ->with(['variants', 'category'])
+            ->where('status', 1)
+            ->whereHas('category', function ($query) use ($q, $ascii) {
+                $query->where('name', 'like', "%{$q}%")
+                      ->orWhere('name', 'like', "%{$ascii}%");
+            })
+            ->limit(6)
+            ->get();
+    }
+
+    return $products
         ->map(function ($product) {
+
+            $variantPrice = $product->variants->min('price');
+            $basePrice = $product->sale_price ? $product->sale_price : $product->price;
+            $originalPrice = $product->price;
 
             return [
                 'id' => $product->id,
                 'name' => $product->name,
                 'slug' => $product->slug,
-                'price' => optional($product->variants->min('price')),
+                'price' => $basePrice ?? $variantPrice ?? 0,
+                'sale_price' => $product->sale_price ?: null,
+                'original_price' => $originalPrice ?: null,
+                'stock' => $product->stock ?? 0,
+                'category' => $product->category?->name ?? null,
                 'image' => $product->image ? asset($product->image) : asset('images/no-image.jpg'),
             ];
         });
