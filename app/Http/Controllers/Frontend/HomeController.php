@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -21,6 +22,11 @@ class HomeController extends Controller
             'brands' => $this->getBrands(),
             'coupons' => $this->getCoupons(),
             'newProducts' => $this->getNewProducts(),
+
+            'phoneProducts' => $this->getProductsByCategorySlug('dien-thoai'),
+            'laptopProducts' => $this->getProductsByCategorySlug('laptop'),
+            'tabletProducts' => $this->getProductsByCategorySlug('may-tinh-bang'),
+            'accessoryProducts' => $this->getProductsByCategorySlug('phu-kien'),
         ]);
     }
 
@@ -64,7 +70,7 @@ class HomeController extends Controller
                 'variants' => fn ($q) => $q->where('status', 1),
             ])
             ->withCount([
-                'variants as total_stock' => fn ($q) => $q->select(\DB::raw("SUM(stock)"))
+                'variants as total_stock' => fn ($q) => $q->select(DB::raw('COALESCE(SUM(stock), 0)'))
             ])
             ->orderByDesc('is_featured')
             ->orderByDesc('sold_count')
@@ -90,6 +96,30 @@ class HomeController extends Controller
                 'variants' => fn ($q) => $q->where('status', 1),
             ])
             ->limit(8)
+            ->get();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PRODUCTS BY CATEGORY
+    |--------------------------------------------------------------------------
+    */
+    protected function getProductsByCategorySlug($slug, $limit = 8)
+    {
+        return Product::where('status', 1)
+            ->whereHas('category', function ($q) use ($slug) {
+                $q->where('slug', $slug)->where('status', 1);
+            })
+            ->with([
+                'category',
+                'brand',
+                'variants' => fn ($q) => $q->where('status', 1),
+            ])
+            ->withCount([
+                'variants as total_stock' => fn ($q) => $q->select(DB::raw('COALESCE(SUM(stock), 0)'))
+            ])
+            ->latest()
+            ->limit($limit)
             ->get();
     }
 
