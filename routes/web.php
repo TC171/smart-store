@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 
 /*
@@ -168,26 +169,56 @@ Route::middleware('guest:web')->group(function () {
 | API SEARCH
 |--------------------------------------------------------------------------
 */
-Route::get('/api/search', function (Request $request) {
+// Route::get('/api/search', function (Request $request) {
 
-    $q = $request->get('q');
+//     $q = $request->get('q');
 
-    if (!$q) return [];
+//     if (!$q) return [];
 
-    return \App\Models\Product::query()
-        ->with('variants')
-        ->where('status', 1)
-        ->where('name', 'like', "%{$q}%")
-        ->limit(6)
-        ->get()
-        ->map(function ($product) {
+//     $ascii = Str::ascii($q);
 
-            return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'slug' => $product->slug,
-                'price' => optional($product->variants->min('price')),
-                'image' => $product->image ? asset($product->image) : asset('images/no-image.jpg'),
-            ];
-        });
-});
+//     $products = \App\Models\Product::query()
+//         ->with(['variants', 'category'])
+//         ->where('status', 1)
+//         ->where(function ($query) use ($q, $ascii) {
+//             $query->where('name', 'like', "%{$q}%")
+//                   ->orWhere('name', 'like', "%{$ascii}%")
+//                   ->orWhere('slug', 'like', "%{$q}%")
+//                   ->orWhere('slug', 'like', "%{$ascii}%");
+//         })
+//         ->limit(6)
+//         ->get();
+
+//     // Fallback: nếu không tìm thấy bằng tên, bám vào danh mục điện thoại, laptop ...
+//     if ($products->isEmpty()) {
+//         $products = \App\Models\Product::query()
+//             ->with(['variants', 'category'])
+//             ->where('status', 1)
+//             ->whereHas('category', function ($query) use ($q, $ascii) {
+//                 $query->where('name', 'like', "%{$q}%")
+//                       ->orWhere('name', 'like', "%{$ascii}%");
+//             })
+//             ->limit(6)
+//             ->get();
+//     }
+
+//     return $products
+//         ->map(function ($product) {
+
+//             $variantPrice = $product->variants->min('price');
+//             $basePrice = $product->sale_price ? $product->sale_price : $product->price;
+//             $originalPrice = $product->price;
+
+//             return [
+//                 'id' => $product->id,
+//                 'name' => $product->name,
+//                 'slug' => $product->slug,
+//                 'price' => $basePrice ?? $variantPrice ?? 0,
+//                 'sale_price' => $product->sale_price ?: null,
+//                 'original_price' => $originalPrice ?: null,
+//                 'stock' => $product->stock ?? 0,
+//                 'category' => $product->category?->name ?? null,
+//                 'image' => $product->image ? asset($product->image) : asset('images/no-image.jpg'),
+//             ];
+//         });
+// });
