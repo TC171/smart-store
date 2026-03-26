@@ -17,39 +17,50 @@ class CartController extends Controller
     }
 
     public function add(Request $request)
-    {
-        $request->validate([
-            'variant_id' => 'required|exists:product_variants,id',
-            'quantity' => 'nullable|integer|min:1',
-        ]);
+{
+    $request->validate([
+        'variant_id' => 'required|exists:product_variants,id',
+        'quantity' => 'nullable|integer|min:1',
+    ]);
 
-        $variant = ProductVariant::with('product')->findOrFail($request->variant_id);
-        $quantity = (int) ($request->quantity ?? 1);
+    $variant = ProductVariant::with('product')->findOrFail($request->variant_id);
+    $quantity = (int) ($request->quantity ?? 1);
 
-        if (! $variant->status || $variant->stock < $quantity) {
-            return back()->with('error', 'San pham tam het hang');
-        }
-
-        $cart = session('cart', []);
-        $key = (string) $variant->id;
-
-        if (! isset($cart[$key])) {
-            $cart[$key] = [
-                'variant_id' => $variant->id,
-                'product_id' => $variant->product_id,
-                'name' => $variant->product->name,
-                'variant' => trim(($variant->color ?? '').' '.$variant->storage.' '.$variant->ram),
-                'price' => (float) ($variant->sale_price ?: $variant->price),
-                'quantity' => 0,
-                'image' => $variant->image ? asset('storage/'.$variant->image) : ($variant->product->thumbnail ? asset('storage/'.$variant->product->thumbnail) : asset('images/no-image.jpg')),
-            ];
-        }
-
-        $cart[$key]['quantity'] += $quantity;
-        session(['cart' => $cart]);
-
-        return redirect()->route('cart.index')->with('success', 'Da them vao gio hang');
+    if (! $variant->status || $variant->stock < $quantity) {
+        return back()->with('error', 'San pham tam het hang');
     }
+
+    $cart = session('cart', []);
+    $key = (string) $variant->id;
+
+    if (! isset($cart[$key])) {
+        $cart[$key] = [
+            'variant_id' => $variant->id,
+            'product_id' => $variant->product_id,
+            'name' => $variant->product->name,
+            'variant' => trim(($variant->color ?? '').' '.$variant->storage.' '.$variant->ram),
+            'price' => (float) ($variant->sale_price ?: $variant->price),
+            'quantity' => 0,
+            'image' => $variant->image 
+                ? asset('storage/'.$variant->image) 
+                : ($variant->product->thumbnail 
+                    ? asset('storage/'.$variant->product->thumbnail) 
+                    : asset('images/no-image.jpg')),
+        ];
+    }
+
+    $cart[$key]['quantity'] += $quantity;
+    session(['cart' => $cart]);
+
+    // 🔥 LOGIC MỚI: PHÂN BIỆT BUY NOW
+    if ($request->has('buy_now')) {
+        return redirect()->route('checkout.index')
+            ->with('success', 'Chuyen den thanh toan');
+    }
+
+    return redirect()->route('cart.index')
+        ->with('success', 'Da them vao gio hang');
+}
 
     public function update(Request $request, string $id)
     {
