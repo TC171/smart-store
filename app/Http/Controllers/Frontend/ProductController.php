@@ -66,6 +66,7 @@ $viewMap = [
     'laptop' => 'frontend.products.types.laptop',
     'phu-kien' => 'frontend.products.types.accessory',
     'tablet' => 'frontend.products.types.tablet',
+    'may-tinh-bang' => 'frontend.products.types.tablet', 
 ];
 
 // fallback nếu không có category trong map

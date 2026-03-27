@@ -9,6 +9,8 @@ use App\Models\InventoryHistory;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderConfirmed;
 
 class OrderController extends Controller
 {
@@ -55,11 +57,23 @@ class OrderController extends Controller
         $oldStatus = $order->status;
         $order->update(['status' => $request->status]);
 
-        // Create inventory history based on status change
+        // 🔥 LOGIC GỬI MAIL KHI ADMIN CẬP NHẬT TRẠNG THÁI
+        if ($request->status !== $oldStatus) {
+            try {
+                // Gửi mail thông báo (Hoàn thành hoặc Hủy đơn)
+                // Ưu tiên gửi vào email người nhận đơn hàng, nếu không có thì gửi vào email tài khoản
+                $recipientEmail = $order->user->email; 
+                Mail::to($recipientEmail)->send(new OrderConfirmed($order));
+            } catch (\Exception $e) {
+                \Log::error("Lỗi gửi mail từ Admin: " . $e->getMessage());
+            }
+        }
+
+        // Xử lý kho hàng
         if ($request->status === 'completed' && $oldStatus !== 'completed') {
-            // Order completed - already handled in seeder
+            // Đã hoàn thành
         } elseif ($request->status === 'cancelled' && $oldStatus !== 'cancelled') {
-            // Order cancelled - return stock
+            // Hủy đơn - Hoàn tồn kho
             foreach ($order->items as $item) {
                 $variant = ProductVariant::find($item->product_variant_id);
                 if ($variant) {

@@ -64,9 +64,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('banners/{banner}/image', [BannerController::class, 'deleteImage'])->name('banners.image-delete');
 
         Route::resource('coupons', CouponController::class)->except(['show']);
+        
+        // Cấu hình Route Order Admin chuẩn
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
-        Route::post('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-        Route::post('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
+        Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
 
         Route::resource('users', UserController::class)->except(['show']);
         Route::resource('customers', CustomerController::class);
@@ -82,6 +84,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
     });
+});
+
+/*
+|--------------------------------------------------------------------------
+| AUTH (GUEST) - ĐƯA LÊN TRÊN ĐỂ TRÁNH LỖI 404 CHI TIẾT SẢN PHẨM
+|--------------------------------------------------------------------------
+*/
+Route::middleware('guest:web')->group(function () {
+    Route::get('/login', [FrontAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [FrontAuthController::class, 'login'])->name('login.post');
+    Route::get('/register', [FrontAuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [FrontAuthController::class, 'register'])->name('register.post');
 });
 
 /*
@@ -108,18 +122,27 @@ Route::middleware(['auth:web', 'customer'])
 |--------------------------------------------------------------------------
 */
 Route::get('/', [HomeController::class, 'index'])->name('home');
-
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
+Route::get('/tim-kiem', [HomeController::class, 'search'])->name('search');
+
+// Giỏ hàng
 Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
 Route::get('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
+
+// Thanh toán & Coupon (Bắt buộc đăng nhập)
 Route::middleware('auth:web')->group(function () {
     Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
     Route::post('/checkout', [CartController::class, 'placeOrder'])->name('checkout.store');
+    
+    // 🔥 Coupon API Routes
+    Route::get('/api/coupons', [CartController::class, 'getAvailableCoupons'])->name('coupon.list');
+    Route::post('/api/apply-coupon', [CartController::class, 'applyCoupon'])->name('coupon.apply');
+    
+    // Route nhận kết quả VNPAY trả về
+    Route::get('/vnpay/return', [CartController::class, 'vnpayReturn'])->name('vnpay.return');
 });
-
-Route::get('/tim-kiem', [HomeController::class, 'search'])->name('search');
 
 /*
 |--------------------------------------------------------------------------
@@ -133,94 +156,61 @@ Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact')
 
 /*
 |--------------------------------------------------------------------------
-| CATEGORY ROUTE (FIX CHÍNH)
+| CATEGORY & PRODUCT ROUTES
 |--------------------------------------------------------------------------
 */
-Route::get('/danh-muc/{slug}', [FrontCategoryController::class, 'products'])
-    ->name('category.products');
+Route::get('/danh-muc/{slug}', [FrontCategoryController::class, 'products'])->name('category.products');
+Route::get('/san-pham-noi-bat', [FrontProductController::class, 'featured'])->name('products.featured');
+
+// 🔥 CHI TIẾT SẢN PHẨM (LUÔN ĐỂ CUỐI CÙNG ĐỂ KHÔNG CHẶN CÁC ROUTE KHÁC)
+Route::get('/{categorySlug}/{productSlug}', [FrontProductController::class, 'show'])->name('products.show');
 
 /*
 |--------------------------------------------------------------------------
-| PRODUCT ROUTES
+| API SEARCH (Đã mở và tối ưu)
 |--------------------------------------------------------------------------
 */
+Route::get('/api/search', function (Request $request) {
+    $q = $request->get('q');
+    if (!$q) return response()->json([]);
 
-// 🔥 Chi tiết sản phẩm theo danh mục
-Route::get('/{categorySlug}/{productSlug}', [FrontProductController::class, 'show'])
-    ->name('products.show');
+    $ascii = Str::ascii($q);
 
-// 🔥 Sản phẩm nổi bật (giữ nguyên)
-Route::get('/san-pham-noi-bat', [FrontProductController::class, 'featured'])
-    ->name('products.featured');
-/*
-|--------------------------------------------------------------------------
-| AUTH (GUEST)
-|--------------------------------------------------------------------------
-*/
-Route::middleware('guest:web')->group(function () {
+    $products = \App\Models\Product::query()
+        ->with(['variants', 'category'])
+        ->where('status', 1)
+        ->where(function ($query) use ($q, $ascii) {
+            $query->where('name', 'like', "%{$q}%")
+                  ->orWhere('name', 'like', "%{$ascii}%")
+                  ->orWhere('slug', 'like', "%{$q}%")
+                  ->orWhere('slug', 'like', "%{$ascii}%");
+        })
+        ->limit(6)
+        ->get();
 
-    Route::get('/login', [FrontAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [FrontAuthController::class, 'login'])->name('login.post');
+    if ($products->isEmpty()) {
+        $products = \App\Models\Product::query()
+            ->with(['variants', 'category'])
+            ->where('status', 1)
+            ->whereHas('category', function ($query) use ($q, $ascii) {
+                $query->where('name', 'like', "%{$q}%")
+                      ->orWhere('name', 'like', "%{$ascii}%");
+            })
+            ->limit(6)
+            ->get();
+    }
 
-    Route::get('/register', [FrontAuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [FrontAuthController::class, 'register'])->name('register.post');
+    return response()->json($products->map(function ($product) {
+        $variantPrice = $product->variants->where('status', 1)->min('sale_price') 
+                        ?? $product->variants->where('status', 1)->min('price');
+        
+        return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'slug' => $product->slug,
+            'price' => $variantPrice ?? $product->price ?? 0,
+            'category' => $product->category?->name ?? 'Sản phẩm',
+            'image' => $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('images/no-image.jpg'),
+        ];
+    }));
 });
-
-/*
-|--------------------------------------------------------------------------
-| API SEARCH
-|--------------------------------------------------------------------------
-*/
-// Route::get('/api/search', function (Request $request) {
-
-//     $q = $request->get('q');
-
-//     if (!$q) return [];
-
-//     $ascii = Str::ascii($q);
-
-//     $products = \App\Models\Product::query()
-//         ->with(['variants', 'category'])
-//         ->where('status', 1)
-//         ->where(function ($query) use ($q, $ascii) {
-//             $query->where('name', 'like', "%{$q}%")
-//                   ->orWhere('name', 'like', "%{$ascii}%")
-//                   ->orWhere('slug', 'like', "%{$q}%")
-//                   ->orWhere('slug', 'like', "%{$ascii}%");
-//         })
-//         ->limit(6)
-//         ->get();
-
-//     // Fallback: nếu không tìm thấy bằng tên, bám vào danh mục điện thoại, laptop ...
-//     if ($products->isEmpty()) {
-//         $products = \App\Models\Product::query()
-//             ->with(['variants', 'category'])
-//             ->where('status', 1)
-//             ->whereHas('category', function ($query) use ($q, $ascii) {
-//                 $query->where('name', 'like', "%{$q}%")
-//                       ->orWhere('name', 'like', "%{$ascii}%");
-//             })
-//             ->limit(6)
-//             ->get();
-//     }
-
-//     return $products
-//         ->map(function ($product) {
-
-//             $variantPrice = $product->variants->min('price');
-//             $basePrice = $product->sale_price ? $product->sale_price : $product->price;
-//             $originalPrice = $product->price;
-
-//             return [
-//                 'id' => $product->id,
-//                 'name' => $product->name,
-//                 'slug' => $product->slug,
-//                 'price' => $basePrice ?? $variantPrice ?? 0,
-//                 'sale_price' => $product->sale_price ?: null,
-//                 'original_price' => $originalPrice ?: null,
-//                 'stock' => $product->stock ?? 0,
-//                 'category' => $product->category?->name ?? null,
-//                 'image' => $product->image ? asset($product->image) : asset('images/no-image.jpg'),
-//             ];
-//         });
-// });
