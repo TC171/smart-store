@@ -121,7 +121,6 @@ class CartController extends Controller
         return view('frontend.checkout');
     }
 
-    //  LẤY DANH SÁCH MÃ GIẢM GIÁ (TỰ ĐỘNG HIỆN INDEX HOẶC JSON)
     public function getAvailableCoupons(Request $request)
     {
         try {
@@ -135,20 +134,17 @@ class CartController extends Controller
                 })
                 ->get();
 
-            // Nếu truy cập thẳng từ trình duyệt -> hiện giao diện chuyên nghiệp
             if (!$request->wantsJson() && !$request->ajax()) {
                 return view('frontend.api_docs.coupons', compact('coupons'));
             }
 
-            // Nếu gọi từ Modal (Javascript) -> trả về JSON
-            return response()->json($coupons);
+            return response()->json($coupons->values());
             
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
-    //  ÁP DỤNG MÃ GIẢM GIÁ (ĐÃ FIX LOGIC DATABASE)
     public function applyCoupon(Request $request)
     {
         $coupon = Coupon::where('code', $request->code)->where('status', 1)->first();
@@ -175,12 +171,10 @@ class CartController extends Controller
             ]);
         }
 
-        // Tính tiền giảm
         $discount = ($coupon->type === 'fixed') 
                     ? (float)$coupon->value 
                     : ($total * (float)$coupon->value / 100);
 
-        // Áp dụng cái khóa max_discount (Số tiền giảm tối đa)
         if ($coupon->max_discount && $coupon->max_discount > 0) {
             $discount = min($discount, (float)$coupon->max_discount);
         }
@@ -188,6 +182,7 @@ class CartController extends Controller
         $discount = min($discount, $total);
 
         session(['coupon' => [
+            'id' => $coupon->id, // 🔥 Lưu ID thay vì Code để khớp Database
             'code' => $coupon->code,
             'discount' => $discount
         ]]);
@@ -203,8 +198,6 @@ class CartController extends Controller
 
     public function placeOrder(Request $request)
     {
-        $this->authorize('create', Order::class);
-
         $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
@@ -230,11 +223,12 @@ class CartController extends Controller
             $createdOrder = Order::create([
                 'order_number' => 'ORD-'.now()->format('YmdHis').'-'.mt_rand(1000, 9999),
                 'user_id' => auth('web')->id(),
+                'coupon_id' => $couponSession['id'] ?? null, // 🔥 Dùng coupon_id (Đã có trong Model của bạn)
                 'total_amount' => $totalAmount,
                 'discount_amount' => $discountAmount,
-                'coupon_code' => $couponSession['code'] ?? null,
                 'grand_total' => max(0, $grandTotal),
                 'shipping_fee' => 0,
+                'tax_amount' => 0,
                 'status' => 'pending',
                 'payment_status' => 'unpaid',
                 'shipping_name' => $request->name,
@@ -249,16 +243,14 @@ class CartController extends Controller
                     'product_id' => $item['product_id'],
                     'product_variant_id' => $item['variant_id'],
                     'product_name' => $item['name'],
-                    'sku' => ProductVariant::find($item['variant_id'])?->sku,
                     'price' => $item['price'],
                     'quantity' => $item['quantity'],
                     'subtotal' => $item['price'] * $item['quantity'],
                 ]);
             }
 
-            // Tăng lượt dùng nếu đặt COD (VNPAY sẽ tăng khi có kết quả trả về)
             if ($request->payment_method === 'cod' && $couponSession) {
-                Coupon::where('code', $couponSession['code'])->increment('used_count');
+                Coupon::where('id', $couponSession['id'])->increment('used_count');
             }
         });
 
@@ -279,15 +271,12 @@ class CartController extends Controller
         }
 
         if ($request->payment_method === 'vnpay') {
-            $vnp_TmnCode = env('VNPAY_TMN_CODE');
-            $vnp_HashSecret = env('VNPAY_HASH_SECRET');
-            $vnp_Url = env('VNPAY_URL');
-            $vnp_Returnurl = env('VNPAY_RETURN_URL');
+            $vnp_Amount = (int)round($createdOrder->grand_total * 100);
 
             $inputData = array(
                 "vnp_Version" => "2.1.0",
-                "vnp_TmnCode" => $vnp_TmnCode,
-                "vnp_Amount" => $createdOrder->grand_total * 100,
+                "vnp_TmnCode" => env('VNPAY_TMN_CODE'),
+                "vnp_Amount" => $vnp_Amount,
                 "vnp_Command" => "pay",
                 "vnp_CreateDate" => date('YmdHis'),
                 "vnp_CurrCode" => "VND",
@@ -295,27 +284,21 @@ class CartController extends Controller
                 "vnp_Locale" => 'vn',
                 "vnp_OrderInfo" => "Thanh toan don hang " . $createdOrder->order_number,
                 "vnp_OrderType" => 'billpayment',
-                "vnp_ReturnUrl" => $vnp_Returnurl,
+                "vnp_ReturnUrl" => env('VNPAY_RETURN_URL'),
                 "vnp_TxnRef" => $createdOrder->order_number,
             );
 
             ksort($inputData);
-            $query = "";
-            $i = 0;
-            $hashdata = "";
+            $query = ""; $i = 0; $hashdata = "";
             foreach ($inputData as $key => $value) {
-                if ($i == 1) {
-                    $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
-                } else {
-                    $hashdata .= urlencode($key) . "=" . urlencode($value);
-                    $i = 1;
-                }
+                if ($i == 1) { $hashdata .= '&' . urlencode($key) . "=" . urlencode($value); }
+                else { $hashdata .= urlencode($key) . "=" . urlencode($value); $i = 1; }
                 $query .= urlencode($key) . "=" . urlencode($value) . '&';
             }
 
-            $vnp_Url = $vnp_Url . "?" . $query;
-            if (isset($vnp_HashSecret)) {
-                $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+            $vnp_Url = env('VNPAY_URL') . "?" . $query;
+            if (env('VNPAY_HASH_SECRET')) {
+                $vnpSecureHash = hash_hmac('sha512', $hashdata, env('VNPAY_HASH_SECRET'));
                 $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
             }
 
@@ -330,42 +313,71 @@ class CartController extends Controller
         $vnp_HashSecret = env('VNPAY_HASH_SECRET');
         $inputData = array();
         foreach ($_GET as $key => $value) {
-            if (substr($key, 0, 4) == "vnp_") {
-                $inputData[$key] = $value;
-            }
+            if (substr($key, 0, 4) == "vnp_") { $inputData[$key] = $value; }
         }
 
-        $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
         unset($inputData['vnp_SecureHash']);
         ksort($inputData);
-        $i = 0;
-        $hashData = "";
+        $i = 0; $hashData = "";
         foreach ($inputData as $key => $value) {
-            if ($i == 1) {
-                $hashData .= '&' . urlencode($key) . "=" . urlencode($value);
-            } else {
-                $hashData .= urlencode($key) . "=" . urlencode($value);
-                $i = 1;
-            }
+            if ($i == 1) { $hashData .= '&' . urlencode($key) . "=" . urlencode($value); }
+            else { $hashData .= urlencode($key) . "=" . urlencode($value); $i = 1; }
         }
 
         $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
         $order = Order::where('order_number', $request->vnp_TxnRef)->first();
 
-        if ($secureHash == $vnp_SecureHash) {
+        if ($secureHash == $request->vnp_SecureHash) {
             if ($request->vnp_ResponseCode == '00') {
                 if ($order) {
                     $order->update(['payment_status' => 'paid', 'status' => 'confirmed']);
-                    // Tăng lượt dùng coupon khi thanh toán VNPAY thành công
-                    if ($order->coupon_code) {
-                        Coupon::where('code', $order->coupon_code)->increment('used_count');
+                    if ($order->coupon_id) {
+                        Coupon::where('id', $order->coupon_id)->increment('used_count');
                     }
                 }
-                // Trả về view thành công chuyên nghiệp
                 return view('frontend.checkout.success', compact('order', 'request'));
             }
             return redirect()->route('cart.index')->with('error', 'Giao dịch thất bại.');
         }
         return redirect()->route('cart.index')->with('error', 'Chữ ký không hợp lệ.');
     }
+
+    public function cancelOrder(Request $request, $id)
+    {
+        $order = Order::where('id', $id)->where('user_id', auth('web')->id())->firstOrFail();
+
+        if (!in_array($order->status, ['pending', 'confirmed'])) {
+            return back()->with('error', 'Đơn hàng không thể hủy.');
+        }
+
+        DB::transaction(function () use ($order) {
+            $order->update(['status' => 'cancelled']);
+            foreach ($order->items as $item) {
+                $variant = ProductVariant::find($item->product_variant_id);
+                if ($variant) {
+                    $variant->increment('stock', $item->quantity);
+                    DB::table('inventory_history')->insert([
+                        'product_variant_id' => $variant->id,
+                        'type' => 'return',
+                        'quantity' => $item->quantity,
+                        'previous_stock' => $variant->stock - $item->quantity,
+                        'current_stock' => $variant->stock,
+                        'reference_type' => 'order_cancel',
+                        'reference_id' => $order->id,
+                        'notes' => 'Hủy đơn #' . $order->order_number,
+                        'created_at' => now(),
+                    ]);
+                }
+            }
+        });
+
+        return back()->with('success', 'Đã hủy đơn hàng thành công.');
+    }
+
+    public function orderHistory()
+    {
+        $orders = Order::where('user_id', auth('web')->id())->orderBy('created_at', 'DESC')->paginate(10);
+        return view('frontend.customer.orders', compact('orders'));
+    }
+    
 }

@@ -10,6 +10,7 @@ class Order extends Model
         'order_number',
         'user_id',
         'coupon_id',
+        'coupon_code', // Bổ sung thêm cột này vì Controller của bạn đang dùng
         'total_amount',
         'subtotal',
         'shipping_fee',
@@ -36,6 +37,8 @@ class Order extends Model
         'completed_at' => 'datetime',
     ];
 
+    // --- Relationships ---
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -43,11 +46,35 @@ class Order extends Model
 
     public function items()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(OrderItem::class, 'order_id');
     }
 
     public function coupon()
     {
         return $this->belongsTo(Coupon::class);
+    }
+
+    // --- Helper Methods (Tiện ích bổ sung) ---
+
+    /**
+     * Lấy màu sắc tương ứng với trạng thái đơn hàng (Dành cho view màu Cam)
+     */
+    public function getStatusColorAttribute()
+    {
+        return [
+            'pending'   => 'orange',   // Chờ xử lý cho màu cam luôn
+            'confirmed' => 'blue',
+            'shipping'  => 'indigo',
+            'completed' => 'green',
+            'cancelled' => 'gray',
+        ][$this->status] ?? 'gray';
+    }
+
+    /**
+     * Định dạng tiền tệ VND (Để view gọi cho gọn)
+     */
+    public function formatPrice($field)
+    {
+        return number_format($this->$field, 0, ',', '.') . 'đ';
     }
 }
