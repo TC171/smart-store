@@ -144,12 +144,14 @@ Route::get('/danh-muc/{slug}', [FrontCategoryController::class, 'products'])
 | PRODUCT ROUTES
 |--------------------------------------------------------------------------
 */
-Route::get('/san-pham/{slug}', [FrontProductController::class, 'show'])
-    ->name('product.detail');
 
+// 🔥 Chi tiết sản phẩm theo danh mục
+Route::get('/{categorySlug}/{productSlug}', [FrontProductController::class, 'show'])
+    ->name('products.show');
+
+// 🔥 Sản phẩm nổi bật (giữ nguyên)
 Route::get('/san-pham-noi-bat', [FrontProductController::class, 'featured'])
     ->name('products.featured');
-
 /*
 |--------------------------------------------------------------------------
 | AUTH (GUEST)

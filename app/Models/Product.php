@@ -57,4 +57,9 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
+    // ⭐ THÊM ĐOẠN NÀY
+    public function reviews()
+    {
+        return $this->hasMany(\App\Models\Review::class);
+    }
 }

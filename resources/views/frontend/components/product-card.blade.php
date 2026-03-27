@@ -1,4 +1,7 @@
-<a href="{{ route('product.detail', $product->slug) }}"
+<a href="{{ route('products.show', [
+    $product->category->slug,
+    $product->slug
+]) }}"
    class="group/card block bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg hover:shadow-2xl hover:shadow-orange-500/20 border border-white/30 hover:border-orange-200/50 overflow-hidden transition-all duration-500 hover:scale-[1.03] hover:shadow-xl active:scale-[0.98] w-full max-w-sm relative">
 
     <!-- Quick Actions Overlay -->
