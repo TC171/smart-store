@@ -59,12 +59,14 @@ class ProductController extends Controller
         $avgRating = round($reviews->avg('rating'), 1);
         $totalReviews = $reviews->count();
 
-        $viewMap = [
-            'dien-thoai' => 'frontend.products.types.phone',
-            'laptop' => 'frontend.products.types.laptop',
-            'phu-kien' => 'frontend.products.types.accessory',
-            'tablet' => 'frontend.products.types.tablet',
-        ];
+// 🔥 map category -> view
+$viewMap = [
+    'dien-thoai' => 'frontend.products.types.phone',
+    'laptop' => 'frontend.products.types.laptop',
+    'phu-kien' => 'frontend.products.types.accessory',
+    'tablet' => 'frontend.products.types.tablet',
+    'may-tinh-bang' => 'frontend.products.types.tablet',
+];
 
         $view = $viewMap[$categorySlug] ?? 'frontend.products.types.default';
 

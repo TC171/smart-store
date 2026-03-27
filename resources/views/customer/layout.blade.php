@@ -1,5 +1,4 @@
-@extends('layouts.app')
-
+@extends('frontend.layouts.app')
 @section('title', 'Customer Dashboard')
 
 @section('content')
