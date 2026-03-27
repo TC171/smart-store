@@ -62,4 +62,17 @@ class Product extends Model
     {
         return $this->hasMany(\App\Models\Review::class);
     }
+
+    // ✅ THÊM: nhiều ảnh sản phẩm
+    public function images()
+    {
+        return $this->hasMany(\App\Models\ProductImage::class);
+    }
+
+    // ✅ THÊM: lấy ảnh chính
+    public function mainImage()
+    {
+        return $this->hasOne(\App\Models\ProductImage::class)
+                    ->where('is_main', 1);
+    }
 }
