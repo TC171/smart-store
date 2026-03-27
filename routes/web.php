@@ -51,6 +51,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
         Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
     });
+    Route::post('/upload-editor-image', [ProductController::class, 'uploadEditorImage'])
+        ->name('upload.image');
 
     Route::middleware(['auth:admin', 'admin'])->group(function () {
 
@@ -85,6 +87,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::view('password', 'admin.password')->name('password');
 
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+
+        
     });
 });
 

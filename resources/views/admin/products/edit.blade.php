@@ -60,16 +60,72 @@
             @error('image')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
 
+        {{-- ẢNH PHỤ HIỆN TẠI --}}
+@if($product->images && $product->images->count())
+<div>
+    <label class="block text-sm font-medium text-gray-300 mb-2">Ảnh chi tiết hiện tại</label>
+
+    <div class="grid grid-cols-3 md:grid-cols-6 gap-4">
+        @foreach($product->images as $img)
+<div class="relative">
+    <img src="{{ asset('storage/'.$img->image) }}"
+         class="w-full h-24 object-cover rounded-lg border border-gray-700">
+
+    {{-- nút xoá --}}
+    <button type="button"
+        onclick="removeOldImage(this, {{ $img->id }})"
+        class="absolute top-1 right-1 bg-red-500 text-white text-xs px-2 py-1 rounded">
+        X
+    </button>
+ 
+
+    @if($img->is_main)
+        <span class="absolute top-1 left-1 bg-green-500 text-black text-xs px-2 py-1 rounded">
+            Main
+        </span>
+    @endif
+</div>
+@endforeach
+
+    </div>
+</div>
+
+
+@endif
+
+{{-- UPLOAD THÊM ẢNH --}}
+<div>
+    <label class="block text-sm font-medium text-gray-300 mb-2">Thêm ảnh mới</label>
+
+    <input type="file"
+        name="images[]"
+        multiple
+        accept="image/*"
+        onchange="previewImages(event)"
+        class="w-full text-gray-300 file:bg-cyan-500 file:text-black file:px-4 file:py-2 file:rounded-lg file:border-0">
+
+    @error('images.*')
+        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+    @enderror
+
+    {{-- Preview ảnh mới --}}
+    <div id="preview-images" class="grid grid-cols-3 md:grid-cols-6 gap-4 mt-4"></div>
+</div>
+
         {{-- Mô tả ngắn --}}
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-2">Mô tả ngắn</label>
             <textarea name="short_description" rows="3" class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500">{{ old('short_description', $product->short_description) }}</textarea>
         </div>
+        
 
         {{-- Mô tả chi tiết --}}
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-2">Mô tả chi tiết</label>
-            <textarea name="description" rows="6" class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500">{{ old('description', $product->description) }}</textarea>
+               {{-- CKEDITOR --}}
+        <textarea id="description" name="description">
+            {{ $product->description }}
+        </textarea>
         </div>
 
         {{-- Thông tin kỹ thuật --}}
@@ -119,7 +175,8 @@
             <label class="block text-sm font-medium text-gray-300 mb-2">Meta keywords</label>
             <input type="text" name="meta_keywords" value="{{ old('meta_keywords', $product->meta_keywords) }}" class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500">
         </div>
-
+        
+<div id="deleted-images"></div>
         {{-- Submit --}}
         <div class="flex justify-end">
             <button type="submit" class="bg-cyan-500 hover:bg-cyan-600 text-black px-6 py-2 rounded-lg font-semibold">
@@ -129,4 +186,123 @@
 
     </form>
 </div>
+{{-- CKEDITOR --}}
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+<script>
+/* ========= CKEDITOR UPLOAD ========= */
+class UploadAdapter {
+    constructor(loader) {
+        this.loader = loader;
+    }
+
+    upload() {
+        return this.loader.file.then(file => new Promise((resolve, reject) => {
+
+            let data = new FormData();
+            data.append('upload', file);
+
+            fetch("{{ route('admin.upload.image') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: data
+            })
+            .then(res => res.json())
+            .then(res => {
+                resolve({
+                    default: res.url
+                });
+            })
+            .catch(err => reject(err));
+        }));
+    }
+
+    abort() {}
+}
+
+function MyUploadPlugin(editor) {
+    editor.plugins.get('FileRepository').createUploadAdapter = loader => {
+        return new UploadAdapter(loader);
+    };
+}
+
+ClassicEditor.create(document.querySelector('#description'), {
+    extraPlugins: [MyUploadPlugin],
+    image: {
+        toolbar: [
+            'imageTextAlternative',
+            'imageStyle:full',
+            'imageStyle:side'
+        ]
+    }
+})
+.catch(error => console.log(error));
+</script>
 @endsection
+<script>
+let selectedFiles = new DataTransfer();
+
+function previewImages(event) {
+    const preview = document.getElementById('preview-images');
+    const input = event.target;
+
+    Array.from(input.files).forEach(file => {
+        selectedFiles.items.add(file);
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.classList.add('relative');
+
+            div.innerHTML = `
+                <img src="${e.target.result}" 
+                     class="w-full h-24 object-cover rounded-lg border border-gray-700">
+
+                <button type="button"
+                        class="absolute top-1 right-1 bg-red-500 text-white text-xs px-2 py-1 rounded"
+                        onclick="removeImage(this, '${file.name}')">
+                    X
+                </button>
+            `;
+
+            preview.appendChild(div);
+        };
+
+        reader.readAsDataURL(file);
+    });
+
+    input.files = selectedFiles.files;
+}
+
+function removeImage(button, fileName) {
+    const dt = new DataTransfer();
+
+    Array.from(selectedFiles.files).forEach(file => {
+        if (file.name !== fileName) {
+            dt.items.add(file);
+        }
+    });
+
+    selectedFiles = dt;
+
+    document.querySelector('input[name="images[]"]').files = selectedFiles.files;
+
+    button.parentElement.remove();
+}
+</script>
+<script>
+function removeOldImage(button, imageId) {
+    // thêm input hidden
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'deleted_images[]';
+    input.value = imageId;
+
+    document.getElementById('deleted-images').appendChild(input);
+
+    // xoá UI
+    button.parentElement.remove();
+}
+</script>

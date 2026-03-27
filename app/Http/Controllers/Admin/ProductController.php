@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\Products\UpdateProductRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage; // ✅ thêm dòng này
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -19,7 +20,7 @@ class ProductController extends Controller
     {
         $this->authorize('viewAny', Product::class);
 
-        $query = Product::with(['category', 'brand']);
+        $query = Product::with(['category', 'brand', 'images']);
 
         if ($request->category_id) {
             $query->where('category_id', $request->category_id);
@@ -87,6 +88,26 @@ class ProductController extends Controller
             'meta_keywords' => $request->meta_keywords,
         ]);
 
+        // ✅ THÊM: upload nhiều ảnh phụ
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $index => $file) {
+
+                $path = $file->store('products', 'public');
+
+                $publicPath = public_path('storage/products/' . basename($path));
+                if (!file_exists(dirname($publicPath))) mkdir(dirname($publicPath), 0755, true);
+                copy(storage_path('app/public/' . $path), $publicPath);
+
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'image' => $path,
+                    'alt_text' => $product->name,
+                    'is_main' => $index == 0 ? 1 : 0,
+                    'sort_order' => $index
+                ]);
+            }
+        }
+
         return redirect()->route('admin.products.index')
             ->with('success', 'Thêm sản phẩm thành công');
     }
@@ -141,6 +162,41 @@ class ProductController extends Controller
             'meta_description' => $request->meta_description,
             'meta_keywords' => $request->meta_keywords,
         ]);
+        // ✅ XOÁ ẢNH CŨ ĐÃ CHỌN
+if ($request->deleted_images) {
+    foreach ($request->deleted_images as $id) {
+
+        $img = ProductImage::find($id);
+
+        if ($img) {
+            // xoá file
+            $this->deleteImage($img->image);
+
+            // xoá DB
+            $img->delete();
+        }
+    }
+}
+
+        // ✅ THÊM: upload thêm ảnh mới (không xóa ảnh cũ)
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+
+                $path = $file->store('products', 'public');
+
+                $publicPath = public_path('storage/products/' . basename($path));
+                if (!file_exists(dirname($publicPath))) mkdir(dirname($publicPath), 0755, true);
+                copy(storage_path('app/public/' . $path), $publicPath);
+
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'image' => $path,
+                    'alt_text' => $product->name,
+                    'is_main' => 0,
+                    'sort_order' => 0
+                ]);
+            }
+        }
 
         return redirect()->route('admin.products.show', $product->id)
             ->with('success', 'Cập nhật sản phẩm thành công');
@@ -152,10 +208,8 @@ class ProductController extends Controller
         $product = Product::with(['category', 'brand', 'variants'])->findOrFail($id);
         $this->authorize('view', $product);
 
-        // Xử lý giá min/max an toàn
         $minPrice = $product->variants->min('price') ?? 0;
         $maxPrice = $product->variants->max('sale_price') ?? $minPrice;
-
         $totalStock = $product->variants->sum('stock') ?? 0;
 
         return view('admin.products.show', compact('product', 'minPrice', 'maxPrice', 'totalStock'));
@@ -165,6 +219,13 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         $this->authorize('delete', $product);
+
+        // ✅ Xóa ảnh phụ
+        foreach ($product->images as $img) {
+            $this->deleteImage($img->image);
+            $img->delete();
+        }
+
         $this->deleteImage($product->thumbnail);
         $product->delete();
 
@@ -206,4 +267,19 @@ class ProductController extends Controller
             if (file_exists($publicPath)) unlink($publicPath);
         }
     }
+    public function uploadEditorImage(Request $request)
+{
+    if ($request->hasFile('upload')) {
+
+        $file = $request->file('upload');
+
+        $path = $file->store('editor', 'public');
+
+        return response()->json([
+            'url' => asset('storage/' . $path)
+        ]);
+    }
+
+    return response()->json(['error' => 'Upload fail'], 400);
+}
 }

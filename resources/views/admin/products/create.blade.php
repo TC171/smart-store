@@ -53,7 +53,9 @@
         {{-- Mô tả chi tiết --}}
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-2">Mô tả chi tiết</label>
-            <textarea name="description" rows="6" class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500">{{ old('description') }}</textarea>
+                {{-- MÔ TẢ CHI TIẾT (CKEDITOR) --}}
+        <textarea id="description" name="description"
+            class="w-full bg-gray-800 text-white p-2 rounded"></textarea>
         </div>
 
         {{-- Thông tin kỹ thuật --}}
@@ -97,6 +99,25 @@
             @error('image')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
 
+{{-- Hình ảnh chi tiết --}}
+<div>
+    <label class="block text-sm font-medium text-gray-300 mb-2">Hình ảnh chi tiết sản phẩm</label>
+
+    <input type="file"
+        name="images[]"
+        multiple
+        accept="image/*"
+        onchange="previewImages(event)"
+        class="w-full text-gray-300 file:bg-cyan-500 file:text-black file:px-4 file:py-2 file:rounded-lg file:border-0">
+
+    @error('images.*')
+        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+    @enderror
+
+    {{-- Preview --}}
+    <div id="preview-images" class="grid grid-cols-3 md:grid-cols-6 gap-4 mt-4"></div>
+</div>
+
         {{-- Meta --}}
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-2">Meta title</label>
@@ -119,5 +140,108 @@
         </div>
 
     </form>
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 </div>
+<script>
+class UploadAdapter {
+    constructor(loader) {
+        this.loader = loader;
+    }
+
+    upload() {
+        return this.loader.file.then(file => new Promise((resolve, reject) => {
+
+            const data = new FormData();
+            data.append('upload', file);
+
+            fetch("{{ route('admin.upload.image') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(result => {
+                resolve({
+                    default: result.url
+                });
+            })
+            .catch(error => reject(error));
+        }));
+    }
+
+    abort() {}
+}
+
+function MyCustomUploadAdapterPlugin(editor) {
+    editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+        return new UploadAdapter(loader);
+    };
+}
+
+ClassicEditor
+    .create(document.querySelector('#description'), {
+        extraPlugins: [MyCustomUploadAdapterPlugin],
+    })
+    .catch(error => {
+        console.error(error);
+    });
+</script>
 @endsection
+<script>
+let selectedFiles = new DataTransfer();
+
+function previewImages(event) {
+    const preview = document.getElementById('preview-images');
+    const input = event.target;
+
+    Array.from(input.files).forEach(file => {
+        // thêm file vào danh sách
+        selectedFiles.items.add(file);
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.classList.add('relative');
+
+            div.innerHTML = `
+                <img src="${e.target.result}" 
+                     class="w-full h-24 object-cover rounded-lg border border-gray-700">
+
+                <button type="button"
+                        class="absolute top-1 right-1 bg-red-500 text-white text-xs px-2 py-1 rounded"
+                        onclick="removeImage(this, '${file.name}')">
+                    X
+                </button>
+            `;
+
+            preview.appendChild(div);
+        };
+
+        reader.readAsDataURL(file);
+    });
+
+    // cập nhật lại input files
+    input.files = selectedFiles.files;
+}
+
+// xoá ảnh
+function removeImage(button, fileName) {
+    const dt = new DataTransfer();
+
+    Array.from(selectedFiles.files).forEach(file => {
+        if (file.name !== fileName) {
+            dt.items.add(file);
+        }
+    });
+
+    selectedFiles = dt;
+
+    document.querySelector('input[name="images[]"]').files = selectedFiles.files;
+
+    // xoá preview
+    button.parentElement.remove();
+}
+</script>
