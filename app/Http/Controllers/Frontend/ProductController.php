@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\Coupon;
+
+// ✅ thêm nhưng không ảnh hưởng code cũ
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -13,26 +16,31 @@ class ProductController extends Controller
     public function show($categorySlug, $productSlug)
     {
         $product = Product::with([
-                'category',
-                'brand',
-                'variants' => function ($q) {
-                    $q->where('status', 1);
-                },
-            ])
-            ->where('slug', $slug)
-            ->where('status', 1)
-            ->firstOrFail();
+            'category',
+            'brand',
+            'variants' => function ($q) {
+                $q->where('status', 1);
+            },
+            'reviews' => function ($q) {
+                $q->where('is_approved', 1)->latest();
+            },
+            'reviews.user'
+        ])
+        ->where('slug', $productSlug)
+        ->where('status', 1)
+        ->firstOrFail();
+
+        // ✅ GIỮ NGUYÊN (quan trọng)
+        if (!$product->category || $product->category->slug !== $categorySlug) {
+            abort(404);
+        }
 
         $this->authorize('view', $product);
 
-        // ✅ Giá thấp nhất - cao nhất
         $minPrice = $product->variants->min(fn($v) => $v->sale_price ?? $v->price) ?? 0;
         $maxPrice = $product->variants->max(fn($v) => $v->sale_price ?? $v->price) ?? 0;
-
-        // ✅ Tổng tồn kho
         $totalStock = $product->variants->sum('stock');
 
-        // ✅ Sản phẩm liên quan
         $relatedProducts = Product::with('variants')
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
@@ -40,7 +48,6 @@ class ProductController extends Controller
             ->take(5)
             ->get();
 
-        // ✅ COUPONS
         $coupons = Coupon::where('status', 1)
             ->where(function ($q) {
                 $q->whereNull('expires_at')
@@ -48,35 +55,33 @@ class ProductController extends Controller
             })
             ->get();
 
-        // ✅ REVIEWS
         $reviews = $product->reviews;
         $avgRating = round($reviews->avg('rating'), 1);
         $totalReviews = $reviews->count();
 
-        // 🔥 map category -> view
-$viewMap = [
-    'dien-thoai' => 'frontend.products.types.phone',
-    'laptop' => 'frontend.products.types.laptop',
-    'phu-kien' => 'frontend.products.types.accessory',
-    'tablet' => 'frontend.products.types.tablet',
-];
+        $viewMap = [
+            'dien-thoai' => 'frontend.products.types.phone',
+            'laptop' => 'frontend.products.types.laptop',
+            'phu-kien' => 'frontend.products.types.accessory',
+            'tablet' => 'frontend.products.types.tablet',
+        ];
 
-// fallback nếu không có category trong map
-$view = $viewMap[$categorySlug] ?? 'frontend.products.types.default';
+        $view = $viewMap[$categorySlug] ?? 'frontend.products.types.default';
 
-return view($view, compact(
-    'product',
-    'minPrice',
-    'maxPrice',
-    'totalStock',
-    'relatedProducts',
-    'coupons',
-    'reviews',
-    'avgRating',
-    'totalReviews'
-));
+        return view($view, compact(
+            'product',
+            'minPrice',
+            'maxPrice',
+            'totalStock',
+            'relatedProducts',
+            'coupons',
+            'reviews',
+            'avgRating',
+            'totalReviews'
+        ));
     }
 
+    // ✅ nâng cấp featured (merge từ file mới)
     public function featured(Request $request)
     {
         $this->authorize('viewAny', Product::class);
@@ -90,21 +95,18 @@ return view($view, compact(
                 },
             ]);
 
-        // Lọc theo danh mục
         if ($request->filled('category')) {
             $query->whereHas('category', function ($q) use ($request) {
                 $q->where('slug', $request->category);
             });
         }
 
-        // Lọc theo thương hiệu
         if ($request->filled('brand')) {
             $query->whereHas('brand', function ($q) use ($request) {
                 $q->where('slug', $request->brand);
             });
         }
 
-        // Lọc theo khoảng giá
         if ($request->filled('price_range') && $request->price_range !== 'all') {
             $query->whereHas('variants', function ($q) use ($request) {
                 $q->where('status', 1);
@@ -113,23 +115,18 @@ return view($view, compact(
                     case 'under_2m':
                         $q->whereRaw('COALESCE(sale_price, price) < ?', [2000000]);
                         break;
-
                     case '2m_4m':
-                        $q->whereRaw('COALESCE(sale_price, price) >= ? AND COALESCE(sale_price, price) <= ?', [2000000, 4000000]);
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [2000000, 4000000]);
                         break;
-
                     case '4m_7m':
-                        $q->whereRaw('COALESCE(sale_price, price) >= ? AND COALESCE(sale_price, price) <= ?', [4000000, 7000000]);
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [4000000, 7000000]);
                         break;
-
                     case '7m_13m':
-                        $q->whereRaw('COALESCE(sale_price, price) >= ? AND COALESCE(sale_price, price) <= ?', [7000000, 13000000]);
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [7000000, 13000000]);
                         break;
-
                     case '13m_20m':
-                        $q->whereRaw('COALESCE(sale_price, price) >= ? AND COALESCE(sale_price, price) <= ?', [13000000, 20000000]);
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [13000000, 20000000]);
                         break;
-
                     case 'over_20m':
                         $q->whereRaw('COALESCE(sale_price, price) > ?', [20000000]);
                         break;
@@ -137,22 +134,15 @@ return view($view, compact(
             });
         }
 
-        // Sắp xếp
         switch ($request->get('sort')) {
             case 'price_asc':
-                $query->withMin([
-                    'variants as min_variant_price' => function ($q) {
-                        $q->where('status', 1);
-                    }
-                ], 'price')->orderBy('min_variant_price', 'asc');
+                $query->withMin(['variants as min_variant_price' => fn($q) => $q->where('status', 1)], 'price')
+                      ->orderBy('min_variant_price');
                 break;
 
             case 'price_desc':
-                $query->withMax([
-                    'variants as max_variant_price' => function ($q) {
-                        $q->where('status', 1);
-                    }
-                ], 'price')->orderBy('max_variant_price', 'desc');
+                $query->withMax(['variants as max_variant_price' => fn($q) => $q->where('status', 1)], 'price')
+                      ->orderByDesc('max_variant_price');
                 break;
 
             case 'best_seller':
@@ -172,13 +162,9 @@ return view($view, compact(
 
         $products = $query->paginate(40)->withQueryString();
 
-        $categories = Category::where('status', 1)
-            ->orderBy('name')
-            ->get();
+        $categories = Category::where('status', 1)->orderBy('name')->get();
 
-        $brands = Brand::whereHas('products', function ($q) {
-                $q->where('status', 1);
-            })
+        $brands = Brand::whereHas('products', fn($q) => $q->where('status', 1))
             ->orderBy('name')
             ->get();
 
