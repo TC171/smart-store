@@ -42,9 +42,7 @@ use App\Http\Controllers\Frontend\PageController;
 |--------------------------------------------------------------------------
 | ADMIN ROUTES
 |--------------------------------------------------------------------------
-
 */
-Route::post('/customer/orders/{id}/cancel', [App\Http\Controllers\Frontend\CartController::class, 'cancelOrder'])->name('customer.orders.cancel');
 Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware('guest:admin')->group(function () {
@@ -69,7 +67,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('coupons', CouponController::class)->except(['show']);
         
-        // Cấu hình Route Order Admin chuẩn
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
@@ -94,7 +91,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| AUTH (GUEST) - ĐƯA LÊN TRÊN ĐỂ TRÁNH LỖI 404 CHI TIẾT SẢN PHẨM
+| AUTH (GUEST)
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest:web')->group(function () {
@@ -118,6 +115,9 @@ Route::middleware(['auth:web', 'customer'])
 
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
+        
+        // Thêm route hủy đơn hàng ở đây
+        Route::post('/orders/{id}/cancel', [CartController::class, 'cancelOrder'])->name('orders.cancel');
 
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
     });
@@ -131,49 +131,34 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
 Route::get('/tim-kiem', [HomeController::class, 'search'])->name('search');
 
-// Giỏ hàng
 Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
 Route::get('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
 
-// Thanh toán & Coupon (Bắt buộc đăng nhập)
 Route::middleware('auth:web')->group(function () {
     Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
     Route::post('/checkout', [CartController::class, 'placeOrder'])->name('checkout.store');
     
-    // 🔥 Coupon API Routes
     Route::get('/api/coupons', [CartController::class, 'getAvailableCoupons'])->name('coupon.list');
     Route::post('/api/apply-coupon', [CartController::class, 'applyCoupon'])->name('coupon.apply');
     
-    // Route nhận kết quả VNPAY trả về
     Route::get('/vnpay/return', [CartController::class, 'vnpayReturn'])->name('vnpay.return');
 });
 
-/*
-|--------------------------------------------------------------------------
-| INFORMATION PAGES
-|--------------------------------------------------------------------------
-*/
 Route::get('/ve-chung-toi', [PageController::class, 'about'])->name('page.about');
 Route::get('/chinh-sach-bao-hanh', [PageController::class, 'warranty'])->name('page.warranty');
 Route::get('/chinh-sach-doi-tra', [PageController::class, 'returnPolicy'])->name('page.return-policy');
 Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
 
-/*
-|--------------------------------------------------------------------------
-| CATEGORY & PRODUCT ROUTES
-|--------------------------------------------------------------------------
-*/
 Route::get('/danh-muc/{slug}', [FrontCategoryController::class, 'products'])->name('category.products');
 Route::get('/san-pham-noi-bat', [FrontProductController::class, 'featured'])->name('products.featured');
 
-// 🔥 CHI TIẾT SẢN PHẨM (LUÔN ĐỂ CUỐI CÙNG ĐỂ KHÔNG CHẶN CÁC ROUTE KHÁC)
 Route::get('/{categorySlug}/{productSlug}', [FrontProductController::class, 'show'])->name('products.show');
 
 /*
 |--------------------------------------------------------------------------
-| API SEARCH (Đã mở và tối ưu)
+| API SEARCH
 |--------------------------------------------------------------------------
 */
 Route::get('/api/search', function (Request $request) {

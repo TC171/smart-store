@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
+use App\Models\Product; // Đã thêm Model Product để xử lý sold_count
 use App\Models\Coupon; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderConfirmed;
+use Exception;
 
 class CartController extends Controller
 {
@@ -24,16 +26,23 @@ class CartController extends Controller
         $request->validate([
             'variant_id' => 'required|exists:product_variants,id',
             'quantity' => 'nullable|integer|min:1',
+        ], [
+            'variant_id.required' => 'Vui lòng chọn một phiên bản (màu sắc/dung lượng) trước khi mua.',
+            'variant_id.exists' => 'Phiên bản không tồn tại.',
         ]);
 
         $variant = ProductVariant::with('product')->findOrFail($request->variant_id);
         $quantity = (int) ($request->quantity ?? 1);
+        $stock = (int) $variant->stock;
 
-        if (! $variant->status || $variant->stock < $quantity) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Sản phẩm tạm hết hàng'], 400);
-            }
-            return back()->with('error', 'Sản phẩm tạm hết hàng');
+        if (! $variant->status) {
+            if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => false, 'message' => 'Phiên bản này đã ngừng kinh doanh.'], 400);
+            return back()->with('error', 'Phiên bản này đã ngừng kinh doanh.');
+        }
+
+        if ($stock < $quantity) {
+            if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => false, 'message' => 'Sản phẩm không đủ số lượng (Kho chỉ còn ' . $stock . ').'], 400);
+            return back()->with('error', 'Sản phẩm không đủ số lượng (Kho chỉ còn ' . $stock . ').');
         }
 
         $cart = session('cart', []);
@@ -44,7 +53,7 @@ class CartController extends Controller
                 'variant_id' => $variant->id,
                 'product_id' => $variant->product_id,
                 'name' => $variant->product->name,
-                'variant' => trim(($variant->color ?? '').' '.$variant->storage.' '.$variant->ram),
+                'variant' => trim(($variant->color ?? '').' '.($variant->storage ?? '').' '.($variant->ram ?? '')),
                 'price' => (float) ($variant->sale_price ?: $variant->price),
                 'quantity' => 0,
                 'image' => $variant->image 
@@ -55,12 +64,27 @@ class CartController extends Controller
             ];
         }
 
-        $cart[$key]['quantity'] += $quantity;
+        $newQuantity = $cart[$key]['quantity'] + $quantity;
+        if ($stock < $newQuantity) {
+            $msg = 'Trong giỏ hàng của bạn đã có '.$cart[$key]['quantity'].' sản phẩm này. Kho không đủ để thêm nữa (Kho thực tế còn: '.$stock.').';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 400);
+            }
+            return back()->with('error', $msg);
+        }
+
+        $cart[$key]['quantity'] = $newQuantity;
         session(['cart' => $cart]);
 
-        if ($request->has('buy_now')) {
+        if ($request->has('buy_now') || $request->buy_now == 1 || $request->buy_now == 'true') {
             session(['checkout_items' => [$key => $cart[$key]]]);
-            return redirect()->route('checkout.index')->with('success', 'Chuyển đến thanh toán');
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'redirect' => route('checkout.index') 
+                ]);
+            }
+            return redirect()->route('checkout.index');
         }
 
         if ($request->ajax() || $request->wantsJson()) {
@@ -72,7 +96,7 @@ class CartController extends Controller
             ]);
         }
 
-        return redirect()->route('cart.index')->with('success', 'Đã thêm vào giỏ hàng');
+        return back()->with('success', 'Đã thêm vào giỏ hàng');
     }
 
     public function update(Request $request, string $id)
@@ -81,6 +105,14 @@ class CartController extends Controller
         $cart = session('cart', []);
         
         if (! isset($cart[$id])) return response()->json(['success' => false], 404);
+
+        $variant = ProductVariant::find($cart[$id]['variant_id']);
+        if (!$variant || $variant->stock < $request->quantity) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Số lượng vượt quá tồn kho (Kho còn: ' . ($variant->stock ?? 0) . ')'
+            ], 400);
+        }
 
         $cart[$id]['quantity'] = (int) $request->quantity;
         session(['cart' => $cart]);
@@ -132,6 +164,7 @@ class CartController extends Controller
                 ->where(function($query) use ($now) {
                     $query->whereNull('expires_at')->orWhere('expires_at', '>=', $now);
                 })
+                ->whereRaw('used_count < usage_limit') 
                 ->get();
 
             if (!$request->wantsJson() && !$request->ajax()) {
@@ -182,7 +215,7 @@ class CartController extends Controller
         $discount = min($discount, $total);
 
         session(['coupon' => [
-            'id' => $coupon->id, // 🔥 Lưu ID thay vì Code để khớp Database
+            'id' => $coupon->id,
             'code' => $coupon->code,
             'discount' => $discount
         ]]);
@@ -200,10 +233,12 @@ class CartController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'regex:/^[0-9]{10,11}$/'],
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
             'payment_method' => 'required|in:cod,vnpay',
+        ], [
+            'phone.regex' => 'Số điện thoại không hợp lệ. Vui lòng chỉ nhập số (từ 10 đến 11 số).'
         ]);
 
         $checkoutItems = session('checkout_items', []);
@@ -216,43 +251,71 @@ class CartController extends Controller
 
         $createdOrder = null; 
 
-        DB::transaction(function () use ($request, $checkoutItems, $discountAmount, $couponSession, &$createdOrder) {
-            $totalAmount = collect($checkoutItems)->sum(fn ($item) => $item['price'] * $item['quantity']);
-            $grandTotal = $totalAmount - $discountAmount;
+        try {
+            DB::transaction(function () use ($request, $checkoutItems, $discountAmount, $couponSession, &$createdOrder) {
+                $totalAmount = collect($checkoutItems)->sum(fn ($item) => $item['price'] * $item['quantity']);
+                $grandTotal = $totalAmount - $discountAmount;
 
-            $createdOrder = Order::create([
-                'order_number' => 'ORD-'.now()->format('YmdHis').'-'.mt_rand(1000, 9999),
-                'user_id' => auth('web')->id(),
-                'coupon_id' => $couponSession['id'] ?? null, // 🔥 Dùng coupon_id (Đã có trong Model của bạn)
-                'total_amount' => $totalAmount,
-                'discount_amount' => $discountAmount,
-                'grand_total' => max(0, $grandTotal),
-                'shipping_fee' => 0,
-                'tax_amount' => 0,
-                'status' => 'pending',
-                'payment_status' => 'unpaid',
-                'shipping_name' => $request->name,
-                'shipping_phone' => $request->phone,
-                'shipping_address' => $request->address,
-                'ordered_at' => now(),
-            ]);
-
-            foreach ($checkoutItems as $item) {
-                OrderItem::create([
-                    'order_id' => $createdOrder->id,
-                    'product_id' => $item['product_id'],
-                    'product_variant_id' => $item['variant_id'],
-                    'product_name' => $item['name'],
-                    'price' => $item['price'],
-                    'quantity' => $item['quantity'],
-                    'subtotal' => $item['price'] * $item['quantity'],
+                $createdOrder = Order::create([
+                    'order_number' => 'ORD-'.now()->format('YmdHis').'-'.mt_rand(1000, 9999),
+                    'user_id' => auth('web')->id(),
+                    'coupon_id' => $couponSession['id'] ?? null,
+                    'total_amount' => $totalAmount,
+                    'discount_amount' => $discountAmount,
+                    'grand_total' => max(0, $grandTotal),
+                    'shipping_fee' => 0,
+                    'tax_amount' => 0,
+                    'status' => 'pending',
+                    'payment_status' => 'unpaid',
+                    'shipping_name' => $request->name,
+                    'shipping_phone' => $request->phone,
+                    'shipping_address' => $request->address,
+                    'ordered_at' => now(),
                 ]);
-            }
 
-            if ($request->payment_method === 'cod' && $couponSession) {
-                Coupon::where('id', $couponSession['id'])->increment('used_count');
-            }
-        });
+                foreach ($checkoutItems as $item) {
+                    $variant = ProductVariant::find($item['variant_id']);
+                    if (!$variant || $variant->stock < $item['quantity']) {
+                        throw new Exception('Sản phẩm ' . $item['name'] . ' hiện không đủ số lượng trong kho.');
+                    }
+
+                    OrderItem::create([
+                        'order_id' => $createdOrder->id,
+                        'product_id' => $item['product_id'],
+                        'product_variant_id' => $item['variant_id'],
+                        'product_name' => $item['name'],
+                        'price' => $item['price'],
+                        'quantity' => $item['quantity'],
+                        'subtotal' => $item['price'] * $item['quantity'],
+                    ]);
+
+                    // 1. Trừ tồn kho
+                    $variant->decrement('stock', $item['quantity']);
+
+                    // 2. CỘNG DỒN SẢN PHẨM BÁN RA (sold_count)
+                    Product::where('id', $item['product_id'])->increment('sold_count', $item['quantity']);
+
+                    // 3. Ghi lịch sử kho
+                    DB::table('inventory_history')->insert([
+                        'product_variant_id' => $variant->id,
+                        'type' => 'sale',
+                        'quantity' => $item['quantity'],
+                        'previous_stock' => $variant->stock + $item['quantity'],
+                        'current_stock' => $variant->stock,
+                        'reference_type' => 'order',
+                        'reference_id' => $createdOrder->id,
+                        'notes' => 'Bán hàng đơn #' . $createdOrder->order_number,
+                        'created_at' => now(),
+                    ]);
+                }
+
+                if ($request->payment_method === 'cod' && $couponSession) {
+                    Coupon::where('id', $couponSession['id'])->increment('used_count');
+                }
+            });
+        } catch (Exception $e) {
+            return redirect()->route('cart.index')->with('error', $e->getMessage());
+        }
 
         $cart = session('cart', []);
         foreach ($checkoutItems as $id => $item) {
@@ -329,7 +392,7 @@ class CartController extends Controller
 
         if ($secureHash == $request->vnp_SecureHash) {
             if ($request->vnp_ResponseCode == '00') {
-                if ($order) {
+                if ($order && $order->payment_status !== 'paid') {
                     $order->update(['payment_status' => 'paid', 'status' => 'confirmed']);
                     if ($order->coupon_id) {
                         Coupon::where('id', $order->coupon_id)->increment('used_count');
@@ -344,15 +407,31 @@ class CartController extends Controller
 
     public function cancelOrder(Request $request, $id)
     {
+        $request->validate([
+            'cancel_reason' => 'required|string|max:500'
+        ], [
+            'cancel_reason.required' => 'Vui lòng chọn hoặc nhập lý do hủy đơn.'
+        ]);
+
         $order = Order::where('id', $id)->where('user_id', auth('web')->id())->firstOrFail();
 
         if (!in_array($order->status, ['pending', 'confirmed'])) {
-            return back()->with('error', 'Đơn hàng không thể hủy.');
+            return back()->with('error', 'Đơn hàng này không thể hủy.');
         }
 
-        DB::transaction(function () use ($order) {
-            $order->update(['status' => 'cancelled']);
+        DB::transaction(function () use ($order, $request) {
+            $paymentStatus = $order->payment_status;
+            if ($paymentStatus === 'paid') {
+                $paymentStatus = 'refunded'; 
+            }
+
+            $order->update([
+                'status' => 'cancelled',
+                'payment_status' => $paymentStatus
+            ]);
+
             foreach ($order->items as $item) {
+                // 1. Trả lại kho
                 $variant = ProductVariant::find($item->product_variant_id);
                 if ($variant) {
                     $variant->increment('stock', $item->quantity);
@@ -364,14 +443,22 @@ class CartController extends Controller
                         'current_stock' => $variant->stock,
                         'reference_type' => 'order_cancel',
                         'reference_id' => $order->id,
-                        'notes' => 'Hủy đơn #' . $order->order_number,
+                        'notes' => 'Hủy đơn #' . $order->order_number . ' - Lý do: ' . $request->cancel_reason,
                         'created_at' => now(),
                     ]);
+                }
+
+                // 2. TRỪ ĐI SỐ LƯỢNG BÁN RA (sold_count) VÌ KHÁCH ĐÃ HỦY ĐƠN
+                $product = Product::find($item->product_id);
+                if ($product && $product->sold_count >= $item->quantity) {
+                    $product->decrement('sold_count', $item->quantity);
+                } elseif ($product) {
+                    $product->update(['sold_count' => 0]); // Tránh số âm
                 }
             }
         });
 
-        return back()->with('success', 'Đã hủy đơn hàng thành công.');
+        return back()->with('success', 'Đã hủy đơn hàng thành công. Lý do hủy đã được ghi nhận vào lịch sử kho.');
     }
 
     public function orderHistory()
@@ -379,5 +466,4 @@ class CartController extends Controller
         $orders = Order::where('user_id', auth('web')->id())->orderBy('created_at', 'DESC')->paginate(10);
         return view('frontend.customer.orders', compact('orders'));
     }
-    
 }

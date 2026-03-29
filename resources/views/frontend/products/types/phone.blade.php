@@ -64,22 +64,24 @@
             <div class="flex gap-4 mt-4">
 
                 {{-- ADD TO CART --}}
-                <form action="{{ route('cart.add') }}" method="POST" onsubmit="return setVariant(this)">
+                {{-- Đã thêm "event" vào hàm onsubmit --}}
+                <form action="{{ route('cart.add') }}" method="POST" onsubmit="return setVariant(this, event)">
                     @csrf
                     <input type="hidden" name="variant_id">
 
-                    <button class="bg-black text-white px-6 py-3 rounded-xl hover:opacity-80 w-full">
+                    <button class="bg-black text-white px-6 py-3 rounded-xl hover:opacity-80 w-full transition">
                         🛒 Thêm vào giỏ
                     </button>
                 </form>
 
                 {{-- BUY NOW --}}
-                <form action="{{ route('cart.add') }}" method="POST" onsubmit="return setVariant(this)">
+                {{-- Đã thêm "event" vào hàm onsubmit --}}
+                <form action="{{ route('cart.add') }}" method="POST" onsubmit="return setVariant(this, event)">
                     @csrf
                     <input type="hidden" name="variant_id">
                     <input type="hidden" name="buy_now" value="1">
 
-                    <button class="bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 w-full">
+                    <button class="bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 w-full transition">
                         Mua ngay
                     </button>
                 </form>
@@ -186,7 +188,7 @@
 </div>
 @endsection
 
-{{-- SCRIPT --}}
+{{-- SCRIPT ĐÃ ĐƯỢC CẬP NHẬT AJAX --}}
 <script>
 function copyCoupon(code, btn) {
     navigator.clipboard.writeText(code);
@@ -199,14 +201,58 @@ function copyCoupon(code, btn) {
     }, 1500);
 }
 
-// chọn variant
-function setVariant(form) {
+// Xử lý gửi Form Thêm Giỏ Hàng & Mua Ngay
+function setVariant(form, event) {
+    // 1. Ngăn chặn form chuyển trang mặc định
+    event.preventDefault(); 
+
     let selected = document.querySelector('.variant-radio:checked');
     if (!selected) {
-        alert('Vui lòng chọn phiên bản');
+        alert('Vui lòng chọn một phiên bản trước khi mua!');
         return false;
     }
+
     form.variant_id.value = selected.value;
-    return true;
+
+    // 2. Gửi yêu cầu ngầm (AJAX)
+    let formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest' // Báo cho server đây là AJAX
+        }
+    })
+    .then(async response => {
+        const data = await response.json();
+        // Nếu HTTP status bị lỗi (bên Controller trả về 400 hoặc 422)
+        if (!response.ok) throw data; 
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            if (data.redirect) {
+                // Nếu bấm Mua Ngay -> Chuyển thẳng sang trang Checkout
+                window.location.href = data.redirect;
+            } else {
+                // Nếu bấm Thêm Giỏ Hàng -> Báo thành công
+                alert('Đã thêm sản phẩm vào giỏ hàng!');
+            }
+        }
+    })
+    .catch(error => {
+        // 3. Xử lý hiển thị thông báo lỗi
+        let errorMsg = error.message || 'Đã xảy ra lỗi, vui lòng thử lại.';
+        
+        // Bắt lỗi validate từ Laravel (ví dụ id không hợp lệ)
+        if (error.errors) {
+            errorMsg = Object.values(error.errors).flat().join('\n');
+        }
+        
+        alert(errorMsg);
+    });
+
+    return false;
 }
 </script>
