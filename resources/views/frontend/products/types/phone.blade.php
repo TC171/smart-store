@@ -40,9 +40,17 @@
                 <h3 class="font-semibold mb-2">Chọn phiên bản</h3>
 
                 <div class="grid grid-cols-2 gap-3">
+                    @php $firstAvailableSelected = false; @endphp
                     @foreach($product->variants as $variant)
-                        <label class="border rounded-xl p-3 cursor-pointer hover:border-black flex flex-col">
-                            <input type="radio" name="variant_id" value="{{ $variant->id }}" class="hidden variant-radio">
+                        <label class="border rounded-xl p-3 flex flex-col {{ $variant->stock <= 0 ? 'opacity-40 cursor-not-allowed border-gray-200' : 'cursor-pointer hover:border-black border-gray-300' }}">
+                            <input type="radio" name="variant_id" value="{{ $variant->id }}" class="hidden variant-radio"
+                                   data-stock="{{ $variant->stock }}"
+                                   {{ $variant->stock <= 0 ? 'disabled' : '' }}
+                                   {{ !$firstAvailableSelected && $variant->stock > 0 ? 'checked' : '' }}>
+
+                            @if($variant->stock > 0 && !$firstAvailableSelected)
+                                @php $firstAvailableSelected = true; @endphp
+                            @endif
 
                             <div class="font-semibold text-sm">
                                 {{ $variant->color }} - {{ $variant->ram }} - {{ $variant->storage }}
@@ -61,13 +69,22 @@
             </div>
 
             {{-- ACTION --}}
+            <div class="flex items-center gap-4 mt-4">
+                <div class="inline-flex items-center border border-gray-300 rounded-xl overflow-hidden bg-white">
+                    <button type="button" id="qty-decrease" class="px-4 py-2 text-gray-600 hover:bg-gray-100">-</button>
+                    <input id="product-quantity" type="text" value="1" inputmode="numeric" pattern="[0-9]*" class="w-16 text-center text-gray-900 border-l border-r border-gray-300 focus:outline-none" />
+                    <button type="button" id="qty-increase" class="px-4 py-2 text-gray-600 hover:bg-gray-100">+</button>
+                </div>
+                <span class="text-sm text-gray-600">Số lượng</span>
+            </div>
+
             <div class="flex gap-4 mt-4">
 
                 {{-- ADD TO CART --}}
-                {{-- Đã thêm "event" vào hàm onsubmit --}}
-                <form action="{{ route('cart.add') }}" method="POST" onsubmit="return setVariant(this, event)">
+                <form action="{{ route('cart.add') }}" method="POST" onsubmit="return setVariant(this)">
                     @csrf
                     <input type="hidden" name="variant_id">
+                    <input type="hidden" name="quantity" value="1">
 
                     <button class="bg-black text-white px-6 py-3 rounded-xl hover:opacity-80 w-full transition">
                         🛒 Thêm vào giỏ
@@ -75,13 +92,11 @@
                 </form>
 
                 {{-- BUY NOW --}}
-                {{-- Đã thêm "event" vào hàm onsubmit --}}
-                <form action="{{ route('cart.add') }}" method="POST" onsubmit="return setVariant(this, event)">
+                <form action="{{ route('cart.add') }}" method="POST" onsubmit="return setVariant(this)">
                     @csrf
                     <input type="hidden" name="variant_id">
-                    <input type="hidden" name="buy_now" value="1">
-
-                    <button class="bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 w-full transition">
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" name="buy_now" value="1" class="bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 w-full transition">
                         Mua ngay
                     </button>
                 </form>
@@ -202,57 +217,83 @@ function copyCoupon(code, btn) {
 }
 
 // Xử lý gửi Form Thêm Giỏ Hàng & Mua Ngay
-function setVariant(form, event) {
-    // 1. Ngăn chặn form chuyển trang mặc định
-    event.preventDefault(); 
-
+function setVariant(form) {
     let selected = document.querySelector('.variant-radio:checked');
     if (!selected) {
         alert('Vui lòng chọn một phiên bản trước khi mua!');
         return false;
     }
 
+    const quantityField = document.getElementById('product-quantity');
+    let quantity = parseInt(quantityField?.value || 1, 10);
+    if (isNaN(quantity) || quantity < 1) {
+        quantity = 1;
+    }
+
+    if (selected.dataset.stock && parseInt(selected.dataset.stock, 10) > 0 && quantity > parseInt(selected.dataset.stock, 10)) {
+        alert('Số lượng vượt quá tồn kho. Vui lòng chọn số lượng tối đa: ' + selected.dataset.stock);
+        quantity = parseInt(selected.dataset.stock, 10);
+        quantityField.value = quantity;
+    }
+
     form.variant_id.value = selected.value;
+    const hiddenQty = form.querySelector('input[name="quantity"]');
+    if (hiddenQty) {
+        hiddenQty.value = quantity;
+    }
 
-    // 2. Gửi yêu cầu ngầm (AJAX)
-    let formData = new FormData(form);
-
-    fetch(form.action, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest' // Báo cho server đây là AJAX
-        }
-    })
-    .then(async response => {
-        const data = await response.json();
-        // Nếu HTTP status bị lỗi (bên Controller trả về 400 hoặc 422)
-        if (!response.ok) throw data; 
-        return data;
-    })
-    .then(data => {
-        if (data.success) {
-            if (data.redirect) {
-                // Nếu bấm Mua Ngay -> Chuyển thẳng sang trang Checkout
-                window.location.href = data.redirect;
-            } else {
-                // Nếu bấm Thêm Giỏ Hàng -> Báo thành công
-                alert('Đã thêm sản phẩm vào giỏ hàng!');
-            }
-        }
-    })
-    .catch(error => {
-        // 3. Xử lý hiển thị thông báo lỗi
-        let errorMsg = error.message || 'Đã xảy ra lỗi, vui lòng thử lại.';
-        
-        // Bắt lỗi validate từ Laravel (ví dụ id không hợp lệ)
-        if (error.errors) {
-            errorMsg = Object.values(error.errors).flat().join('\n');
-        }
-        
-        alert(errorMsg);
-    });
-
-    return false;
+    return true;
 }
+
+function updateQuantityInput(delta) {
+    const quantityField = document.getElementById('product-quantity');
+    if (!quantityField) return;
+
+    let value = parseInt(quantityField.value || '1', 10);
+    if (isNaN(value)) value = 1;
+    value += delta;
+    if (value < 1) value = 1;
+
+    const selected = document.querySelector('.variant-radio:checked');
+    if (selected && selected.dataset.stock) {
+        const maxStock = parseInt(selected.dataset.stock, 10);
+        if (!isNaN(maxStock) && value > maxStock) {
+            value = maxStock;
+        }
+    }
+
+    quantityField.value = value;
+}
+
+function updateVariantSelectionUI() {
+    document.querySelectorAll('.variant-radio').forEach(el => {
+        const label = el.closest('label');
+        if (!label) return;
+        if (el.checked) {
+            label.classList.add('border-black', 'bg-gray-50');
+            label.classList.remove('border-gray-300');
+        } else {
+            label.classList.remove('border-black', 'bg-gray-50');
+            label.classList.add(el.disabled ? 'border-gray-200' : 'border-gray-300');
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('qty-decrease')?.addEventListener('click', () => updateQuantityInput(-1));
+    document.getElementById('qty-increase')?.addEventListener('click', () => updateQuantityInput(1));
+    document.querySelectorAll('.variant-radio').forEach(el => {
+        el.addEventListener('change', () => {
+            const quantityField = document.getElementById('product-quantity');
+            const selected = document.querySelector('.variant-radio:checked');
+            if (!quantityField || !selected || !selected.dataset.stock) return;
+            const maxStock = parseInt(selected.dataset.stock, 10);
+            if (!isNaN(maxStock) && parseInt(quantityField.value || '1', 10) > maxStock) {
+                quantityField.value = maxStock;
+            }
+            updateVariantSelectionUI();
+        });
+    });
+    updateVariantSelectionUI();
+});
 </script>

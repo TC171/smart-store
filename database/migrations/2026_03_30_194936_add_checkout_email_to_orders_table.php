@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('product_attributes')) {
-            Schema::create('product_attributes', function (Blueprint $table) {
-                $table->id();
-                $table->timestamps();
+        if (!Schema::hasColumn('orders', 'email')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->string('email')->nullable()->after('user_id');
             });
         }
     }
@@ -24,6 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_attributes');
+        if (Schema::hasColumn('orders', 'email')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->dropColumn('email');
+            });
+        }
     }
 };
