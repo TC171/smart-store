@@ -23,44 +23,29 @@
                 </p>
             </div>
 
-            {{-- Category Card --}}
-            <section class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-4">
-                <p class="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">
-                    Danh mục
-                </p>
+            {{-- Category Card: chỉ hiện ở trang sản phẩm nổi bật --}}
+            @if (!$isCategoryPage)
+                <section class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-4">
+                    <p class="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">
+                        Danh mục
+                    </p>
 
-                <div class="flex flex-wrap gap-3">
-                    <a href="{{ route('products.featured', request()->except(['category', 'page'])) }}"
-                        class="px-5 py-2 rounded-full text-sm font-semibold transition
-                        {{ !$isCategoryPage && !request('category') ? 'bg-orange-500 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-500' }}">
-                        Tất cả
-                    </a>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="{{ route('products.featured') }}"
+                            class="px-5 py-2 rounded-full text-sm font-semibold transition
+                            {{ !request('category') ? 'bg-orange-500 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-500' }}">
+                            Tất cả
+                        </a>
 
-                    <a href="{{ route('category.products', 'dien-thoai') }}"
-                        class="px-5 py-2 rounded-full text-sm font-semibold transition
-                        {{ ($isCategoryPage && $category->slug == 'dien-thoai') || request('category') == 'dien-thoai' ? 'bg-orange-500 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-500' }}">
-                        📱 Điện thoại
-                    </a>
-
-                    <a href="{{ route('category.products', 'laptop') }}"
-                        class="px-5 py-2 rounded-full text-sm font-semibold transition
-                        {{ ($isCategoryPage && $category->slug == 'laptop') || request('category') == 'laptop' ? 'bg-orange-500 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-500' }}">
-                        💻 Laptop
-                    </a>
-
-                    <a href="{{ route('category.products', 'may-tinh-bang') }}"
-                        class="px-5 py-2 rounded-full text-sm font-semibold transition
-                        {{ ($isCategoryPage && $category->slug == 'may-tinh-bang') || request('category') == 'may-tinh-bang' ? 'bg-orange-500 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-500' }}">
-                        📟 Máy tính bảng
-                    </a>
-
-                    <a href="{{ route('category.products', 'phu-kien') }}"
-                        class="px-5 py-2 rounded-full text-sm font-semibold transition
-                        {{ ($isCategoryPage && $category->slug == 'phu-kien') || request('category') == 'phu-kien' ? 'bg-orange-500 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-500' }}">
-                        🎧 Phụ kiện
-                    </a>
-                </div>
-            </section>
+                        @foreach ($categories as $item)
+                            <a href="{{ route('category.products', $item->slug) }}"
+                                class="px-5 py-2 rounded-full text-sm font-semibold transition bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-500">
+                                {{ $item->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
 
             {{-- Brand Card --}}
             <section class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-6">
@@ -191,15 +176,7 @@
                     {{-- Result Bar --}}
                     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 mb-5">
                         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                            <p class="text-sm text-gray-500">
-                                Hiển thị
-                                <span class="font-bold text-orange-500">{{ $products->firstItem() ?? 0 }}</span>
-                                -
-                                <span class="font-bold text-orange-500">{{ $products->lastItem() ?? 0 }}</span>
-                                trong tổng
-                                <span class="font-bold text-gray-900">{{ $products->total() }}</span>
-                                sản phẩm
-                            </p>
+                            
 
                             <form method="GET" action="{{ $baseRoute }}"
                                 class="flex items-center gap-3">
