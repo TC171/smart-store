@@ -31,6 +31,7 @@ class HomeController extends Controller
         return Banner::where('position', 'header')
             ->where('status', 1)
             ->orderBy('sort_order')
+            ->latest('id')
             ->get();
     }
 
@@ -39,6 +40,7 @@ class HomeController extends Controller
         return Category::where('is_featured', 1)
             ->where('status', 1)
             ->orderBy('sort_order')
+            ->latest('id')
             ->get();
     }
 
@@ -82,6 +84,7 @@ class HomeController extends Controller
         $categories = Category::where('is_featured', 1)
             ->where('status', 1)
             ->orderBy('sort_order')
+            ->latest('id')
             ->get();
 
         return $categories->map(function ($category) use ($limit) {
@@ -111,8 +114,7 @@ class HomeController extends Controller
     protected function getBrands()
     {
         return Brand::where('status', 1)
-            ->orderBy('name')
-            ->limit(10)
+            ->latest('id')
             ->get();
     }
 
