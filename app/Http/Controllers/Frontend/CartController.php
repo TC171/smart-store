@@ -54,6 +54,9 @@ class CartController extends Controller
                 'product_id' => $variant->product_id,
                 'name' => $variant->product->name,
                 'variant' => trim(($variant->color ?? '').' '.($variant->storage ?? '').' '.($variant->ram ?? '')),
+                'color' => $variant->color,
+                'storage' => $variant->storage,
+                'ram' => $variant->ram,
                 'price' => (float) ($variant->sale_price ?: $variant->price),
                 'quantity' => 0,
                 'image' => $this->resolveVariantImageUrl($variant),
@@ -61,11 +64,24 @@ class CartController extends Controller
         }
 
         $newQuantity = $cart[$key]['quantity'] + $quantity;
-        if ($stock < $newQuantity) {
-            $msg = 'Trong giỏ hàng của bạn đã có '.$cart[$key]['quantity'].' sản phẩm này. Kho không đủ để thêm nữa (Kho thực tế còn: '.$stock.').';
-            if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => false, 'message' => $msg], 400);
-            return back()->with('error', $msg);
-        }
+
+                if ($stock <= 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Sản phẩm đã hết hàng!'
+                    ], 400);
+                }
+
+                if ($newQuantity > $stock) {
+                    $remain = $stock - $cart[$key]['quantity'];
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => $remain > 0
+                            ? "Bạn chỉ có thể thêm tối đa $remain sản phẩm nữa."
+                            : "Bạn đã thêm tối đa số lượng tồn kho vào giỏ hàng."
+                    ], 400);
+                }
 
         $cart[$key]['quantity'] = $newQuantity;
         session(['cart' => $cart]);
@@ -285,7 +301,7 @@ class CartController extends Controller
                 ]);
 
                 foreach ($checkoutItems as $item) {
-                    $variant = ProductVariant::find($item['variant_id']);
+                    $variant = ProductVariant::lockForUpdate()->find($item['variant_id']);
                     if (!$variant || $variant->stock < $item['quantity']) {
                         throw new Exception('Sản phẩm ' . $item['name'] . ' hiện không đủ số lượng trong kho.');
                     }

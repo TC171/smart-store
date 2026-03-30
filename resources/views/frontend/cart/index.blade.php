@@ -69,7 +69,15 @@
                                         <a href="#" class="font-bold text-gray-800 text-sm md:text-base line-clamp-2 hover:text-red-600 transition-colors leading-snug pr-2">
                                             {{ $item['name'] }}
                                         </a>
-                                        <p class="text-sm text-gray-500 mt-1">Phân loại: <span class="text-gray-700">{{ $item['variant'] }}</span></p>
+                                        @if(!empty($item['color']))
+                                            <p class="text-sm text-gray-500 mt-1">Màu: <span class="text-gray-700">{{ $item['color'] }}</span></p>
+                                        @endif
+                                        @if(!empty($item['storage']))
+                                            <p class="text-sm text-gray-500 mt-1">Dung lượng: <span class="text-gray-700">{{ $item['storage'] }}</span></p>
+                                        @endif
+                                        @if(empty($item['color']) && empty($item['storage']) && empty($item['ram']))
+                                            <p class="text-sm text-gray-500 mt-1">Phân loại: <span class="text-gray-700">{{ $item['variant'] }}</span></p>
+                                        @endif
                                     </div>
                                     
                                     <div class="mt-3 flex flex-col md:flex-row md:items-end justify-between gap-3">
@@ -106,7 +114,7 @@
                                 <li>Bạn cũng có thể nhập mã giảm giá ở trang thanh toán.</li>
                             </ul>
 
-                            <button type="submit" id="btn-checkout" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-lg uppercase transition-colors shadow-lg shadow-red-600/30 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed text-sm tracking-wide" disabled>
+                            <button type="submit" id="btn-checkout" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 rounded-lg uppercase transition-colors shadow-lg shadow-orange-600/30 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed text-sm tracking-wide" disabled>
                                 Thanh toán
                             </button>
                         </div>
@@ -122,7 +130,7 @@
                     </svg>
                 </div>
                 <p class="text-gray-500 mb-6 font-medium">Chưa có sản phẩm nào trong giỏ hàng</p>
-                <a href="/" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold uppercase transition-colors shadow-lg shadow-red-600/20 text-sm">
+                <a href="/" class="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-bold uppercase transition-colors shadow-lg shadow-orange-600/20 text-sm">
                     Tiếp tục mua sắm
                 </a>
             </div>

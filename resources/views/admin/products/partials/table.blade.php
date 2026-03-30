@@ -57,6 +57,7 @@
                 <tr>
                     <th class="p-3">ID</th>
                     <th class="p-3">Sản phẩm</th>
+                    <th class="p-3 text-center">Ảnh chi tiết</th>
                     <th class="p-3">Danh mục</th>
                     <th class="p-3">Brand</th>
                     <th class="p-3">
@@ -103,6 +104,24 @@
                                     {{ $product->variants->count() }} biến thể
                                 </div>
                             </div>
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <div class="flex flex-wrap gap-1 justify-center">
+
+                            @forelse($product->images->take(4) as $img)
+                                <img src="{{ asset('storage/'.$img->image) }}"
+                                    class="w-10 h-10 object-cover rounded border border-gray-700">
+                            @empty
+                                <span class="text-gray-500 text-xs">Không có</span>
+                            @endforelse
+
+                            @if($product->images->count() > 4)
+                                <span class="text-xs text-gray-400">
+                                    +{{ $product->images->count() - 4 }}
+                                </span>
+                            @endif
+
                         </div>
                     </td>
 

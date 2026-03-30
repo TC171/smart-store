@@ -57,19 +57,16 @@
                     loading="lazy">
             @endforeach
 
-            {{-- Prev --}}
             <button @click="prev()"
                 class="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-orange-500 hover:text-white transition">
                 ←
             </button>
 
-            {{-- Next --}}
             <button @click="next()"
                 class="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-orange-500 hover:text-white transition">
                 →
             </button>
 
-            {{-- Dots --}}
             <div class="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2">
                 @foreach ($banners as $index => $banner)
                     <button @click="active = {{ $index }}"
@@ -80,7 +77,6 @@
             </div>
         </div>
     @endif
-
 
     {{-- ================= CATEGORY ================= --}}
     <section data-aos="fade-up">
@@ -225,41 +221,20 @@
 
     {{-- ================= CATEGORY PRODUCT SLIDERS ================= --}}
     <section class="space-y-10" data-aos="fade-up">
-        @include('frontend.components.home-product-slider', [
-            'title' => '📱 Điện thoại',
-            'subtitle' => 'Những mẫu điện thoại đáng chú ý',
-            'products' => $phoneProducts,
-            'viewMoreUrl' => route('category.products', 'dien-thoai'),
-            'mobileButtonText' => 'Xem thêm điện thoại',
-            'emptyText' => 'Chưa có sản phẩm điện thoại',
-        ])
-
-        @include('frontend.components.home-product-slider', [
-            'title' => '💻 Laptop',
-            'subtitle' => 'Laptop nổi bật cho học tập và công việc',
-            'products' => $laptopProducts,
-            'viewMoreUrl' => route('category.products', 'laptop'),
-            'mobileButtonText' => 'Xem thêm laptop',
-            'emptyText' => 'Chưa có sản phẩm laptop',
-        ])
-
-        @include('frontend.components.home-product-slider', [
-            'title' => '📟 Máy tính bảng',
-            'subtitle' => 'Thiết bị gọn nhẹ cho học tập và giải trí',
-            'products' => $tabletProducts,
-            'viewMoreUrl' => route('category.products', 'may-tinh-bang'),
-            'mobileButtonText' => 'Xem thêm máy tính bảng',
-            'emptyText' => 'Chưa có sản phẩm máy tính bảng',
-        ])
-
-        @include('frontend.components.home-product-slider', [
-            'title' => '🎧 Phụ kiện',
-            'subtitle' => 'Sạc, cáp, tai nghe và phụ kiện cần thiết',
-            'products' => $accessoryProducts,
-            'viewMoreUrl' => route('category.products', 'phu-kien'),
-            'mobileButtonText' => 'Xem thêm phụ kiện',
-            'emptyText' => 'Chưa có sản phẩm phụ kiện',
-        ])
+        @forelse($categoryProducts as $item)
+            @include('frontend.components.home-product-slider', [
+                'title' => $item['category']->name,
+                'subtitle' => 'Sản phẩm nổi bật trong danh mục',
+                'products' => $item['products'],
+                'viewMoreUrl' => route('category.products', $item['category']->slug),
+                'mobileButtonText' => 'Xem thêm ' . $item['category']->name,
+                'emptyText' => 'Chưa có sản phẩm',
+            ])
+        @empty
+            <div class="bg-white rounded-3xl p-8 shadow-xl text-center text-gray-500">
+                Chưa có danh mục nổi bật nào.
+            </div>
+        @endforelse
     </section>
 
     {{-- ================= NEWSLETTER ================= --}}
