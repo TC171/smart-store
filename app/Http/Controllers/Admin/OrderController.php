@@ -11,6 +11,7 @@ use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderConfirmed;
+use App\Mail\OrderStatusUpdated;
 
 class OrderController extends Controller
 {
@@ -30,6 +31,7 @@ class OrderController extends Controller
 
         if ($request->search) {
             $query->where('order_number', 'like', '%'.$request->search.'%')
+                ->orWhere('email', 'like', '%'.$request->search.'%')
                 ->orWhereHas('user', function ($q) {
                     $q->where('name', 'like', '%'.request('search').'%')
                         ->orWhere('email', 'like', '%'.request('search').'%');
@@ -55,15 +57,22 @@ class OrderController extends Controller
         $this->authorize('update', $order);
 
         $oldStatus = $order->status;
-        $order->update(['status' => $request->status]);
+        $oldPaymentStatus = $order->payment_status;
+
+        $updateData = ['status' => $request->status];
+        if ($request->filled('payment_status')) {
+            $updateData['payment_status'] = $request->payment_status;
+        }
+
+        $order->update($updateData);
 
         // 🔥 LOGIC GỬI MAIL KHI ADMIN CẬP NHẬT TRẠNG THÁI
         if ($request->status !== $oldStatus) {
             try {
-                // Gửi mail thông báo (Hoàn thành hoặc Hủy đơn)
-                // Ưu tiên gửi vào email người nhận đơn hàng, nếu không có thì gửi vào email tài khoản
-                $recipientEmail = $order->user->email; 
-                Mail::to($recipientEmail)->send(new OrderConfirmed($order));
+                $recipient = $order->email ?: ($order->user->email ?? null);
+                if ($recipient) {
+                    Mail::to($recipient)->send(new OrderStatusUpdated($order));
+                }
             } catch (\Exception $e) {
                 \Log::error("Lỗi gửi mail từ Admin: " . $e->getMessage());
             }
@@ -93,6 +102,11 @@ class OrderController extends Controller
                     ]);
                 }
             }
+        }
+
+        if ($request->filled('payment_status') && $request->payment_status !== $oldPaymentStatus) {
+            // Nếu chỉ thay đổi trạng thái thanh toán mà không thay đổi trạng thái đơn hàng,
+            // thì vẫn cập nhật nhưng không gửi email trạng thái đơn hàng.
         }
 
         return back()->with('success', 'Cập nhật trạng thái đơn hàng thành công');

@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('inventory_history', function (Blueprint $table) {
-            $table->id();
+        if (!Schema::hasTable('inventory_history')) {
+            Schema::create('inventory_history', function (Blueprint $table) {
+                $table->id();
             $table->foreignId('product_variant_id')->constrained('product_variants')->onDelete('cascade');
             $table->enum('type', ['in', 'out', 'adjustment', 'return', 'sale', 'purchase']);
             $table->integer('quantity');
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });
+        }
     }
 
     /**

@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('wishlists', function (Blueprint $table) {
-            $table->id();
+        if (!Schema::hasTable('wishlists')) {
+            Schema::create('wishlists', function (Blueprint $table) {
+                $table->id();
             $table->timestamps();
         });
+        }
     }
 
     /**
