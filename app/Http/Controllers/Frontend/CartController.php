@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Mail\OrderConfirmed;
+use App\Mail\OrderStatusUpdated;
 use Exception;
 use Carbon\Carbon;
 
@@ -55,7 +56,7 @@ class CartController extends Controller
                 'variant' => trim(($variant->color ?? '').' '.($variant->storage ?? '').' '.($variant->ram ?? '')),
                 'price' => (float) ($variant->sale_price ?: $variant->price),
                 'quantity' => 0,
-                'image' => $variant->image ? asset('storage/'.$variant->image) : ($variant->product->thumbnail ? asset('storage/'.$variant->product->thumbnail) : asset('images/no-image.jpg')),
+                'image' => $this->resolveVariantImageUrl($variant),
             ];
         }
 
@@ -95,6 +96,34 @@ class CartController extends Controller
         return back()->with('success', 'Đã thêm vào giỏ hàng');
     }
 
+    public function resolveVariantImageUrl(ProductVariant $variant)
+    {
+        if ($variant->image) {
+            if (Str::startsWith($variant->image, ['http://', 'https://'])) {
+                return $variant->image;
+            }
+
+            if (Str::startsWith($variant->image, 'storage/')) {
+                return asset($variant->image);
+            }
+
+            return asset('storage/' . ltrim($variant->image, '/'));
+        }
+
+        if ($variant->product && $variant->product->thumbnail) {
+            $thumbnail = $variant->product->thumbnail;
+            if (Str::startsWith($thumbnail, ['http://', 'https://'])) {
+                return $thumbnail;
+            }
+            if (Str::startsWith($thumbnail, 'storage/')) {
+                return asset($thumbnail);
+            }
+            return asset('storage/' . ltrim($thumbnail, '/'));
+        }
+
+        return asset('images/no-image.jpg');
+    }
+
     public function update(Request $request, string $id)
     {
         $request->validate(['quantity' => 'required|integer|min:1']);
@@ -103,13 +132,34 @@ class CartController extends Controller
         if (! isset($cart[$id])) return response()->json(['success' => false], 404);
 
         $variant = ProductVariant::find($cart[$id]['variant_id']);
-        if (!$variant || $variant->stock < $request->quantity) {
-            return response()->json(['success' => false, 'message' => 'Số lượng vượt quá tồn kho (Kho còn: ' . ($variant->stock ?? 0) . ')'], 400);
+        if (!$variant) {
+            return response()->json(['success' => false, 'message' => 'Phiên bản sản phẩm không tồn tại.'], 404);
         }
 
-        $cart[$id]['quantity'] = (int) $request->quantity;
+        $quantity = (int) $request->quantity;
+        $availableStock = (int) $variant->stock;
+
+        if ($availableStock < $quantity) {
+            $cart[$id]['quantity'] = $availableStock;
+            session(['cart' => $cart]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Kho hàng hiện không đủ sản phẩm. Số lượng đã được điều chỉnh về mức tồn kho hiện có.',
+                'quantity' => $availableStock,
+                'subtotal' => $cart[$id]['price'] * $availableStock,
+                'available_stock' => $availableStock,
+            ]);
+        }
+
+        $cart[$id]['quantity'] = $quantity;
         session(['cart' => $cart]);
-        return response()->json(['success' => true, 'subtotal' => $cart[$id]['price'] * $cart[$id]['quantity']]);
+
+        return response()->json([
+            'success' => true,
+            'quantity' => $cart[$id]['quantity'],
+            'subtotal' => $cart[$id]['price'] * $cart[$id]['quantity'],
+        ]);
     }
 
     public function remove(string $id)
@@ -232,6 +282,7 @@ class CartController extends Controller
                 $createdOrder = Order::create([
                     'order_number' => 'ORD-'.now()->format('YmdHis').'-'.mt_rand(1000, 9999),
                     'user_id' => auth('web')->id(),
+                    'email' => $request->email,
                     'coupon_id' => $couponSession['id'] ?? null,
                     'total_amount' => $totalAmount,
                     'discount_amount' => $discountAmount,
@@ -291,8 +342,13 @@ class CartController extends Controller
         session(['cart' => $cart]);
         session()->forget(['checkout_items', 'coupon']);
 
+        try {
+            Mail::to($request->email)->send(new OrderConfirmed($createdOrder));
+        } catch (\Exception $e) {
+            \Log::error('Mail Error: ' . $e->getMessage());
+        }
+
         if ($request->payment_method === 'cod') {
-            try { Mail::to($request->email)->send(new OrderConfirmed($createdOrder)); } catch (\Exception $e) { \Log::error("Mail Error: " . $e->getMessage()); }
             return redirect()->route('customer.orders')->with('success', 'Đặt hàng thành công!');
         }
 
@@ -350,33 +406,69 @@ class CartController extends Controller
 
     public function cancelOrder(Request $request, $id)
     {
-        $request->validate(['cancel_reason' => 'required|string|max:500'], ['cancel_reason.required' => 'Vui lòng chọn lý do hủy đơn.']);
         $order = Order::where('id', $id)->where('user_id', auth('web')->id())->firstOrFail();
-        if (!in_array($order->status, ['pending', 'confirmed'])) return back()->with('error', 'Đơn hàng này không thể hủy.');
 
-        DB::transaction(function () use ($order, $request) {
-            $paymentStatus = $order->payment_status;
-            if ($paymentStatus === 'paid') $paymentStatus = 'refunded'; 
+        if ($order->status === 'cancelled' || $order->status === 'refunded') {
+            return back()->with('error', 'Đơn hàng này đã được xử lý và không thể hủy nữa.');
+        }
 
-            $order->update(['status' => 'cancelled', 'payment_status' => $paymentStatus]);
+        if ($order->status === 'pending') {
+            $request->validate(['cancel_reason' => 'nullable|string|max:500']);
+        } else {
+            $request->validate(['cancel_reason' => 'required|string|max:500'], ['cancel_reason.required' => 'Vui lòng chọn lý do hủy đơn.']);
+        }
 
-            foreach ($order->items as $item) {
-                $variant = ProductVariant::find($item->product_variant_id);
-                if ($variant) {
-                    $variant->increment('stock', $item->quantity);
-                    DB::table('inventory_history')->insert([
-                        'product_variant_id' => $variant->id, 'type' => 'return', 'quantity' => $item->quantity,
-                        'previous_stock' => $variant->stock - $item->quantity, 'current_stock' => $variant->stock,
-                        'reference_type' => 'order_cancel', 'reference_id' => $order->id,
-                        'notes' => 'Hủy đơn #' . $order->order_number . ' - Lý do: ' . $request->cancel_reason, 'created_at' => now(),
-                    ]);
+        $cancelReason = trim($request->cancel_reason ?: 'Hủy đơn trực tiếp từ khách hàng.');
+
+        if ($order->status === 'pending') {
+            DB::transaction(function () use ($order, $request, $cancelReason) {
+                $paymentStatus = $order->payment_status;
+                if ($paymentStatus === 'paid') $paymentStatus = 'refunded'; 
+
+                $order->update(['status' => 'cancelled', 'payment_status' => $paymentStatus]);
+
+                foreach ($order->items as $item) {
+                    $variant = ProductVariant::find($item->product_variant_id);
+                    if ($variant) {
+                        $variant->increment('stock', $item->quantity);
+                                DB::table('inventory_history')->insert([
+                            'product_variant_id' => $variant->id, 'type' => 'return', 'quantity' => $item->quantity,
+                            'previous_stock' => $variant->stock - $item->quantity, 'current_stock' => $variant->stock,
+                            'reference_type' => 'order_cancel', 'reference_id' => $order->id,
+                            'notes' => 'Hủy đơn #' . $order->order_number . ' - Lý do: ' . $cancelReason, 'created_at' => now(),
+                        ]);
+                    }
+                    $product = Product::find($item->product_id);
+                    if ($product && $product->sold_count >= $item->quantity) $product->decrement('sold_count', $item->quantity);
+                    elseif ($product) $product->update(['sold_count' => 0]); 
                 }
-                $product = Product::find($item->product_id);
-                if ($product && $product->sold_count >= $item->quantity) $product->decrement('sold_count', $item->quantity);
-                elseif ($product) $product->update(['sold_count' => 0]); 
+            });
+
+            try {
+                $recipient = $order->email ?: auth('web')->user()->email;
+                Mail::to($recipient)->send(new OrderStatusUpdated($order));
+            } catch (\Exception $e) {
+                \Log::error('Mail Error: ' . $e->getMessage());
             }
-        });
-        return back()->with('success', 'Đã hủy đơn hàng thành công.');
+
+            return back()->with('success', 'Đã hủy đơn hàng thành công.');
+        }
+
+        $order->note = trim(($order->note ? $order->note . "\n" : '') . 'Yêu cầu hủy đơn hàng: ' . $cancelReason);
+        $order->save();
+
+        try {
+            $recipient = $order->email ?: auth('web')->user()->email;
+            Mail::to($recipient)->send(new OrderStatusUpdated(
+                $order,
+                'Chúng tôi đã nhận được yêu cầu hủy đơn của bạn. Admin sẽ kiểm tra và phản hồi sớm nhất.',
+                'Yêu cầu hủy đơn #' . $order->order_number . ' đã được gửi'
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Mail Error: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Yêu cầu hủy đơn hàng đã được gửi. Admin sẽ kiểm tra và phê duyệt.');
     }
 
     public function orderHistory()

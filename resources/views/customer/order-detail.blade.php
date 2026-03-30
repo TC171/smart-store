@@ -41,10 +41,11 @@
                     <div class="flex-1">
                         <h4 class="font-medium text-gray-900">{{ $item->variant->product->name ?? 'N/A' }}</h4>
                         <p class="text-sm text-gray-500">SKU: {{ $item->variant->sku }}</p>
-                        @if($item->variant->color || $item->variant->storage)
+                        @if($item->variant)
                             <p class="text-sm text-gray-500">
-                                @if($item->variant->color) Màu: {{ $item->variant->color }} @endif
-                                @if($item->variant->storage) - Dung lượng: {{ $item->variant->storage }} @endif
+                                @if($item->variant->color)Màu sắc: {{ $item->variant->color }}@endif
+                                @if($item->variant->storage) | Dung lượng: {{ $item->variant->storage }}@endif
+                                @if($item->variant->ram) | RAM: {{ $item->variant->ram }}@endif
                             </p>
                         @endif
                     </div>
@@ -144,7 +145,7 @@
         </a>
     </div>
 
-    @if(in_array($order->status, ['pending', 'confirmed']))
+    @if(!in_array($order->status, ['cancelled', 'refunded']))
     <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog text-start">
             <div class="modal-content">
@@ -170,7 +171,9 @@
                     </div>
                     <div class="modal-footer bg-gray-50 border-t px-4 py-3 flex justify-end gap-2">
                         <button type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium" data-bs-dismiss="modal">Đóng</button>
-                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium shadow-sm">Xác nhận Hủy Đơn</button>
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium shadow-sm">
+                            {{ $order->status === 'pending' ? 'Xác nhận Hủy Đơn' : 'Gửi Yêu Cầu Hủy Đơn' }}
+                        </button>
                     </div>
                 </form>
             </div>

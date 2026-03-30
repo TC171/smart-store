@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('brands', function (Blueprint $table) {
-            $table->id();
+        if (!Schema::hasTable('brands')) {
+            Schema::create('brands', function (Blueprint $table) {
+                $table->id();
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('logo')->nullable();
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->text('meta_description')->nullable();
             $table->timestamps();
         });
+        }
     }
 
     /**

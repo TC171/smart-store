@@ -73,7 +73,7 @@
 
                     <td class="px-6 py-4 text-gray-300">{{ $order->user->name ?? 'N/A' }}</td>
 
-                    <td class="px-6 py-4 text-gray-300">{{ $order->user->email ?? 'N/A' }}</td>
+                    <td class="px-6 py-4 text-gray-300">{{ $order->email ?? $order->user->email ?? 'N/A' }}</td>
 
                     <td class="px-6 py-4 text-white font-semibold">
                         {{ number_format($order->total_amount) }}₫
