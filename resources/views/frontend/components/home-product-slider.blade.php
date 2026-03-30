@@ -1,5 +1,5 @@
 <section x-data="productSlider()" class="relative bg-white rounded-3xl p-6 shadow-xl">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex items-start justify-between mb-4 gap-4">
         <div>
             <h2 class="text-2xl font-bold">{{ $title }}</h2>
             @isset($subtitle)
@@ -8,7 +8,7 @@
         </div>
 
         <a href="{{ $viewMoreUrl }}"
-           class="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-orange-200 text-orange-500 font-semibold hover:bg-orange-50 transition">
+           class="hidden md:inline-flex shrink-0 mt-1 items-center gap-2 px-4 py-2 rounded-xl border border-orange-200 text-orange-500 font-semibold hover:bg-orange-50 transition">
             Xem thêm
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
