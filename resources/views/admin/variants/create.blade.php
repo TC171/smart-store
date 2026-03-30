@@ -9,6 +9,7 @@ Thêm biến thể sản phẩm
 </h1>
 
 <form action="{{ route('admin.variants.store') }}" method="POST"
+enctype="multipart/form-data"
 class="bg-gray-900 p-6 rounded-xl shadow-lg space-y-6">
 
 @csrf
@@ -183,8 +184,8 @@ document.getElementById('generateBtn').addEventListener('click', function() {
     const storages = Array.from(document.getElementById('storages').selectedOptions).map(option => option.value);
     const rams = Array.from(document.getElementById('rams').selectedOptions).map(option => option.value);
 
-    if (colors.length === 0 || storages.length === 0 || rams.length === 0) {
-        alert('Vui lòng chọn ít nhất một màu sắc, bộ nhớ và RAM');
+    if (colors.length === 0 || storages.length === 0) {
+        alert('Vui lòng chọn ít nhất một màu sắc và bộ nhớ');
         return;
     }
 
@@ -194,16 +195,16 @@ document.getElementById('generateBtn').addEventListener('click', function() {
     let index = 0;
     colors.forEach(color => {
         storages.forEach(storage => {
-            rams.forEach(ram => {
+            // Nếu không chọn RAM, tạo một variant với ram = ''
+            if (rams.length === 0) {
                 const row = document.createElement('tr');
                 row.className = 'border-t border-gray-700';
-
                 row.innerHTML = `
                     <td class="px-4 py-3">
-                        ${color} - ${storage} - ${ram}
+                        ${color} - ${storage}
                         <input type="hidden" name="variants[${index}][color]" value="${color}">
                         <input type="hidden" name="variants[${index}][storage]" value="${storage}">
-                        <input type="hidden" name="variants[${index}][ram]" value="${ram}">
+                        <input type="hidden" name="variants[${index}][ram]" value="">
                     </td>
                     <td class="px-4 py-3">
                         <input type="number" name="variants[${index}][price]" min="0" step="0.01"
@@ -220,10 +221,39 @@ document.getElementById('generateBtn').addEventListener('click', function() {
                                class="w-full text-gray-300 file:bg-gray-600 file:text-white file:px-3 file:py-1 file:rounded file:border-0">
                     </td>
                 `;
-
                 variantsBody.appendChild(row);
                 index++;
-            });
+            } else {
+                // Nếu có RAM chọn, tạo các biến thể như bình thường
+                rams.forEach(ram => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-t border-gray-700';
+                    row.innerHTML = `
+                        <td class="px-4 py-3">
+                            ${color} - ${storage} - ${ram}
+                            <input type="hidden" name="variants[${index}][color]" value="${color}">
+                            <input type="hidden" name="variants[${index}][storage]" value="${storage}">
+                            <input type="hidden" name="variants[${index}][ram]" value="${ram}">
+                        </td>
+                        <td class="px-4 py-3">
+                            <input type="number" name="variants[${index}][price]" min="0" step="0.01"
+                                   class="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2"
+                                   placeholder="0" required>
+                        </td>
+                        <td class="px-4 py-3">
+                            <input type="number" name="variants[${index}][stock]" min="0"
+                                   class="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2"
+                                   placeholder="0" required>
+                        </td>
+                        <td class="px-4 py-3">
+                            <input type="file" name="variants[${index}][image]" accept="image/*"
+                                   class="w-full text-gray-300 file:bg-gray-600 file:text-white file:px-3 file:py-1 file:rounded file:border-0">
+                        </td>
+                    `;
+                    variantsBody.appendChild(row);
+                    index++;
+                });
+            }
         });
     });
 
