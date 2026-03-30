@@ -205,7 +205,7 @@
                             <div class="flex-1">
                                 <h4 class="font-black text-gray-800 text-sm">Giảm ngay ${valueFormatted}</h4>
                                 <p class="text-[10px] text-gray-500">Mã ưu đãi đặc biệt</p>
-                                <p class="text-[10px] text-red-600 font-bold mt-1">HSD: ${new Date(cp.end_date).toLocaleDateString('vi-VN')}</p>
+                                <p class="text-[10px] text-red-600 font-bold mt-1">HSD: ${new Date(cp.end_date ?? cp.expires_at).toLocaleDateString('vi-VN')}</p>
                             </div>
                             <div class="text-red-600 font-black text-xs uppercase">Dùng</div>
                         </div>`;

@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Coupon;
-
-// ✅ thêm nhưng không ảnh hưởng code cũ
 use App\Models\Brand;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -30,7 +28,6 @@ class ProductController extends Controller
         ->where('status', 1)
         ->firstOrFail();
 
-        // ✅ GIỮ NGUYÊN (quan trọng)
         if (!$product->category || $product->category->slug !== $categorySlug) {
             abort(404);
         }
@@ -48,25 +45,25 @@ class ProductController extends Controller
             ->take(5)
             ->get();
 
+        // 🔥 SỬA LỖI MÃ GIẢM GIÁ: Dùng trực tiếp lệnh SQL NOW() và bao trọn trường hợp NULL
         $coupons = Coupon::where('status', 1)
-            ->where(function ($q) {
-                $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>=', now());
-            })
+            ->whereRaw('(starts_at IS NULL OR starts_at <= NOW())')
+            ->whereRaw('(expires_at IS NULL OR expires_at >= NOW())')
+            ->whereRaw('(usage_limit IS NULL OR used_count < usage_limit)')
             ->get();
 
         $reviews = $product->reviews;
         $avgRating = round($reviews->avg('rating'), 1);
         $totalReviews = $reviews->count();
 
-// 🔥 map category -> view
-$viewMap = [
-    'dien-thoai' => 'frontend.products.types.phone',
-    'laptop' => 'frontend.products.types.laptop',
-    'phu-kien' => 'frontend.products.types.accessory',
-    'tablet' => 'frontend.products.types.tablet',
-    'may-tinh-bang' => 'frontend.products.types.tablet',
-];
+        // 🔥 map category -> view
+        $viewMap = [
+            'dien-thoai' => 'frontend.products.types.phone',
+            'laptop' => 'frontend.products.types.laptop',
+            'phu-kien' => 'frontend.products.types.accessory',
+            'tablet' => 'frontend.products.types.tablet',
+            'may-tinh-bang' => 'frontend.products.types.tablet',
+        ];
 
         $view = $viewMap[$categorySlug] ?? 'frontend.products.types.default';
 
@@ -83,7 +80,6 @@ $viewMap = [
         ));
     }
 
-    // ✅ nâng cấp featured (merge từ file mới)
     public function featured(Request $request)
     {
         $this->authorize('viewAny', Product::class);
@@ -163,17 +159,9 @@ $viewMap = [
         }
 
         $products = $query->paginate(40)->withQueryString();
-
         $categories = Category::where('status', 1)->orderBy('name')->get();
+        $brands = Brand::whereHas('products', fn($q) => $q->where('status', 1))->orderBy('name')->get();
 
-        $brands = Brand::whereHas('products', fn($q) => $q->where('status', 1))
-            ->orderBy('name')
-            ->get();
-
-        return view('frontend.products.featured', compact(
-            'products',
-            'categories',
-            'brands'
-        ));
+        return view('frontend.products.featured', compact('products', 'categories', 'brands'));
     }
 }
