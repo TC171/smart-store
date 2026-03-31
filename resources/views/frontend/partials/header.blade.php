@@ -558,7 +558,8 @@
 
     // SCRIPT AJAX THÊM VÀO GIỎ HÀNG
     document.addEventListener('DOMContentLoaded', function() {
-        const addToCartForms = document.querySelectorAll('form[action*="/cart/add"]');
+        const addToCartForms = Array.from(document.querySelectorAll('form[action*="/cart/add"]'))
+            .filter(form => !(form.getAttribute('onsubmit') || '').includes('setVariant'));
 
         addToCartForms.forEach(form => {
             form.addEventListener('submit', function(e) {
@@ -602,7 +603,7 @@
             });
         });
 
-        function updateMiniCartUI(cartData) {
+        window.updateMiniCartUI = function(cartData) {
             const container = document.getElementById('mini-cart-items');
             if(!container) return;
 

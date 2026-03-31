@@ -83,14 +83,18 @@
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 </a>
 
-                                @if(in_array($order->status, ['pending', 'confirmed']))
+                                @if($order->status === 'pending')
                                     <form action="{{ route('customer.orders.cancel', $order->id) }}" method="POST" 
-                                          onsubmit="return confirm('Nghĩa ơi, bạn chắc chắn muốn hủy đơn hàng #{{ $order->order_number }} chứ?')">
+                                          onsubmit="return confirm('Nghĩa ơi, bạn chắc chắn muốn xác nhận hủy đơn hàng #{{ $order->order_number }} chứ?')">
                                         @csrf
-                                        <button type="submit" title="Hủy đơn hàng" class="text-orange-600 hover:text-red-700 transition-all transform hover:scale-110">
+                                        <button type="submit" title="Xác nhận hủy đơn" class="text-orange-600 hover:text-red-700 transition-all transform hover:scale-110">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         </button>
                                     </form>
+                                @elseif(!in_array($order->status, ['cancelled', 'refunded']))
+                                    <a href="{{ route('customer.order.detail', $order) }}" title="Yêu cầu hủy đơn" class="text-yellow-400 hover:text-yellow-300 transition-all transform hover:scale-110">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </a>
                                 @else
                                     <div class="text-gray-200 cursor-not-allowed" title="Không thể hủy đơn hàng này">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

@@ -33,7 +33,6 @@
             </div>
         </div>
 
-        <!-- Order Items -->
         <div class="mb-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Sản phẩm đã đặt</h3>
             <div class="space-y-4">
@@ -42,10 +41,11 @@
                     <div class="flex-1">
                         <h4 class="font-medium text-gray-900">{{ $item->variant->product->name ?? 'N/A' }}</h4>
                         <p class="text-sm text-gray-500">SKU: {{ $item->variant->sku }}</p>
-                        @if($item->variant->color || $item->variant->storage)
+                        @if($item->variant)
                             <p class="text-sm text-gray-500">
-                                @if($item->variant->color) Màu: {{ $item->variant->color }} @endif
-                                @if($item->variant->storage) - Dung lượng: {{ $item->variant->storage }} @endif
+                                @if($item->variant->color)Màu sắc: {{ $item->variant->color }}@endif
+                                @if($item->variant->storage) | Dung lượng: {{ $item->variant->storage }}@endif
+                                @if($item->variant->ram) | RAM: {{ $item->variant->ram }}@endif
                             </p>
                         @endif
                     </div>
@@ -59,7 +59,60 @@
             </div>
         </div>
 
-        <!-- Order Summary -->
+        @if($order->status === 'completed')
+        <div class="mb-6 bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Đánh giá đơn hàng</h3>
+            @php
+                $pendingItems = $order->items->filter(function($item) use ($reviewedProductIds) {
+                    return !in_array($item->product_id, $reviewedProductIds ?? []);
+                });
+            @endphp
+
+            @if($pendingItems->isEmpty())
+                <p class="text-gray-600">Bạn đã gửi đánh giá cho tất cả sản phẩm trong đơn hàng này.</p>
+            @else
+                <p class="text-gray-600 mb-4">Chọn sản phẩm và gửi đánh giá để admin duyệt.</p>
+
+                @foreach($pendingItems as $item)
+                    <div class="mb-6 p-4 border border-gray-200 rounded-lg">
+                        <h4 class="font-semibold">{{ $item->variant->product->name ?? 'Sản phẩm' }}</h4>
+                        <form action="{{ route('customer.orders.reviews.store', $order) }}" method="POST" class="space-y-4 mt-4">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $item->product_id }}">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Đánh giá</label>
+                                <select name="rating" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                    <option value="">Chọn số sao</option>
+                                    @for($i = 5; $i >= 1; $i--)
+                                        <option value="{{ $i }}">{{ $i }} sao</option>
+                                    @endfor
+                                </select>
+                                @error('rating')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Tiêu đề</label>
+                                <input type="text" name="title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Tiêu đề đánh giá (tùy chọn)">
+                                @error('title')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Nhận xét</label>
+                                <textarea name="comment" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Viết cảm nhận của bạn..."></textarea>
+                                @error('comment')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Gửi đánh giá</button>
+                        </form>
+                    </div>
+                @endforeach
+            @endif
+        </div>
+        @endif
+
         <div class="border-t pt-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -122,9 +175,11 @@
                             'refunded' => 'bg-orange-100 text-orange-800'
                         ];
                         @endphp
-                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $paymentColors[$order->payment_status] ?? 'bg-gray-100 text-gray-800' }}">
-                            {{ $paymentLabels[$order->payment_status] ?? $order->payment_status }}
-                        </span>
+                        <div class="flex items-center justify-between">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $paymentColors[$order->payment_status] ?? 'bg-gray-100 text-gray-800' }}">
+                                {{ $paymentLabels[$order->payment_status] ?? $order->payment_status }}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -139,9 +194,62 @@
     </div>
 
     <div class="text-center">
-        <a href="{{ route('customer.orders') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">
+        <a href="{{ route('customer.orders') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium inline-block mb-8">
             ← Quay lại danh sách đơn hàng
         </a>
     </div>
+
+    @if(!in_array($order->status, ['cancelled', 'refunded']))
+    <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog text-start">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-bold text-lg">Hủy đơn hàng #{{ $order->order_number }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('customer.orders.cancel', $order->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label font-medium">Vui lòng chọn hoặc nhập lý do hủy đơn <span class="text-red-500">*</span></label>
+                            <select class="form-select mb-2 mt-1 w-full border-gray-300 rounded-md shadow-sm" name="cancel_reason" required onchange="checkOtherReasonDetail(this)">
+                                <option value="">-- Chọn lý do --</option>
+                                <option value="Tôi muốn thay đổi địa chỉ giao hàng">Tôi muốn thay đổi địa chỉ giao hàng</option>
+                                <option value="Tôi muốn thay đổi sản phẩm/số lượng">Tôi muốn thay đổi sản phẩm/số lượng</option>
+                                <option value="Tôi tìm thấy giá rẻ hơn ở nơi khác">Tôi tìm thấy giá rẻ hơn ở nơi khác</option>
+                                <option value="Tôi không có nhu cầu mua nữa">Tôi không có nhu cầu mua nữa</option>
+                                <option value="other">Lý do khác...</option>
+                            </select>
+                            <input type="text" class="form-control d-none mt-2 w-full border-gray-300 rounded-md shadow-sm p-2 border" id="cancel_reason_text_detail" placeholder="Nhập lý do khác của bạn..." disabled>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-gray-50 border-t px-4 py-3 flex justify-end gap-2">
+                        <button type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium shadow-sm">
+                            {{ $order->status === 'pending' ? 'Xác nhận Hủy Đơn' : 'Gửi Yêu Cầu Hủy Đơn' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkOtherReasonDetail(select) {
+            var inputList = document.getElementById('cancel_reason_text_detail');
+            if (select.value === 'other') {
+                inputList.classList.remove('d-none'); 
+                inputList.disabled = false;
+                inputList.name = 'cancel_reason'; 
+                select.name = ''; 
+            } else {
+                inputList.classList.add('d-none'); 
+                inputList.disabled = true;
+                inputList.name = ''; 
+                select.name = 'cancel_reason';
+            }
+        }
+    </script>
+    @endif
 </div>
 @endsection

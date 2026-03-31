@@ -9,6 +9,7 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'user_id',
+        'email',
         'coupon_id',
         'coupon_code', // Bổ sung thêm cột này vì Controller của bạn đang dùng
         'total_amount',

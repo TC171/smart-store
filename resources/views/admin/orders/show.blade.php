@@ -32,11 +32,11 @@
                     </div>
                     <div>
                         <span class="text-gray-400">Email:</span>
-                        <span class="ml-2">{{ $order->user->email }}</span>
+                        <span class="ml-2">{{ $order->email ?? $order->user->email }}</span>
                     </div>
                     <div>
                         <span class="text-gray-400">Điện thoại:</span>
-                        <span class="ml-2">{{ $order->user->phone ?? 'N/A' }}</span>
+                        <span class="ml-2">{{ $order->shipping_phone ?? $order->user->phone ?? 'N/A' }}</span>
                     </div>
                 </div>
             </div>
@@ -90,10 +90,16 @@
                     @foreach ($order->items as $item)
                     <tr class="border-b border-gray-800 hover:bg-gray-800 transition">
                         <td class="px-4 py-4 text-gray-300">
-                            {{ $item->product_name ?? 'N/A' }}
-                            @if ($item->variant && $item->variant->color)
-                            <span class="text-gray-500 ml-2">({{ $item->variant->color }})</span>
+                            <div class="space-y-1">
+                            <div>{{ $item->product_name ?? 'N/A' }}</div>
+                            @if ($item->variant)
+                            <div class="text-gray-500 text-sm">
+                                @if($item->variant->color)Màu sắc: {{ $item->variant->color }}@endif
+                                @if($item->variant->storage) | Dung lượng: {{ $item->variant->storage }}@endif
+                                @if($item->variant->ram) | RAM: {{ $item->variant->ram }}@endif
+                            </div>
                             @endif
+                        </div>
                         </td>
                         <td class="px-4 py-4 text-gray-300">{{ $item->sku }}</td>
                         <td class="px-4 py-4 text-right text-gray-300">{{ number_format($item->price) }}₫</td>
@@ -145,87 +151,53 @@
     </div>
 
     {{-- Trạng thái --}}
-    <div class="grid grid-cols-2 gap-6 mb-6">
-        {{-- Trạng thái đơn hàng --}}
+    <div class="grid grid-cols-1 gap-6 mb-6">
         <div class="bg-gray-900 p-6 rounded-xl shadow-lg">
-            <h3 class="text-lg font-semibold text-cyan-400 mb-4">Trạng thái đơn hàng</h3>
+            <h3 class="text-lg font-semibold text-cyan-400 mb-4">Cập nhật trạng thái đơn hàng</h3>
 
-            @php
-            $statusLabels = [
-                'pending' => 'Chờ xác nhận',
-                'confirmed' => 'Đã xác nhận',
-                'shipping' => 'Đang giao hàng',
-                'completed' => 'Hoàn thành',
-                'cancelled' => 'Đã huỷ',
-                'refunded' => 'Đã hoàn tiền'
-            ];
-            @endphp
-
-            <div class="mb-4">
-                <p class="text-gray-400 text-sm mb-2">Trạng thái hiện tại:</p>
-                <p class="text-2xl font-bold text-white">
-                    {{ $statusLabels[$order->status] ?? $order->status }}
-                </p>
-            </div>
-
-            <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="space-y-3">
+            <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="space-y-5">
                 @csrf
                 @method('PATCH')
 
-                <select name="status"
-                        class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500">
-                    <option value="">-- Chọn trạng thái --</option>
-                    <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Chờ xác nhận</option>
-                    <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }}>Đã xác nhận</option>
-                    <option value="shipping" {{ $order->status === 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
-                    <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>Hoàn thành</option>
-                    <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Đã huỷ</option>
-                    <option value="refunded" {{ $order->status === 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
-                </select>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Trạng thái đơn hàng</label>
+                        <select name="status"
+                                class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500">
+                            <option value="">-- Chọn trạng thái --</option>
+                            <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Chờ xác nhận</option>
+                            <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }}>Đã xác nhận</option>
+                            <option value="shipping" {{ $order->status === 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
+                            <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>Hoàn thành</option>
+                            <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Đã huỷ</option>
+                            <option value="refunded" {{ $order->status === 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Trạng thái thanh toán</label>
+                        <select name="payment_status"
+                                class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500">
+                            <option value="">-- Chọn trạng thái thanh toán --</option>
+                            <option value="unpaid" {{ $order->payment_status === 'unpaid' ? 'selected' : '' }}>Chưa thanh toán</option>
+                            <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
+                            <option value="refunded" {{ $order->payment_status === 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
+                        </select>
+                    </div>
+                </div>
 
                 <button type="submit"
-                        class="w-full bg-cyan-500 hover:bg-cyan-600 text-black px-4 py-2 rounded-lg font-semibold">
-                    Cập nhật trạng thái
+                        class="w-full md:w-auto bg-cyan-500 hover:bg-cyan-600 text-black px-6 py-3 rounded-lg font-semibold transition">
+                    Cập nhật đơn hàng
                 </button>
             </form>
-        </div>
 
-        {{-- Trạng thái thanh toán --}}
-        <div class="bg-gray-900 p-6 rounded-xl shadow-lg">
-            <h3 class="text-lg font-semibold text-cyan-400 mb-4">Trạng thái thanh toán</h3>
-
-            @php
-            $paymentLabels = [
-                'unpaid' => 'Chưa thanh toán',
-                'paid' => 'Đã thanh toán',
-                'refunded' => 'Đã hoàn tiền'
-            ];
-            @endphp
-
-            <div class="mb-4">
-                <p class="text-gray-400 text-sm mb-2">Trạng thái hiện tại:</p>
-                <p class="text-2xl font-bold text-white">
-                    {{ $paymentLabels[$order->payment_status] ?? $order->payment_status }}
-                </p>
-            </div>
-
-            <form action="{{ route('admin.orders.updatePaymentStatus', $order) }}" method="POST" class="space-y-3">
-                @csrf
-                @method('PATCH')
-
-                <select name="payment_status"
-                        class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500">
-                    <option value="">-- Chọn trạng thái thanh toán --</option>
-                    <option value="unpaid" {{ $order->payment_status === 'unpaid' ? 'selected' : '' }}>Chưa thanh toán</option>
-                    <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
-                    <option value="refunded" {{ $order->payment_status === 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
-                </select>
-
-                <button type="submit"
-                        class="w-full bg-cyan-500 hover:bg-cyan-600 text-black px-4 py-2 rounded-lg font-semibold">
-                    Cập nhật thanh toán
-                </button>
-            </form>
+            @if($order->note)
+                <div class="mt-6 bg-gray-800 p-4 rounded-lg border border-gray-700">
+                    <h4 class="text-sm font-semibold text-cyan-300 mb-2">Ghi chú / Yêu cầu</h4>
+                    <p class="text-sm text-gray-300 whitespace-pre-line">{{ $order->note }}</p>
+                </div>
+            @endif
         </div>
     </div>
 

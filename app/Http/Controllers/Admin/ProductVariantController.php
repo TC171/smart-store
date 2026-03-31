@@ -40,7 +40,7 @@ class ProductVariantController extends Controller
             'variants' => 'required|array|min:1',
             'variants.*.color' => 'required|string',
             'variants.*.storage' => 'required|string',
-            'variants.*.ram' => 'required|string',
+            'variants.*.ram' => 'nullable|string',
             'variants.*.price' => 'required|numeric|min:0',
             'variants.*.stock' => 'required|integer|min:0',
         ]);
@@ -50,8 +50,8 @@ class ProductVariantController extends Controller
         foreach ($request->variants as $index => $variantData) {
             // Xử lý ảnh cho từng variant
             $imagePath = null;
-            if ($request->hasFile("variants.{$index}.image")) {
-                $imagePath = $request->file("variants.{$index}.image")->store('variants', 'public');
+            if (isset($variantData['image']) && $variantData['image'] instanceof \Illuminate\Http\UploadedFile) {
+                $imagePath = $variantData['image']->store('variants', 'public');
             }
 
             $baseSku = $this->generateSku($product, $variantData['color'], $variantData['storage'], $variantData['ram']);
@@ -108,7 +108,7 @@ class ProductVariantController extends Controller
         $variant = ProductVariant::findOrFail($id);
 
         $request->validate([
-            'ram' => 'required|string|max:50',
+            'ram' => 'nullable|string|max:50',
             'storage' => 'required|string|max:50',
             'color' => 'required|string|max:100',
             'price' => 'required|numeric|min:0',

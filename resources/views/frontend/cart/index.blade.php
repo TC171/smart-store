@@ -23,7 +23,7 @@
 
         @if(count($cart) > 0)
             <form action="{{ route('checkout.index') }}" method="GET" id="cart-form">
-                
+                <div id="ajax-notification" class="hidden mb-6 rounded-xl px-4 py-4 text-sm font-medium border border-transparent"></div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
                     <div class="lg:col-span-2 space-y-4">
@@ -60,7 +60,8 @@
                                 </div>
 
                                 <div class="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 border border-gray-100 rounded-lg p-1 bg-white">
-                                    <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}" class="w-full h-full object-contain">
+                                    <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}" class="w-full h-full object-contain"
+                                         onerror="this.onerror=null;this.src='{{ asset('images/no-image.jpg') }}';">
                                 </div>
 
                                 <div class="flex-1 flex flex-col justify-between pr-6 md:pr-8">
@@ -68,7 +69,15 @@
                                         <a href="#" class="font-bold text-gray-800 text-sm md:text-base line-clamp-2 hover:text-red-600 transition-colors leading-snug pr-2">
                                             {{ $item['name'] }}
                                         </a>
-                                        <p class="text-sm text-gray-500 mt-1">Phân loại: <span class="text-gray-700">{{ $item['variant'] }}</span></p>
+                                        @if(!empty($item['color']))
+                                            <p class="text-sm text-gray-500 mt-1">Màu: <span class="text-gray-700">{{ $item['color'] }}</span></p>
+                                        @endif
+                                        @if(!empty($item['storage']))
+                                            <p class="text-sm text-gray-500 mt-1">Dung lượng: <span class="text-gray-700">{{ $item['storage'] }}</span></p>
+                                        @endif
+                                        @if(empty($item['color']) && empty($item['storage']) && empty($item['ram']))
+                                            <p class="text-sm text-gray-500 mt-1">Phân loại: <span class="text-gray-700">{{ $item['variant'] }}</span></p>
+                                        @endif
                                     </div>
                                     
                                     <div class="mt-3 flex flex-col md:flex-row md:items-end justify-between gap-3">
@@ -105,7 +114,7 @@
                                 <li>Bạn cũng có thể nhập mã giảm giá ở trang thanh toán.</li>
                             </ul>
 
-                            <button type="submit" id="btn-checkout" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-lg uppercase transition-colors shadow-lg shadow-red-600/30 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed text-sm tracking-wide" disabled>
+                            <button type="submit" id="btn-checkout" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 rounded-lg uppercase transition-colors shadow-lg shadow-orange-600/30 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed text-sm tracking-wide" disabled>
                                 Thanh toán
                             </button>
                         </div>
@@ -121,7 +130,7 @@
                     </svg>
                 </div>
                 <p class="text-gray-500 mb-6 font-medium">Chưa có sản phẩm nào trong giỏ hàng</p>
-                <a href="/" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold uppercase transition-colors shadow-lg shadow-red-600/20 text-sm">
+                <a href="/" class="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-bold uppercase transition-colors shadow-lg shadow-orange-600/20 text-sm">
                     Tiếp tục mua sắm
                 </a>
             </div>
@@ -206,11 +215,35 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    function showNotification(message, type = 'info') {
+        const container = document.getElementById('ajax-notification');
+        if (!container) return;
+
+        container.textContent = message;
+        container.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-600', 'bg-green-50', 'border-green-200', 'text-green-600', 'bg-blue-50', 'border-blue-200', 'text-blue-600');
+
+        if (type === 'error') {
+            container.classList.add('bg-red-50', 'border-red-200', 'text-red-600');
+        } else if (type === 'success') {
+            container.classList.add('bg-green-50', 'border-green-200', 'text-green-600');
+        } else {
+            container.classList.add('bg-blue-50', 'border-blue-200', 'text-blue-600');
+        }
+
+        if (container.timeoutId) {
+            clearTimeout(container.timeoutId);
+        }
+
+        container.timeoutId = setTimeout(() => {
+            container.classList.add('hidden');
+        }, 4500);
+    }
+
     // Cập nhật lên Server
     function updateQuantity(id, qty) {
         calculateTotal(); // Cập nhật tổng tiền tức thì
-        
-        // Gọi AJAX lưu session
+        const input = document.querySelector(`.input-qty[data-id="${id}"]`);
+
         fetch(`/cart/update/${id}`, {
             method: 'POST',
             headers: {
@@ -219,6 +252,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Accept': 'application/json'
             },
             body: JSON.stringify({ quantity: qty })
+        })
+        .then(async response => {
+            const data = await response.json().catch(() => null);
+            const hasQuantity = data && data.quantity !== undefined && input;
+
+            if (!response.ok || (data && data.success === false)) {
+                if (hasQuantity) {
+                    input.value = data.quantity;
+                }
+                showNotification(data && data.message ? data.message : 'Kho hàng hiện không đủ sản phẩm.', 'error');
+                calculateTotal();
+                return;
+            }
+
+            if (hasQuantity) {
+                input.value = data.quantity;
+            }
+            if (data && data.message) {
+                showNotification(data.message, 'success');
+            }
+            calculateTotal();
+        })
+        .catch(() => {
+            showNotification('Lỗi kết nối. Vui lòng thử lại.', 'error');
+            calculateTotal();
         });
     }
 
