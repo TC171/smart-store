@@ -166,15 +166,153 @@ class HomeController extends Controller
     {
         $query = $request->get('q');
 
-        $products = Product::where('status', 1)
-            ->where('name', 'like', "%{$query}%")
+        // Alias viết tắt (sync với /api/search)
+        $aliasMap = [
+            'ip' => 'iphone', 'iph' => 'iphone',
+            'ss' => 'samsung', 'sam' => 'samsung',
+            'xm' => 'xiaomi', 'mi' => 'xiaomi',
+            'hw' => 'huawei', 'opp' => 'oppo',
+            'nk' => 'nokia', 'vv' => 'vivo', 'rl' => 'realme',
+            'mb' => 'macbook', 'mac' => 'macbook',
+            'aw' => 'apple watch', 'ap' => 'airpods', 'apd' => 'airpods',
+            'tb' => 'tablet', 'mtb' => 'máy tính bảng',
+            'dt' => 'điện thoại', 'lt' => 'laptop',
+            'pk' => 'phụ kiện', 'sac' => 'sạc',
+            'op' => 'ốp lưng', 'cap' => 'cáp', 'tn' => 'tai nghe',
+            // Viết liền không dấu
+            'dienthoai' => 'điện thoại', 'maytinhbang' => 'máy tính bảng',
+            'phukien' => 'phụ kiện', 'oplung' => 'ốp lưng', 'tainghe' => 'tai nghe',
+        ];
+
+        $lowerQ = \Illuminate\Support\Str::lower($query);
+        $ascii = \Illuminate\Support\Str::ascii($query);
+        $asciiSlug = \Illuminate\Support\Str::slug($query);
+        $searchTerms = [$query, $ascii];
+        if ($asciiSlug) {
+            $searchTerms[] = $asciiSlug;
+        }
+
+        // "lap top" → "laptop"
+        $noSpaces = str_replace(' ', '', $lowerQ);
+        if ($noSpaces !== $lowerQ) {
+            $searchTerms[] = $noSpaces;
+            $searchTerms[] = \Illuminate\Support\Str::ascii($noSpaces);
+        }
+
+        if (preg_match('/^([a-zA-Z]+)\s*(\d+.*)$/', $lowerQ, $matches)) {
+            $prefix = $matches[1];
+            $suffix = $matches[2];
+            if (isset($aliasMap[$prefix])) {
+                $expanded = $aliasMap[$prefix] . ' ' . $suffix;
+                $searchTerms[] = $expanded;
+                $searchTerms[] = \Illuminate\Support\Str::ascii($expanded);
+                $searchTerms[] = \Illuminate\Support\Str::slug($expanded);
+            }
+        }
+
+        if (isset($aliasMap[$lowerQ])) {
+            $searchTerms[] = $aliasMap[$lowerQ];
+        }
+
+        $searchTerms = array_unique(array_filter($searchTerms));
+
+        $productsQuery = Product::where('status', 1)
+            ->where(function ($q) use ($searchTerms) {
+                foreach ($searchTerms as $term) {
+                    $q->orWhere('name', 'like', "%{$term}%")
+                      ->orWhere('slug', 'like', "%{$term}%");
+                }
+                $q->orWhereHas('category', function ($catQ) use ($searchTerms) {
+                    $catQ->where(function ($inner) use ($searchTerms) {
+                        foreach ($searchTerms as $term) {
+                            $inner->orWhere('name', 'like', "%{$term}%")
+                                  ->orWhere('slug', 'like', "%{$term}%");
+                        }
+                    });
+                });
+                $q->orWhereHas('brand', function ($brandQ) use ($searchTerms) {
+                    $brandQ->where(function ($inner) use ($searchTerms) {
+                        foreach ($searchTerms as $term) {
+                            $inner->orWhere('name', 'like', "%{$term}%")
+                                  ->orWhere('slug', 'like', "%{$term}%");
+                        }
+                    });
+                });
+            })
             ->with([
                 'category',
                 'brand',
                 'variants' => fn ($q) => $q->where('status', 1),
-            ])
-            ->paginate(12);
+            ]);
 
-        return view('frontend.search', compact('products', 'query'));
+        // Filters
+        if ($request->filled('category')) {
+            $productsQuery->whereHas('category', function ($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
+        }
+
+        if ($request->filled('brand')) {
+            $productsQuery->whereHas('brand', function ($q) use ($request) {
+                $q->where('slug', $request->brand);
+            });
+        }
+
+        if ($request->filled('price_range') && $request->price_range !== 'all') {
+            $productsQuery->whereHas('variants', function ($q) use ($request) {
+                $q->where('status', 1);
+
+                switch ($request->price_range) {
+                    case 'under_2m':
+                        $q->whereRaw('COALESCE(sale_price, price) < ?', [2000000]);
+                        break;
+                    case '2m_4m':
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [2000000, 4000000]);
+                        break;
+                    case '4m_7m':
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [4000000, 7000000]);
+                        break;
+                    case '7m_13m':
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [7000000, 13000000]);
+                        break;
+                    case '13m_20m':
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [13000000, 20000000]);
+                        break;
+                    case 'over_20m':
+                        $q->whereRaw('COALESCE(sale_price, price) > ?', [20000000]);
+                        break;
+                }
+            });
+        }
+
+        switch ($request->get('sort')) {
+            case 'price_asc':
+                $productsQuery->withMin(['variants as min_variant_price' => fn($q) => $q->where('status', 1)], 'price')
+                      ->orderBy('min_variant_price');
+                break;
+
+            case 'price_desc':
+                $productsQuery->withMax(['variants as max_variant_price' => fn($q) => $q->where('status', 1)], 'price')
+                      ->orderByDesc('max_variant_price');
+                break;
+
+            case 'best_seller':
+                $productsQuery->orderByDesc('sold_count')->latest();
+                break;
+
+            case 'newest':
+                $productsQuery->latest();
+                break;
+
+            default:
+                break;
+        }
+
+        $products = $productsQuery->paginate(24)->withQueryString();
+
+        $categories = Category::where('status', 1)->orderBy('name')->get();
+        $brands = Brand::where('status', 1)->orderBy('name')->get();
+
+        return view('frontend.search', compact('products', 'query', 'categories', 'brands'));
     }
 }
