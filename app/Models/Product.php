@@ -75,4 +75,8 @@ class Product extends Model
         return $this->hasOne(\App\Models\ProductImage::class)
                     ->where('is_main', 1);
     }
+    public function specs()
+{
+    return $this->hasMany(ProductSpec::class, 'product_id')->orderBy('sort_order');
+}
 }

@@ -127,6 +127,8 @@ Route::middleware(['auth:web', 'customer'])
 | FRONTEND PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
+
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
 Route::get('/tim-kiem', [HomeController::class, 'search'])->name('search');
