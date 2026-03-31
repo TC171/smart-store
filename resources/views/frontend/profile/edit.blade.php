@@ -216,15 +216,7 @@
                                 @enderror
                             </div>
 
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Mã bưu điện</label>
-                                <input type="text" name="postal_code"
-                                    value="{{ old('postal_code', $defaultAddress->postal_code ?? '') }}"
-                                    class="w-full rounded-2xl border-slate-300 focus:border-orange-500 focus:ring-orange-500">
-                                @error('postal_code')
-                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
+                           
 
                             <div></div>
 
