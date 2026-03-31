@@ -59,6 +59,60 @@
             </div>
         </div>
 
+        @if($order->status === 'completed')
+        <div class="mb-6 bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Đánh giá đơn hàng</h3>
+            @php
+                $pendingItems = $order->items->filter(function($item) use ($reviewedProductIds) {
+                    return !in_array($item->product_id, $reviewedProductIds ?? []);
+                });
+            @endphp
+
+            @if($pendingItems->isEmpty())
+                <p class="text-gray-600">Bạn đã gửi đánh giá cho tất cả sản phẩm trong đơn hàng này.</p>
+            @else
+                <p class="text-gray-600 mb-4">Chọn sản phẩm và gửi đánh giá để admin duyệt.</p>
+
+                @foreach($pendingItems as $item)
+                    <div class="mb-6 p-4 border border-gray-200 rounded-lg">
+                        <h4 class="font-semibold">{{ $item->variant->product->name ?? 'Sản phẩm' }}</h4>
+                        <form action="{{ route('customer.orders.reviews.store', $order) }}" method="POST" class="space-y-4 mt-4">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $item->product_id }}">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Đánh giá</label>
+                                <select name="rating" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                    <option value="">Chọn số sao</option>
+                                    @for($i = 5; $i >= 1; $i--)
+                                        <option value="{{ $i }}">{{ $i }} sao</option>
+                                    @endfor
+                                </select>
+                                @error('rating')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Tiêu đề</label>
+                                <input type="text" name="title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Tiêu đề đánh giá (tùy chọn)">
+                                @error('title')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Nhận xét</label>
+                                <textarea name="comment" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Viết cảm nhận của bạn..."></textarea>
+                                @error('comment')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Gửi đánh giá</button>
+                        </form>
+                    </div>
+                @endforeach
+            @endif
+        </div>
+        @endif
+
         <div class="border-t pt-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>

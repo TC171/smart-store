@@ -115,6 +115,7 @@ Route::middleware(['auth:web', 'customer'])
 
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
+        Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
         
         // Thêm route hủy đơn hàng ở đây
         Route::post('/orders/{id}/cancel', [CartController::class, 'cancelOrder'])->name('orders.cancel');

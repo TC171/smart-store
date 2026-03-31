@@ -454,18 +454,27 @@ window.changeQty = function(amount) {
 
     window.setVariant = function(form, event) {
     event.preventDefault();
+    event.stopImmediatePropagation();
 
     let variantId = document.getElementById('variant_id').value;
     let quantity = parseInt(document.getElementById('quantity').value);
     let stock = parseInt(document.getElementById('stock').innerText);
 
     if (!variantId) {
-        alert('Vui lòng chọn đầy đủ phiên bản!');
+        if (typeof showToast === 'function') {
+            showToast('Vui lòng chọn đầy đủ phiên bản!', 'error');
+        } else {
+            alert('Vui lòng chọn đầy đủ phiên bản!');
+        }
         return false;
     }
 
     if (quantity > stock) {
-        alert('Số lượng vượt quá hàng còn trong kho!');
+        if (typeof showToast === 'function') {
+            showToast('Số lượng vượt quá hàng còn trong kho!', 'error');
+        } else {
+            alert('Số lượng vượt quá hàng còn trong kho!');
+        }
         return false;
     }
 
@@ -485,16 +494,31 @@ window.changeQty = function(amount) {
     .then(res => res.json())
     .then(data => {
         if (!data.success) {
-            alert(data.message);
+            if (typeof showToast === 'function') {
+                showToast(data.message || 'Có lỗi xảy ra!', 'error');
+            } else {
+                alert(data.message || 'Có lỗi xảy ra!');
+            }
             return;
         }
 
         if (data.redirect) {
             window.location.href = data.redirect;
         } else {
-            alert('Đã thêm vào giỏ!');
+            if (typeof showToast === 'function') {
+                showToast('Đã thêm vào giỏ!', 'success');
+            }
+
+            if (typeof updateMiniCartUI === 'function') {
+                updateMiniCartUI(data.cart);
+            }
+            const badge = document.querySelector('.cart-badge-count');
+            if (badge && typeof data.cart_count !== 'undefined') {
+                badge.innerText = data.cart_count;
+            }
         }
-    });
+    })
+    .catch(error => console.error('Error:', error));
 
     return false;
 };
