@@ -36,21 +36,22 @@ use App\Http\Controllers\Frontend\CustomerOrderController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ProductController as FrontProductController;
 use App\Http\Controllers\Frontend\CategoryController as FrontCategoryController;
+use App\Http\Controllers\Frontend\BrandController as FrontBrandController;
 use App\Http\Controllers\Frontend\PageController;
 
 /*
 |--------------------------------------------------------------------------
 | ADMIN ROUTES
 |--------------------------------------------------------------------------
+
 */
+Route::post('/customer/orders/{id}/cancel', [App\Http\Controllers\Frontend\CartController::class, 'cancelOrder'])->name('customer.orders.cancel');
 Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware('guest:admin')->group(function () {
         Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
         Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
     });
-    Route::post('/upload-editor-image', [ProductController::class, 'uploadEditorImage'])
-        ->name('upload.image');
 
     Route::middleware(['auth:admin', 'admin'])->group(function () {
 
@@ -67,6 +68,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('coupons', CouponController::class)->except(['show']);
         
+        // Cấu hình Route Order Admin chuẩn
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
@@ -84,14 +86,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::view('password', 'admin.password')->name('password');
 
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
-
-        
     });
 });
 
 /*
 |--------------------------------------------------------------------------
-| AUTH (GUEST)
+| AUTH (GUEST) - ĐƯA LÊN TRÊN ĐỂ TRÁNH LỖI 404 CHI TIẾT SẢN PHẨM
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest:web')->group(function () {
@@ -100,7 +100,19 @@ Route::middleware('guest:web')->group(function () {
     Route::get('/register', [FrontAuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [FrontAuthController::class, 'register'])->name('register.post');
 });
+Route::middleware(['auth:web', 'customer'])
+    ->prefix('customer')
+    ->name('customer.')
+    ->group(function () {
 
+        Route::get('/dashboard', fn () => view('customer.dashboard'))->name('dashboard');
+
+        Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
+        Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
+        Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
+
+        Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
+    });
 /*
 |--------------------------------------------------------------------------
 | CUSTOMER ROUTES
@@ -115,9 +127,6 @@ Route::middleware(['auth:web', 'customer'])
 
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
-        
-        // Thêm route hủy đơn hàng ở đây
-        Route::post('/orders/{id}/cancel', [CartController::class, 'cancelOrder'])->name('orders.cancel');
 
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
     });
@@ -133,77 +142,276 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
 Route::get('/tim-kiem', [HomeController::class, 'search'])->name('search');
 
+// Giỏ hàng
 Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
 Route::get('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
 
+// Thanh toán & Coupon (Bắt buộc đăng nhập)
 Route::middleware('auth:web')->group(function () {
     Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
     Route::post('/checkout', [CartController::class, 'placeOrder'])->name('checkout.store');
     
+    // 🔥 Coupon API Routes
     Route::get('/api/coupons', [CartController::class, 'getAvailableCoupons'])->name('coupon.list');
     Route::post('/api/apply-coupon', [CartController::class, 'applyCoupon'])->name('coupon.apply');
     
+    // Route nhận kết quả VNPAY trả về
     Route::get('/vnpay/return', [CartController::class, 'vnpayReturn'])->name('vnpay.return');
 });
 
+/*
+|--------------------------------------------------------------------------
+| INFORMATION PAGES
+|--------------------------------------------------------------------------
+*/
 Route::get('/ve-chung-toi', [PageController::class, 'about'])->name('page.about');
 Route::get('/chinh-sach-bao-hanh', [PageController::class, 'warranty'])->name('page.warranty');
 Route::get('/chinh-sach-doi-tra', [PageController::class, 'returnPolicy'])->name('page.return-policy');
 Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
 
+/*
+|--------------------------------------------------------------------------
+| CATEGORY & PRODUCT ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::get('/danh-muc/{slug}', [FrontCategoryController::class, 'products'])->name('category.products');
+Route::get('/thuong-hieu/{slug}', [FrontBrandController::class, 'products'])->name('brand.products');
 Route::get('/san-pham-noi-bat', [FrontProductController::class, 'featured'])->name('products.featured');
-
-Route::get('/{categorySlug}/{productSlug}', [FrontProductController::class, 'show'])->name('products.show');
 
 /*
 |--------------------------------------------------------------------------
-| API SEARCH
+| API SEARCH (Nâng cấp: hỗ trợ viết tắt + fuzzy search)
 |--------------------------------------------------------------------------
 */
-Route::get('/api/search', function (Request $request) {
-    $q = $request->get('q');
+
+// Bảng alias viết tắt phổ biến → từ khóa gốc
+$searchAliasMap = [
+    'ip'      => 'iphone',
+    'iph'     => 'iphone',
+    'ss'      => 'samsung',
+    'sam'     => 'samsung',
+    'xm'      => 'xiaomi',
+    'mi'      => 'xiaomi',
+    'hw'      => 'huawei',
+    'opp'     => 'oppo',
+    'nk'      => 'nokia',
+    'lg'      => 'lg',
+    'vv'      => 'vivo',
+    'rl'      => 'realme',
+    'mb'      => 'macbook',
+    'mac'     => 'macbook',
+    'dell'    => 'dell',
+    'hp'      => 'hp',
+    'aw'      => 'apple watch',
+    'ap'      => 'airpods',
+    'apd'     => 'airpods',
+    'tb'      => 'tablet',
+    'mtb'         => 'máy tính bảng',
+    'dt'          => 'điện thoại',
+    'lt'          => 'laptop',
+    'pk'          => 'phụ kiện',
+    'sac'         => 'sạc',
+    'op'          => 'ốp lưng',
+    'cap'         => 'cáp',
+    'tn'          => 'tai nghe',
+    // Viết liền không dấu
+    'dienthoai'   => 'điện thoại',
+    'maytinhbang' => 'máy tính bảng',
+    'phukien'     => 'phụ kiện',
+    'oplung'      => 'ốp lưng',
+    'tainghe'     => 'tai nghe',
+];
+
+Route::get('/api/search', function (Request $request) use ($searchAliasMap) {
+    $q = trim($request->get('q', ''));
     if (!$q) return response()->json([]);
 
     $ascii = Str::ascii($q);
+    $lowerQ = Str::lower($q);
 
+    // Expand viết tắt: "ip17" hoặc "ip 14" → detect prefix → expand
+    $expandedTerms = [$q, $ascii];
+
+    // Thêm slug format: "dien thoai" → "dien-thoai" để match slug trong DB
+    $asciiSlug = Str::slug($q);
+    if ($asciiSlug) {
+        $expandedTerms[] = $asciiSlug;
+    }
+
+    // Thêm phiên bản xóa dấu cách: "lap top" → "laptop"
+    $noSpaces = str_replace(' ', '', $lowerQ);
+    if ($noSpaces !== $lowerQ) {
+        $expandedTerms[] = $noSpaces;
+        $expandedTerms[] = Str::ascii($noSpaces);
+    }
+
+    // Tách phần chữ và phần số (có/không dấu cách): "ip14" hoặc "ip 14" → prefix="ip", suffix="14"
+    if (preg_match('/^([a-zA-Z]+)\s*(\d+.*)$/', $lowerQ, $matches)) {
+        $prefix = $matches[1];
+        $suffix = $matches[2];
+        if (isset($searchAliasMap[$prefix])) {
+            $expanded = $searchAliasMap[$prefix] . ' ' . $suffix;
+            $expandedTerms[] = $expanded;
+            $expandedTerms[] = Str::ascii($expanded);
+            $expandedTerms[] = Str::slug($expanded);
+        }
+    }
+
+    // Cũng check toàn bộ chuỗi (không có số) có phải alias không
+    $trimmedQ = trim($lowerQ);
+    if (isset($searchAliasMap[$trimmedQ])) {
+        $expandedTerms[] = $searchAliasMap[$trimmedQ];
+    }
+
+    $expandedTerms = array_unique(array_filter($expandedTerms));
+
+    // Tìm theo tên/slug sản phẩm + tên/slug danh mục + tên/slug thương hiệu (tất cả cùng lúc)
+    // Tìm sản phẩm khớp
     $products = \App\Models\Product::query()
         ->with(['variants', 'category'])
         ->where('status', 1)
-        ->where(function ($query) use ($q, $ascii) {
-            $query->where('name', 'like', "%{$q}%")
-                  ->orWhere('name', 'like', "%{$ascii}%")
-                  ->orWhere('slug', 'like', "%{$q}%")
-                  ->orWhere('slug', 'like', "%{$ascii}%");
+        ->where(function ($query) use ($expandedTerms) {
+            foreach ($expandedTerms as $term) {
+                // Tìm theo tên/slug sản phẩm
+                $query->orWhere('name', 'like', "%{$term}%")
+                      ->orWhere('slug', 'like', "%{$term}%");
+            }
+            // Tìm theo danh mục
+            $query->orWhereHas('category', function ($catQ) use ($expandedTerms) {
+                $catQ->where(function ($q) use ($expandedTerms) {
+                    foreach ($expandedTerms as $term) {
+                        $q->orWhere('name', 'like', "%{$term}%")
+                          ->orWhere('slug', 'like', "%{$term}%");
+                    }
+                });
+            });
+            // Tìm theo thương hiệu
+            $query->orWhereHas('brand', function ($brandQ) use ($expandedTerms) {
+                $brandQ->where(function ($q) use ($expandedTerms) {
+                    foreach ($expandedTerms as $term) {
+                        $q->orWhere('name', 'like', "%{$term}%")
+                          ->orWhere('slug', 'like', "%{$term}%");
+                    }
+                });
+            });
         })
+        ->limit(8)
+        ->get();
+
+    // Tìm danh mục khớp
+    $categories = \App\Models\Category::where('status', 1)
+        ->where(function ($query) use ($expandedTerms) {
+            foreach ($expandedTerms as $term) {
+                $query->orWhere('name', 'like', "%{$term}%")
+                      ->orWhere('slug', 'like', "%{$term}%");
+            }
+        })
+        ->limit(3)->get();
+
+    // Tìm thương hiệu khớp
+    $brands = \App\Models\Brand::where('status', 1)
+        ->where(function ($query) use ($expandedTerms) {
+            foreach ($expandedTerms as $term) {
+                $query->orWhere('name', 'like', "%{$term}%")
+                      ->orWhere('slug', 'like', "%{$term}%");
+            }
+        })
+        ->limit(3)->get();
+
+    return response()->json([
+        'products' => $products->map(function ($product) {
+            $activeVariants = $product->variants->where('status', 1);
+            $salePrice = $activeVariants->min('sale_price');
+            $basePrice = $activeVariants->min('price');
+            
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'slug' => ($product->category ? $product->category->slug : 'san-pham') . '/' . $product->slug,
+                'price' => $basePrice ?? $product->price ?? 0,
+                'sale_price' => $salePrice,
+                'category' => $product->category?->name ?? 'Sản phẩm',
+                'image' => $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('images/no-image.jpg'),
+            ];
+        }),
+        'categories' => $categories->map(fn($c) => [
+            'name' => $c->name,
+            'slug' => $c->slug,
+            'icon' => $c->icon
+        ]),
+        'brands' => $brands->map(fn($b) => [
+            'name' => $b->name,
+            'slug' => $b->slug,
+            'logo' => $b->logo ? asset('storage/' . $b->logo) : null
+        ])
+    ]);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API SEARCH SUGGESTIONS (Gợi ý khi focus thanh tìm kiếm)
+|--------------------------------------------------------------------------
+*/
+Route::get('/api/search/suggestions', function () {
+    // Sản phẩm bán chạy / nổi bật
+    $featured = \App\Models\Product::query()
+        ->with(['variants', 'category'])
+        ->where('status', 1)
+        ->orderByDesc('is_featured')
+        ->orderByDesc('sold_count')
         ->limit(6)
         ->get();
 
-    if ($products->isEmpty()) {
-        $products = \App\Models\Product::query()
-            ->with(['variants', 'category'])
-            ->where('status', 1)
-            ->whereHas('category', function ($query) use ($q, $ascii) {
-                $query->where('name', 'like', "%{$q}%")
-                      ->orWhere('name', 'like', "%{$ascii}%");
-            })
-            ->limit(6)
-            ->get();
-    }
+    $products = $featured->map(function ($product) {
+        $activeVariants = $product->variants->where('status', 1);
+        $salePrice = $activeVariants->min('sale_price');
+        $basePrice = $activeVariants->min('price');
 
-    return response()->json($products->map(function ($product) {
-        $variantPrice = $product->variants->where('status', 1)->min('sale_price') 
-                        ?? $product->variants->where('status', 1)->min('price');
-        
         return [
             'id' => $product->id,
             'name' => $product->name,
-            'slug' => $product->slug,
-            'price' => $variantPrice ?? $product->price ?? 0,
+            'slug' => ($product->category ? $product->category->slug : 'san-pham') . '/' . $product->slug,
+            'price' => $basePrice ?? $product->price ?? 0,
+            'sale_price' => $salePrice,
             'category' => $product->category?->name ?? 'Sản phẩm',
             'image' => $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('images/no-image.jpg'),
         ];
-    }));
+    });
+
+    // Danh mục gợi ý (lấy từ database)
+    $categories = \App\Models\Category::where('status', 1)
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->get()
+        ->map(function ($cat) {
+            return [
+                'name' => $cat->name,
+                'slug' => $cat->slug,
+                'icon' => $cat->icon,
+                'image' => $cat->image ? asset('storage/' . $cat->image) : null,
+            ];
+        });
+
+    // Thương hiệu (lấy từ database)
+    $brands = \App\Models\Brand::where('status', 1)
+        ->orderBy('name')
+        ->get()
+        ->map(function ($brand) {
+            return [
+                'name' => $brand->name,
+                'slug' => $brand->slug,
+                'logo' => $brand->logo ? asset('storage/' . $brand->logo) : null,
+            ];
+        });
+
+    return response()->json([
+        'products' => $products,
+        'categories' => $categories,
+        'brands' => $brands,
+    ]);
 });
+
+// 🔥 CHI TIẾT SẢN PHẨM (LUÔN ĐỂ CUỐI CÙNG ĐỂ KHÔNG CHẶN CÁC ROUTE KHÁC)
+Route::get('/{categorySlug}/{productSlug}', [FrontProductController::class, 'show'])->name('products.show');

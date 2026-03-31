@@ -572,6 +572,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.setVariant = function(form, event){
     event.preventDefault();
+    event.stopImmediatePropagation();
 
     let variantId = document.getElementById('variant_id').value;
     let quantityInput = document.getElementById('quantity');

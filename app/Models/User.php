@@ -70,4 +70,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(Review::class);
     }
+    public function addresses()
+    {
+        return $this->hasMany(\App\Models\UserAddress::class);
+    }
+
+    public function defaultAddress()
+    {
+        return $this->hasOne(\App\Models\UserAddress::class)->where('is_default', 1);
+    }
 }
