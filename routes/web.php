@@ -37,6 +37,7 @@ use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ProductController as FrontProductController;
 use App\Http\Controllers\Frontend\CategoryController as FrontCategoryController;
 use App\Http\Controllers\Frontend\PageController;
+use App\Http\Controllers\Frontend\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -111,18 +112,23 @@ Route::middleware(['auth:web', 'customer'])
     ->name('customer.')
     ->group(function () {
 
-        Route::get('/dashboard', fn () => view('customer.dashboard'))->name('dashboard');
+        Route::get('/dashboard', [ProfileController::class, 'edit'])->name('dashboard');
+
+        Route::put('/dashboard', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/dashboard/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+        Route::post('/dashboard/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
 
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
+
+        // từ main
         Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
-        
-        // Thêm route hủy đơn hàng ở đây
+
+        // hủy đơn
         Route::post('/orders/{id}/cancel', [CartController::class, 'cancelOrder'])->name('orders.cancel');
 
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
     });
-
 /*
 |--------------------------------------------------------------------------
 | FRONTEND PUBLIC ROUTES
