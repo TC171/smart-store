@@ -38,6 +38,7 @@ use App\Http\Controllers\Frontend\ProductController as FrontProductController;
 use App\Http\Controllers\Frontend\CategoryController as FrontCategoryController;
 use App\Http\Controllers\Frontend\BrandController as FrontBrandController;
 use App\Http\Controllers\Frontend\PageController;
+use App\Http\Controllers\Frontend\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,7 @@ use App\Http\Controllers\Frontend\PageController;
 |--------------------------------------------------------------------------
 
 */
+
 Route::post('/customer/orders/{id}/cancel', [App\Http\Controllers\Frontend\CartController::class, 'cancelOrder'])->name('customer.orders.cancel');
 Route::prefix('admin')->name('admin.')->group(function () {
 
@@ -67,7 +69,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('banners/{banner}/image', [BannerController::class, 'deleteImage'])->name('banners.image-delete');
 
         Route::resource('coupons', CouponController::class)->except(['show']);
-        
+
         // Cấu hình Route Order Admin chuẩn
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
@@ -111,11 +113,15 @@ Route::middleware(['auth:web', 'customer'])
     ->name('customer.')
     ->group(function () {
 
-        Route::get('/dashboard', fn () => view('customer.dashboard'))->name('dashboard');
+        Route::get('/dashboard', [ProfileController::class, 'edit'])->name('dashboard');
+
+        Route::put('/dashboard', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/dashboard/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+        Route::post('/dashboard/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
 
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
-
+        Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
     });
 
@@ -138,11 +144,11 @@ Route::get('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.r
 Route::middleware('auth:web')->group(function () {
     Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
     Route::post('/checkout', [CartController::class, 'placeOrder'])->name('checkout.store');
-    
+
     // 🔥 Coupon API Routes
     Route::get('/api/coupons', [CartController::class, 'getAvailableCoupons'])->name('coupon.list');
     Route::post('/api/apply-coupon', [CartController::class, 'applyCoupon'])->name('coupon.apply');
-    
+
     // Route nhận kết quả VNPAY trả về
     Route::get('/vnpay/return', [CartController::class, 'vnpayReturn'])->name('vnpay.return');
 });
@@ -262,14 +268,14 @@ Route::get('/api/search', function (Request $request) use ($searchAliasMap) {
             foreach ($expandedTerms as $term) {
                 // Tìm theo tên/slug sản phẩm
                 $query->orWhere('name', 'like', "%{$term}%")
-                      ->orWhere('slug', 'like', "%{$term}%");
+                    ->orWhere('slug', 'like', "%{$term}%");
             }
             // Tìm theo danh mục
             $query->orWhereHas('category', function ($catQ) use ($expandedTerms) {
                 $catQ->where(function ($q) use ($expandedTerms) {
                     foreach ($expandedTerms as $term) {
                         $q->orWhere('name', 'like', "%{$term}%")
-                          ->orWhere('slug', 'like', "%{$term}%");
+                            ->orWhere('slug', 'like', "%{$term}%");
                     }
                 });
             });
@@ -278,7 +284,7 @@ Route::get('/api/search', function (Request $request) use ($searchAliasMap) {
                 $brandQ->where(function ($q) use ($expandedTerms) {
                     foreach ($expandedTerms as $term) {
                         $q->orWhere('name', 'like', "%{$term}%")
-                          ->orWhere('slug', 'like', "%{$term}%");
+                            ->orWhere('slug', 'like', "%{$term}%");
                     }
                 });
             });
@@ -291,7 +297,7 @@ Route::get('/api/search', function (Request $request) use ($searchAliasMap) {
         ->where(function ($query) use ($expandedTerms) {
             foreach ($expandedTerms as $term) {
                 $query->orWhere('name', 'like', "%{$term}%")
-                      ->orWhere('slug', 'like', "%{$term}%");
+                    ->orWhere('slug', 'like', "%{$term}%");
             }
         })
         ->limit(3)->get();
@@ -301,7 +307,7 @@ Route::get('/api/search', function (Request $request) use ($searchAliasMap) {
         ->where(function ($query) use ($expandedTerms) {
             foreach ($expandedTerms as $term) {
                 $query->orWhere('name', 'like', "%{$term}%")
-                      ->orWhere('slug', 'like', "%{$term}%");
+                    ->orWhere('slug', 'like', "%{$term}%");
             }
         })
         ->limit(3)->get();
@@ -311,7 +317,7 @@ Route::get('/api/search', function (Request $request) use ($searchAliasMap) {
             $activeVariants = $product->variants->where('status', 1);
             $salePrice = $activeVariants->min('sale_price');
             $basePrice = $activeVariants->min('price');
-            
+
             return [
                 'id' => $product->id,
                 'name' => $product->name,
