@@ -120,6 +120,11 @@ Route::middleware(['auth:web', 'customer'])
 
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
+
+        // từ main
+        Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
+
+        // hủy đơn
         Route::post('/orders/{id}/cancel', [CartController::class, 'cancelOrder'])->name('orders.cancel');
 
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
