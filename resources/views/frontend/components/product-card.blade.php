@@ -1,3 +1,43 @@
+@php
+    $availableVariants = collect($product->variants)->where('status', true);
+
+    $defaultVariant = $availableVariants
+        ->where('stock', '>', 0)
+        ->sortBy(function ($variant) {
+            return ($variant->sale_price && $variant->sale_price > 0)
+                ? $variant->sale_price
+                : $variant->price;
+        })
+        ->first();
+
+    if (!$defaultVariant) {
+        $defaultVariant = $availableVariants
+            ->sortBy(function ($variant) {
+                return ($variant->sale_price && $variant->sale_price > 0)
+                    ? $variant->sale_price
+                    : $variant->price;
+            })
+            ->first();
+    }
+
+    $displayMinPrice = $availableVariants
+        ->map(function ($variant) {
+            return ($variant->sale_price && $variant->sale_price > 0)
+                ? $variant->sale_price
+                : $variant->price;
+        })
+        ->min();
+
+    $cheapestSaleVariant = $availableVariants
+        ->filter(function ($variant) {
+            return $variant->sale_price && $variant->sale_price > 0 && $variant->price > $variant->sale_price;
+        })
+        ->sortBy('sale_price')
+        ->first();
+
+    $originalMinPrice = $cheapestSaleVariant?->price;
+@endphp
+
 <a href="{{ route('products.show', [
     $product->category->slug,
     $product->slug
@@ -7,10 +47,13 @@
     <!-- Quick Actions Overlay -->
     <div class="absolute inset-0 bg-gradient-to-t from-black/70 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex flex-col justify-end p-4 backdrop-blur-sm">
         <div class="flex gap-2">
-                            <button onclick="event.preventDefault(); quickAddToCart({{ $product->id }})" 
-                    class="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 active:from-orange-700 active:scale-95 text-white py-3 px-4 rounded-2xl font-bold text-sm shadow-xl hover:shadow-orange-500/50 transition-all duration-200 backdrop-blur-sm active:shadow-lg">
+            <button
+                onclick="event.preventDefault(); quickAddToCart({{ $defaultVariant?->id ?? 0 }})"
+                class="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 active:from-orange-700 active:scale-95 text-white py-3 px-4 rounded-2xl font-bold text-sm shadow-xl hover:shadow-orange-500/50 transition-all duration-200 backdrop-blur-sm active:shadow-lg"
+                {{ !$defaultVariant ? 'disabled' : '' }}>
                 <i class="fas fa-cart-plus mr-1"></i>Thêm Giỏ
             </button>
+
             <button onclick="event.preventDefault()"
                     class="w-12 h-12 bg-white/20 hover:bg-white backdrop-blur-sm rounded-2xl flex items-center justify-center text-white hover:text-gray-800 shadow-lg hover:shadow-xl transition-all">
                 <i class="far fa-eye text-xl"></i>
@@ -23,7 +66,7 @@
         <!-- Product Image -->
         <div class="relative z-10">
             @if($product->thumbnail)
-                <img src="{{ asset('storage/' . $product->thumbnail) }}" 
+                <img src="{{ asset('storage/' . $product->thumbnail) }}"
                      class="w-full h-56 object-cover rounded-2xl mx-auto shadow-2xl transition-all duration-700 group-hover/card:scale-110 group-hover/card:rotate-2"
                      loading="lazy"
                      alt="{{ $product->name }}">
@@ -48,8 +91,6 @@
             @endif
         </div>
 
-       
-
         <!-- Stock Ring Indicator -->
         <div class="absolute bottom-3 right-3 w-16 h-6 bg-emerald-500/90 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg z-20">
             {{ collect($product->variants)->sum('stock') ?? 0 }}+ Còn
@@ -65,16 +106,13 @@
 
         <!-- Price -->
         <div class="flex items-baseline gap-2">
-            @php
-                $minPrice = $product->variants->min('price');
-                $maxPrice = $product->variants->max('price');
-            @endphp
             <span class="text-2xl font-black text-red-600 drop-shadow-sm">
-                {{ number_format($minPrice ?? 0) }}đ
+                {{ number_format($displayMinPrice ?? 0) }}đ
             </span>
-            @if($minPrice !== null && $maxPrice !== null && $minPrice != $maxPrice)
+
+            @if($originalMinPrice && $originalMinPrice > $displayMinPrice)
                 <span class="text-xl font-bold text-gray-400 line-through">
-                    {{ number_format($maxPrice) }}đ
+                    {{ number_format($originalMinPrice) }}đ
                 </span>
             @endif
         </div>
@@ -88,7 +126,7 @@
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star-half-alt"></i>
             </div>
-            
+
             <span class="text-xs text-gray-400 ml-auto">•</span>
             <span class="text-xs text-gray-500">
                 {{ $product->sold_count ?? 0 }}+ bán
@@ -112,21 +150,21 @@
 
 <script>
 function toggleWishlist(id) {
-    // Toggle heart animation
     event.currentTarget.querySelector('i').classList.toggle('far');
     event.currentTarget.querySelector('i').classList.toggle('fas');
     event.currentTarget.querySelector('i').style.color = 'rgb(239 68 68)';
 }
 
-function quickAddToCart(id) {
-    // Show toast or cart flyout
+function quickAddToCart(variantId) {
+    if (!variantId) return;
+
     const btn = event.target.closest('button');
     btn.innerHTML = '<i class="fas fa-check mr-1"></i>Đã Thêm!';
     btn.classList.add('!bg-green-500');
+
     setTimeout(() => {
         btn.innerHTML = '<i class="fas fa-cart-plus mr-1"></i>Thêm Giỏ';
         btn.classList.remove('!bg-green-500');
     }, 2000);
 }
 </script>
-
