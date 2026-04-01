@@ -63,8 +63,10 @@
         <div class="mb-6 bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Đánh giá đơn hàng</h3>
             @php
-                $pendingItems = $order->items->filter(function($item) use ($reviewedProductIds) {
-                    return !in_array($item->product_id, $reviewedProductIds ?? []);
+                $pendingItems = $order->items->filter(function($item) use ($reviewCounts, $completedOrderCounts) {
+                    $reviewed = $reviewCounts[$item->product_id] ?? 0;
+                    $allowed = $completedOrderCounts[$item->product_id] ?? 0;
+                    return $reviewed < $allowed;
                 });
             @endphp
 
@@ -74,8 +76,14 @@
                 <p class="text-gray-600 mb-4">Chọn sản phẩm và gửi đánh giá để admin duyệt.</p>
 
                 @foreach($pendingItems as $item)
+                    @php
+                        $reviewed = $reviewCounts[$item->product_id] ?? 0;
+                        $allowed = $completedOrderCounts[$item->product_id] ?? 0;
+                        $remaining = $allowed - $reviewed;
+                    @endphp
                     <div class="mb-6 p-4 border border-gray-200 rounded-lg">
                         <h4 class="font-semibold">{{ $item->variant->product->name ?? 'Sản phẩm' }}</h4>
+                        <p class="text-sm text-gray-500 mt-1">Còn {{ $remaining }} lượt đánh giá (đã dùng {{ $reviewed }}/{{ $allowed }})</p>
                         <form action="{{ route('customer.orders.reviews.store', $order) }}" method="POST" class="space-y-4 mt-4">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $item->product_id }}">

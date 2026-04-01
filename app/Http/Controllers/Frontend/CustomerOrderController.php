@@ -24,12 +24,24 @@ class CustomerOrderController extends Controller
         $order->load(['items.variant.product']);
 
         $productIds = $order->items->pluck('product_id')->filter()->unique();
-        $reviewedProductIds = auth('web')->user()->reviews()
+
+        $reviewCounts = auth('web')->user()->reviews()
             ->whereIn('product_id', $productIds)
-            ->pluck('product_id')
+            ->selectRaw('product_id, count(*) as total')
+            ->groupBy('product_id')
+            ->pluck('total', 'product_id')
             ->toArray();
 
-        return view('customer.order-detail', compact('order', 'reviewedProductIds'));
+        $completedOrderCounts = [];
+        $userId = auth('web')->id();
+        foreach ($productIds as $productId) {
+            $completedOrderCounts[$productId] = Order::where('user_id', $userId)
+                ->where('status', 'completed')
+                ->whereHas('items', fn($q) => $q->where('product_id', $productId))
+                ->count();
+        }
+
+        return view('customer.order-detail', compact('order', 'reviewCounts', 'completedOrderCounts'));
     }
 
     public function storeReview(Request $request, Order $order)
@@ -50,18 +62,30 @@ class CustomerOrderController extends Controller
             'comment' => ['required', 'string'],
         ]);
 
-        Review::updateOrCreate(
-            [
-                'user_id' => auth()->id(),
-                'product_id' => $data['product_id'],
-            ],
-            [
-                'rating' => $data['rating'],
-                'title' => $data['title'] ?? null,
-                'comment' => $data['comment'],
-                'is_approved' => false,
-            ]
-        );
+        $userId = auth()->id();
+        $productId = $data['product_id'];
+
+        $currentReviewCount = Review::where('user_id', $userId)
+            ->where('product_id', $productId)
+            ->count();
+
+        $completedOrderCount = Order::where('user_id', $userId)
+            ->where('status', 'completed')
+            ->whereHas('items', fn($q) => $q->where('product_id', $productId))
+            ->count();
+
+        if ($currentReviewCount >= $completedOrderCount) {
+            return back()->with('error', 'Bạn đã đánh giá đủ số lần cho sản phẩm này.');
+        }
+
+        Review::create([
+            'user_id' => $userId,
+            'product_id' => $productId,
+            'rating' => $data['rating'],
+            'title' => $data['title'] ?? null,
+            'comment' => $data['comment'],
+            'is_approved' => false,
+        ]);
 
         return back()->with('success', 'Đánh giá của bạn đã được gửi, admin sẽ xem xét và duyệt.');
     }
