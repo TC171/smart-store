@@ -101,6 +101,8 @@ Route::middleware('guest:web')->group(function () {
     Route::post('/login', [FrontAuthController::class, 'login'])->name('login.post');
     Route::get('/register', [FrontAuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [FrontAuthController::class, 'register'])->name('register.post');
+    Route::get('/forgot-password', [FrontAuthController::class, 'showForgotPassword'])->name('forgot-password');
+    Route::post('/forgot-password', [FrontAuthController::class, 'processForgotPassword'])->name('forgot-password.post');
 });
 
 /*
