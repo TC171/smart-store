@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between mb-8">
             <div>
                 <h1 class="text-3xl font-black text-gray-800 uppercase italic">Đơn hàng <span class="text-orange-500">của tôi</span></h1>
-                <p class="text-gray-500 text-sm">Chào Nghĩa, bạn có thể quản lý và theo dõi đơn hàng tại đây</p>
+                <p class="text-gray-500 text-sm">Chào {{ Auth::user()->name }}, bạn có thể quản lý và theo dõi đơn hàng tại đây</p>
             </div>
             <a href="/" class="text-orange-600 font-bold hover:underline">← Tiếp tục mua sắm</a>
         </div>
@@ -85,7 +85,7 @@
 
                                 @if($order->status === 'pending')
                                     <form action="{{ route('customer.orders.cancel', $order->id) }}" method="POST" 
-                                          onsubmit="return confirm('Nghĩa ơi, bạn chắc chắn muốn xác nhận hủy đơn hàng #{{ $order->order_number }} chứ?')">
+                                          onsubmit="return confirm('{{ Auth::user()->name }} ơi, bạn chắc chắn muốn xác nhận hủy đơn hàng #{{ $order->order_number }} chứ?')">
                                         @csrf
                                         <button type="submit" title="Xác nhận hủy đơn" class="text-orange-600 hover:text-red-700 transition-all transform hover:scale-110">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -110,7 +110,7 @@
                                 <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                                     <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                                 </div>
-                                <p class="text-gray-400 font-medium italic">Nghĩa chưa có đơn hàng nào cả.</p>
+                                <p class="text-gray-400 font-medium italic">{{ Auth::user()->name }} chưa có đơn hàng nào cả.</p>
                                 <a href="/" class="mt-4 bg-orange-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-orange-700 transition-all shadow-lg shadow-orange-200 uppercase text-xs tracking-widest">Mua sắm ngay</a>
                             </div>
                         </td>
