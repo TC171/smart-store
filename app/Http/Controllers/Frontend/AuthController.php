@@ -21,6 +21,40 @@ class AuthController extends Controller
         return view('frontend.auth.register');
     }
 
+    // ===== FORGOT PASSWORD =====
+    public function showForgotPassword()
+    {
+        return view('frontend.auth.forgot-password');
+    }
+
+    public function processForgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $request->email)->where('role', 'customer')->first();
+
+        if (!$user) {
+            return back()->with('error', 'Email không tồn tại trên hệ thống');
+        }
+
+        // Generate an 8-character random string for the new password
+        $newPassword = \Illuminate\Support\Str::random(8);
+
+        // Update password in db
+        $user->password = Hash::make($newPassword);
+        $user->save();
+
+        // Send email with the new password
+        \Illuminate\Support\Facades\Mail::send('emails.forgot_password', ['newPassword' => $newPassword], function ($message) use ($user) {
+            $message->to($user->email, $user->name)
+                    ->subject('Mật khẩu mới của bạn - Smart Store');
+        });
+
+        return redirect()->route('login')->with('success', 'Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.');
+    }
+
     // ===== LOGIN =====
     public function login(Request $request)
     {

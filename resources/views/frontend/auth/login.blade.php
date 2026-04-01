@@ -9,6 +9,17 @@
             Đăng nhập
         </h2>
 
+        @if(session('success'))
+            <div class="bg-green-100 text-green-600 p-3 rounded mb-4 text-sm text-center">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="bg-red-100 text-red-600 p-3 rounded mb-4 text-sm text-center">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('login.post') }}">
     @csrf
 
@@ -17,6 +28,10 @@
 
     <input type="password" name="password" placeholder="Mật khẩu"
         class="w-full border px-4 py-2 mb-3 rounded-lg">
+
+    <div class="flex justify-end w-full mb-3">
+        <a href="{{ route('forgot-password') }}" class="text-sm text-red-500 hover:underline">Quên mật khẩu?</a>
+    </div>
 
     @error('email')
         <p class="text-red-500 text-sm">{{ $message }}</p>
