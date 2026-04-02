@@ -161,6 +161,30 @@
                 </select>
             </div>
         </div>
+        {{-- Thông số kỹ thuật --}}
+<div>
+    <label class="block text-sm font-medium text-gray-300 mb-2">Thông số kỹ thuật</label>
+
+    <div id="specs-wrapper" class="space-y-3">
+        @foreach($product->specs as $spec)
+<div class="flex gap-2 items-center">
+    <input type="hidden" name="spec_id[]" value="{{ $spec->id }}">
+    <input type="text" name="spec_name[]" value="{{ $spec->name }}"
+        class="w-1/3 bg-gray-800 text-white border border-gray-700 rounded px-3 py-2" placeholder="Tên thông số">
+    <input type="text" name="spec_value[]" value="{{ $spec->value }}"
+        class="w-2/3 bg-gray-800 text-white border border-gray-700 rounded px-3 py-2" placeholder="Giá trị">
+    <button type="button"
+        onclick="removeSpec(this, {{ $spec->id }})"
+        class="bg-red-500 hover:bg-red-600 px-3 rounded text-white">X</button>
+</div>
+@endforeach
+    </div>
+
+    <button type="button" onclick="addSpec()" 
+        class="mt-3 bg-green-500 hover:bg-green-600 px-4 py-2 rounded text-black font-semibold">
+        + Thêm thông số
+    </button>
+</div>
 
         {{-- Meta --}}
         <div>
@@ -183,6 +207,7 @@
                 Cập nhật sản phẩm
             </button>
         </div>
+        <div id="deleted-specs"></div>
 
     </form>
 </div>
@@ -303,6 +328,41 @@ function removeOldImage(button, imageId) {
     document.getElementById('deleted-images').appendChild(input);
 
     // xoá UI
+    button.parentElement.remove();
+}
+function addSpec(name = '', value = '') {
+    const wrapper = document.getElementById('specs-wrapper');
+
+    const div = document.createElement('div');
+    div.classList.add('flex', 'gap-2', 'items-center');
+
+    div.innerHTML = `
+        <input type="hidden" name="spec_id[]" value="">
+        <input type="text" name="spec_name[]" value="${name}"
+            placeholder="Tên thông số"
+            class="w-1/3 bg-gray-800 text-white border border-gray-700 rounded px-3 py-2">
+        <input type="text" name="spec_value[]" value="${value}"
+            placeholder="Giá trị"
+            class="w-2/3 bg-gray-800 text-white border border-gray-700 rounded px-3 py-2">
+        <button type="button"
+            onclick="this.parentElement.remove()"
+            class="bg-red-500 hover:bg-red-600 px-3 rounded text-white">
+            X
+        </button>
+    `;
+
+    wrapper.appendChild(div);
+}
+function removeSpec(button, specId = null) {
+    if (specId) {
+        // Nếu là spec cũ, tạo input hidden để báo server xoá
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'deleted_spec_ids[]';
+        input.value = specId;
+        document.getElementById('deleted-specs').appendChild(input);
+    }
+    // Xoá UI
     button.parentElement.remove();
 }
 </script>
