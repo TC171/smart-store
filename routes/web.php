@@ -56,10 +56,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 
     Route::middleware(['auth:admin', 'admin'])->group(function () {
-Route::post(
+        Route::post(
         'upload-image',
         [ProductController::class, 'uploadImage']
     )->name('upload.image');
+
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::resource('products', ProductController::class);

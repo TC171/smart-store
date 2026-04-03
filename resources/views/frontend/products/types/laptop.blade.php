@@ -409,9 +409,23 @@
                             {{ $item->name }}
                         </div>
 
-                        <div class="text-red-500 font-bold">
-                            {{ number_format($item->min_price ?? 0) }} ₫
-                        </div>
+                        @php
+    $prices = $item->variants->pluck('price');
+@endphp
+
+@if($prices->count())
+    <div class="text-red-500 font-semibold text-lg">
+        @if($prices->min() == $prices->max())
+            {{ number_format($prices->min()) }}₫
+        @else
+            {{ number_format($prices->min()) }}
+            <span class="mx-1">-</span>
+            {{ number_format($prices->max()) }}₫
+        @endif
+    </div>
+@else
+    <span class="text-gray-400 italic">Liên hệ</span>
+@endif
 
                         {{-- LABEL --}}
                         <div class="text-xs mt-1">
