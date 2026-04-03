@@ -78,6 +78,30 @@
             </div>
         </div>
     </div>
+    {{-- 🔹 BẢNG THÔNG SỐ KỸ THUẬT --}}
+@if($product->specs && $product->specs->count())
+<div class="mt-6">
+    <h2 class="text-xl font-bold text-cyan-400 mb-2">Thông số kỹ thuật</h2>
+
+    <table class="w-full text-sm border border-gray-700">
+        <thead class="bg-gray-800 text-gray-300">
+            <tr>
+                <th class="p-3 text-left">Tên thông số</th>
+                <th class="p-3 text-left">Giá trị</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach($product->specs as $spec)
+            <tr class="border-t border-gray-700 hover:bg-gray-900">
+                <td class="p-3">{{ $spec->name }}</td>
+                <td class="p-3">{{ $spec->value }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+@endif
 
     {{-- 🔥 GALLERY ẢNH CHI TIẾT --}}
     @if($product->images && $product->images->count())
@@ -103,6 +127,7 @@
         </div>
     </div>
     @endif
+    
 
     {{-- VARIANTS --}}
     <div class="mt-8">

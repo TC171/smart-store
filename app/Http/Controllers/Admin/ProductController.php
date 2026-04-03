@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
-
+use App\Models\ProductSpec;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Products\StoreProductRequest;
 use App\Http\Requests\Admin\Products\UpdateProductRequest;
@@ -87,6 +87,19 @@ class ProductController extends Controller
             'meta_description' => $request->meta_description,
             'meta_keywords' => $request->meta_keywords,
         ]);
+        if ($request->spec_name) {
+    foreach ($request->spec_name as $index => $name) {
+        if (!empty($name) && !empty($request->spec_value[$index])) {
+            ProductSpec::create([
+                'product_id' => $product->id,
+                'name' => $name,
+                'value' => $request->spec_value[$index],
+                'sort_order' => $index, // nếu muốn lưu thứ tự
+            ]);
+        }
+    }
+}
+        
 
         // ✅ THÊM: upload nhiều ảnh phụ
         if ($request->hasFile('images')) {
@@ -115,6 +128,7 @@ class ProductController extends Controller
     // Form edit sản phẩm
     public function edit($id)
     {
+        $product = Product::with(['specs'])->findOrFail($id);
         $product = Product::findOrFail($id);
         $this->authorize('update', $product);
 
@@ -162,6 +176,40 @@ class ProductController extends Controller
             'meta_description' => $request->meta_description,
             'meta_keywords' => $request->meta_keywords,
         ]);
+         // --- Xử lý xoá thông số bị xoá ---
+    if ($request->deleted_spec_ids) {
+        ProductSpec::whereIn('id', $request->deleted_spec_ids)
+            ->where('product_id', $product->id)
+            ->delete();
+    }
+        // Xử lý thông số kỹ thuật
+if ($request->spec_name) {
+    foreach ($request->spec_name as $index => $name) {
+        $specId = $request->spec_id[$index] ?? null;
+
+        if (!empty($name) && !empty($request->spec_value[$index])) {
+            if ($specId) {
+                // update nếu đã có
+                ProductSpec::where('id', $specId)->update([
+                    'name' => $name,
+                    'value' => $request->spec_value[$index],
+                    'sort_order' => $index
+                ]);
+            } else {
+                // tạo mới
+                ProductSpec::create([
+                    'product_id' => $product->id,
+                    'name' => $name,
+                    'value' => $request->spec_value[$index],
+                    'sort_order' => $index
+                ]);
+            }
+        } else if ($specId) {
+            // xóa nếu tên hoặc giá trị trống
+            ProductSpec::destroy($specId);
+        }
+    }
+}
         // ✅ XOÁ ẢNH CŨ ĐÃ CHỌN
 if ($request->deleted_images) {
     foreach ($request->deleted_images as $id) {
@@ -205,7 +253,7 @@ if ($request->deleted_images) {
     // Hiển thị chi tiết sản phẩm
     public function show($id)
     {
-        $product = Product::with(['category', 'brand', 'variants'])->findOrFail($id);
+        $product = Product::with(['category', 'brand', 'variants', 'specs'])->findOrFail($id);
         $this->authorize('view', $product);
 
         $minPrice = $product->variants->min('price') ?? 0;
