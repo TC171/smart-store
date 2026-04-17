@@ -201,13 +201,100 @@
         @endif
     </div>
 
-    <div class="text-center">
+    {{-- ===== HOÀN HÀNG / HOÀN TIỀN ===== --}}
+    @if(in_array($order->status, ['completed', 'shipping']))
+        @php
+            $pendingRefund   = $order->refundRequests->whereIn('status', ['pending'])->first();
+            $approvedRefund  = $order->refundRequests->whereIn('status', ['approved_return'])->first();
+            $completedRefund = $order->refundRequests->where('status', 'refunded')->first();
+            $rejectedRefund  = $order->refundRequests->where('status', 'rejected')->first();
+        @endphp
+
+        @if($pendingRefund)
+        {{-- Đang chờ duyệt --}}
+        <div class="mt-6 p-5 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start gap-4">
+            <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+                <p class="font-bold text-yellow-800">Yêu cầu hoàn hàng đang chờ xét duyệt</p>
+                <p class="text-sm text-yellow-700 mt-1">Loại: <strong>{{ $pendingRefund->type_label }}</strong> — Gửi lúc {{ $pendingRefund->created_at->format('H:i d/m/Y') }}</p>
+                <p class="text-xs text-yellow-600 mt-1">Lý do: {{ \Illuminate\Support\Str::limit($pendingRefund->reason, 100) }}</p>
+            </div>
+        </div>
+
+        @elseif($approvedRefund)
+        {{-- Đã duyệt - chờ gửi hàng --}}
+        <div class="mt-6 p-5 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-4">
+            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div>
+                <p class="font-bold text-blue-800">Yêu cầu hoàn hàng đã được duyệt!</p>
+                <p class="text-sm text-blue-700 mt-1">Vui lòng gửi hàng với mã: <span class="font-mono font-bold bg-blue-100 px-2 py-0.5 rounded text-blue-900">{{ $approvedRefund->return_code }}</span></p>
+                @if($approvedRefund->admin_note)
+                <p class="text-xs text-blue-600 mt-1">Ghi chú: {{ $approvedRefund->admin_note }}</p>
+                @endif
+            </div>
+        </div>
+
+        @elseif($completedRefund)
+        {{-- Đã hoàn tiền --}}
+        <div class="mt-6 p-5 bg-green-50 border border-green-200 rounded-xl flex items-start gap-4">
+            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+                <p class="font-bold text-green-800">✅ Đã hoàn tiền thành công</p>
+                <p class="text-sm text-green-700 mt-1">Yêu cầu hoàn hàng của bạn đã được xử lý xong.</p>
+            </div>
+        </div>
+
+        @elseif($rejectedRefund)
+        {{-- Bị từ chối - có thể gửi lại --}}
+        <div class="mt-6 p-5 bg-red-50 border border-red-200 rounded-xl">
+            <div class="flex items-start gap-4 mb-4">
+                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </div>
+                <div>
+                    <p class="font-bold text-red-800">Yêu cầu hoàn hàng đã bị từ chối</p>
+                    @if($rejectedRefund->admin_note)
+                    <p class="text-sm text-red-700 mt-1">Lý do từ chối: {{ $rejectedRefund->admin_note }}</p>
+                    @endif
+                </div>
+            </div>
+            <a href="{{ route('customer.orders.refund.create', $order) }}"
+               class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                Gửi yêu cầu mới
+            </a>
+        </div>
+
+        @else
+        {{-- Chưa có yêu cầu nào — hiện nút hoàn hàng --}}
+        <div class="mt-6 p-5 bg-orange-50 border border-orange-200 rounded-xl flex items-center justify-between gap-4">
+            <div>
+                <p class="font-bold text-orange-800">Có vấn đề với đơn hàng?</p>
+                <p class="text-sm text-orange-700 mt-1">Bạn có thể yêu cầu hoàn hàng hoặc hoàn tiền nếu sản phẩm không đúng mô tả.</p>
+            </div>
+            <a href="{{ route('customer.orders.refund.create', $order) }}"
+               class="flex-shrink-0 inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl text-sm transition-colors shadow-md shadow-orange-200 whitespace-nowrap">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                Yêu cầu hoàn hàng
+            </a>
+        </div>
+        @endif
+    @endif
+    {{-- ===== /HOÀN HÀNG ===== --}}
+
+    <div class="text-center mt-6">
         <a href="{{ route('customer.orders') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium inline-block mb-8">
             ← Quay lại danh sách đơn hàng
         </a>
     </div>
 
-    @if(!in_array($order->status, ['cancelled', 'refunded']))
+    @if(!in_array($order->status, ['completed', 'cancelled', 'refunded']))
     <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog text-start">
             <div class="modal-content">

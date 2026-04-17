@@ -39,6 +39,8 @@ use App\Http\Controllers\Frontend\CategoryController as FrontCategoryController;
 use App\Http\Controllers\Frontend\BrandController as FrontBrandController;
 use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\ProfileController;
+use App\Http\Controllers\Frontend\RefundController;
+use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,7 +49,6 @@ use App\Http\Controllers\Frontend\ProfileController;
 
 */
 
-Route::post('/customer/orders/{id}/cancel', [App\Http\Controllers\Frontend\CartController::class, 'cancelOrder'])->name('customer.orders.cancel');
 Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware('guest:admin')->group(function () {
@@ -74,6 +75,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
+
+        // Quản lý yêu cầu hoàn hàng
+        Route::get('refunds', [AdminRefundController::class, 'index'])->name('refunds.index');
+        Route::get('refunds/{refund}', [AdminRefundController::class, 'show'])->name('refunds.show');
+        Route::post('refunds/{refund}/approve', [AdminRefundController::class, 'approve'])->name('refunds.approve');
+        Route::post('refunds/{refund}/confirm', [AdminRefundController::class, 'confirmReceived'])->name('refunds.confirm');
+        Route::post('refunds/{refund}/reject', [AdminRefundController::class, 'reject'])->name('refunds.reject');
 
         Route::resource('users', UserController::class)->except(['show']);
         Route::resource('customers', CustomerController::class);
@@ -123,7 +131,13 @@ Route::middleware(['auth:web', 'customer'])
 
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
+        Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
+
+        // Hoàn hàng / Hoàn tiền
+        Route::get('/orders/{order}/refund', [RefundController::class, 'create'])->name('orders.refund.create');
+        Route::post('/orders/{order}/refund', [RefundController::class, 'store'])->name('orders.refund.store');
+
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
     });
 

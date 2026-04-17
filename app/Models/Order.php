@@ -55,6 +55,11 @@ class Order extends Model
         return $this->belongsTo(Coupon::class);
     }
 
+    public function refundRequests()
+    {
+        return $this->hasMany(RefundRequest::class);
+    }
+
     // --- Helper Methods (Tiện ích bổ sung) ---
 
     /**

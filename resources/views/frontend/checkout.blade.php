@@ -48,7 +48,45 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1.5">Địa chỉ nhận hàng chi tiết <span class="text-red-500">*</span></label>
-                            <textarea name="address" rows="3" required class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none transition-all resize-none text-sm">{{ auth('web')->check() ? auth('web')->user()->address ?? '' : '' }}</textarea>
+                            
+                            <!-- Khu vực chọn Tỉnh/Thành -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="relative">
+                                    <select id="province" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none text-sm bg-white cursor-pointer appearance-none transition-all" required>
+                                        <option value="">Tỉnh / Thành phố</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <select id="district" disabled class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none text-sm bg-white cursor-pointer appearance-none transition-all disabled:opacity-50 disabled:bg-gray-50" required>
+                                        <option value="">Quận / Huyện</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <select id="ward" disabled class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none text-sm bg-white cursor-pointer appearance-none transition-all disabled:opacity-50 disabled:bg-gray-50" required>
+                                        <option value="">Phường / Xã</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Nhập số nhà chi tiết -->
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                                </div>
+                                <input type="text" id="street_address" placeholder="Tên đường, Tòa nhà, Số nhà chi tiết..." required class="w-full pl-10 px-4 py-2.5 rounded-lg border border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none transition-all text-sm">
+                            </div>
+
+                            <!-- Input ẩn để gộp dữ liệu submit về Laravel Backend -->
+                            <input type="hidden" name="address" id="final_address" value="{{ auth('web')->check() ? auth('web')->user()->address ?? '' : '' }}">
                         </div>
                     </div>
 
@@ -251,5 +289,94 @@
             }
         });
     }
+
+    // Tích hợp API Tỉnh/Thành phố Việt Nam
+    document.addEventListener("DOMContentLoaded", function() {
+        const provinceSelect = document.getElementById('province');
+        const districtSelect = document.getElementById('district');
+        const wardSelect = document.getElementById('ward');
+        const streetInput = document.getElementById('street_address');
+        const finalAddress = document.getElementById('final_address');
+        const form = document.getElementById('checkout-form');
+
+        const fetchAPI = async (url) => {
+            try {
+                const res = await fetch(url);
+                return await res.json();
+            } catch (err) {
+                console.error("Lỗi khi tải dữ liệu địa giới hành chính:", err);
+                return null;
+            }
+        };
+
+        // 1. Tải danh sách Tỉnh/Thành
+        fetchAPI('https://provinces.open-api.vn/api/?depth=1').then(data => {
+            if(!data) return;
+            let html = '<option value="">Tỉnh / Thành phố</option>';
+            data.forEach(item => {
+                html += `<option value="${item.code}" data-name="${item.name}">${item.name}</option>`;
+            });
+            provinceSelect.innerHTML = html;
+        });
+
+        // 2. Tải danh sách Quận/Huyện khi chọn Tỉnh
+        provinceSelect.addEventListener('change', function() {
+            districtSelect.disabled = true;
+            wardSelect.disabled = true;
+            districtSelect.innerHTML = '<option value="">Đang tải Quận / Huyện...</option>';
+            wardSelect.innerHTML = '<option value="">Phường / Xã</option>';
+            
+            if(this.value) {
+                fetchAPI(`https://provinces.open-api.vn/api/p/${this.value}?depth=2`).then(data => {
+                    if(!data) return;
+                    let html = '<option value="">Chọn Quận / Huyện</option>';
+                    data.districts.forEach(item => {
+                        html += `<option value="${item.code}" data-name="${item.name}">${item.name}</option>`;
+                    });
+                    districtSelect.innerHTML = html;
+                    districtSelect.disabled = false;
+                });
+            } else {
+                districtSelect.innerHTML = '<option value="">Quận / Huyện</option>';
+            }
+        });
+
+        // 3. Tải danh sách Phường/Xã khi chọn Quận
+        districtSelect.addEventListener('change', function() {
+            wardSelect.disabled = true;
+            wardSelect.innerHTML = '<option value="">Đang tải Phường / Xã...</option>';
+            
+            if(this.value) {
+                fetchAPI(`https://provinces.open-api.vn/api/d/${this.value}?depth=2`).then(data => {
+                    if(!data) return;
+                    let html = '<option value="">Chọn Phường / Xã</option>';
+                    data.wards.forEach(item => {
+                        html += `<option value="${item.code}" data-name="${item.name}">${item.name}</option>`;
+                    });
+                    wardSelect.innerHTML = html;
+                    wardSelect.disabled = false;
+                });
+            } else {
+                wardSelect.innerHTML = '<option value="">Phường / Xã</option>';
+            }
+        });
+
+        // 4. Gộp dữ liệu vào thẻ hidden trước khi Submit form
+        form.addEventListener('submit', function(e) {
+            const pName = provinceSelect.options[provinceSelect.selectedIndex]?.getAttribute('data-name') || '';
+            const dName = districtSelect.options[districtSelect.selectedIndex]?.getAttribute('data-name') || '';
+            const wName = wardSelect.options[wardSelect.selectedIndex]?.getAttribute('data-name') || '';
+            const street = streetInput.value.trim();
+
+            if (pName && dName && wName && street) {
+                // Sẽ lưu String chuẩn xác ví dụ: "Số 123 Đường A, Phường B, Quận C, Tỉnh D"
+                finalAddress.value = `${street}, ${wName}, ${dName}, ${pName}`;
+            } else {
+                // Phòng trường hợp lỗi select
+                e.preventDefault();
+                alert("Vui lòng chọn đầy đủ thông tin Tỉnh/Thành phố, Quận/Huyện, Phường/Xã!");
+            }
+        });
+    });
 </script>
 @endsection
