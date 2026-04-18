@@ -73,10 +73,24 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 text-sm">
-                            <a href="{{ route('customer.order.detail', $order) }}"
-                               class="text-blue-600 hover:text-blue-800 font-medium">
-                                Xem chi tiết
-                            </a>
+                            <div class="flex items-center gap-3">
+                                <a href="{{ route('customer.order.detail', $order) }}"
+                                   class="text-blue-600 hover:text-blue-800 font-medium">
+                                    Xem chi tiết
+                                </a>
+
+                                @if(in_array($order->status, ['completed', 'shipping']) && !$order->refundRequests->where('status', 'pending')->count())
+                                    <a href="{{ route('customer.orders.refund.create', $order) }}" 
+                                       title="Yêu cầu hoàn hàng"
+                                       class="text-orange-500 hover:text-orange-700 transition-all font-medium">
+                                        Hoàn hàng/Tiền
+                                    </a>
+                                @elseif($order->refundRequests->where('status', 'pending')->count())
+                                    <span title="Đang chờ duyệt hoàn hàng" class="text-yellow-600 font-medium whitespace-nowrap">
+                                        Đang chờ duyệt...
+                                    </span>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @endforeach

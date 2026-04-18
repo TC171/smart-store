@@ -352,7 +352,9 @@ class CartController extends Controller
         }
 
         if ($request->payment_method === 'cod') {
-            return redirect()->route('customer.orders')->with('success', 'Đặt hàng thành công!');
+            return redirect()->route('customer.orders')->with([
+                'success' => 'Đặt hàng thành công! Cảm ơn bạn đã tin tưởng Smart Store.',
+            ]);
         }
 
         if ($request->payment_method === 'vnpay') {
@@ -411,8 +413,8 @@ class CartController extends Controller
     {
         $order = Order::where('id', $id)->where('user_id', auth('web')->id())->firstOrFail();
 
-        if ($order->status === 'cancelled' || $order->status === 'refunded') {
-            return back()->with('error', 'Đơn hàng này đã được xử lý và không thể hủy nữa.');
+        if (in_array($order->status, ['completed', 'cancelled', 'refunded'])) {
+            return back()->with('error', 'Đơn hàng này đã hoàn thành hoặc đã được xử lý nên không thể hủy nữa.');
         }
 
         if ($order->status === 'pending') {

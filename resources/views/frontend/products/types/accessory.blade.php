@@ -618,14 +618,38 @@ document.addEventListener('DOMContentLoaded', function () {
     fetch(form.action, {
         method:'POST',
         body: formData,
-        headers:{'X-Requested-With':'XMLHttpRequest'}
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
     })
     .then(res => res.json())
     .then(data => {
-        if(!data.success){ alert(data.message); return; }
-        if(data.redirect){ window.location.href = data.redirect; }
-        else alert(`Đã thêm ${quantity} sản phẩm vào giỏ!`);
-    });
+        if (!data.success) {
+            if (typeof showToast === 'function') {
+                showToast(data.message || 'Có lỗi xảy ra!', 'error');
+            } else {
+                alert(data.message || 'Có lỗi xảy ra!');
+            }
+            return;
+        }
+
+        if (data.redirect) {
+            window.location.href = data.redirect;
+        } else {
+            if (typeof showToast === 'function') {
+                showToast('Đã thêm vào giỏ!', 'success');
+            }
+
+            if (typeof updateMiniCartUI === 'function') {
+                updateMiniCartUI(data.cart);
+            }
+            const badge = document.querySelector('.cart-badge-count');
+            if (badge && typeof data.cart_count !== 'undefined') {
+                badge.innerText = data.cart_count;
+            }
+        }
+    })
+    .catch(error => console.error('Error:', error));
 
     return false;
 };
