@@ -42,7 +42,7 @@
                                 'shipping' => 'Đang giao hàng',
                                 'completed' => 'Hoàn thành',
                                 'cancelled' => 'Đã huỷ',
-                                'refunded' => 'Đã hoàn tiền'
+                                'refunded' => 'Đã hoàn hàng'
                             ];
                             $statusColors = [
                                 'pending' => 'bg-yellow-100 text-yellow-800',

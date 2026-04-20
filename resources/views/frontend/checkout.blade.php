@@ -212,6 +212,20 @@
     </div>
 </div>
 
+<!-- Modal Thông báo giới hạn COD -->
+<div id="codLimitModal" class="fixed inset-0 z-[110] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl animate-modal-in text-center p-8">
+        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto mb-6">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+        <h3 class="text-xl font-black text-gray-800 mb-4 uppercase">Thông báo thanh toán</h3>
+        <p class="text-gray-600 mb-8 leading-relaxed">
+            Đơn hàng của bạn đã vượt mức <span class="font-bold text-red-600">10 triệu</span> tiền mặt. Vui lòng thanh toán bằng <span class="font-bold text-blue-600">VNPAY</span> để tiếp tục.
+        </p>
+        <button type="button" onclick="closeCodModal()" class="w-full py-4 bg-gray-900 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-black transition-all">Tôi đã hiểu</button>
+    </div>
+</div>
+
 <style>
     .scrollbar-thin::-webkit-scrollbar { width: 4px; }
     .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 20px; }
@@ -361,8 +375,19 @@
             }
         });
 
-        // 4. Gộp dữ liệu vào thẻ hidden trước khi Submit form
+        // 4. Kiểm tra giới hạn COD (> 10 triệu) và gộp dữ liệu vào thẻ hidden trước khi Submit form
         form.addEventListener('submit', function(e) {
+            // Lấy tổng tiền hiện tại từ text (xóa 'đ' và '.')
+            const totalText = document.getElementById('grand-total-display').innerText;
+            const totalValue = parseInt(totalText.replace(/[^\d]/g, ''));
+            const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+            if (paymentMethod === 'cod' && totalValue > 10000000) {
+                e.preventDefault();
+                document.getElementById('codLimitModal').classList.remove('hidden');
+                return;
+            }
+
             const pName = provinceSelect.options[provinceSelect.selectedIndex]?.getAttribute('data-name') || '';
             const dName = districtSelect.options[districtSelect.selectedIndex]?.getAttribute('data-name') || '';
             const wName = wardSelect.options[wardSelect.selectedIndex]?.getAttribute('data-name') || '';
@@ -378,5 +403,12 @@
             }
         });
     });
+
+    function closeCodModal() {
+        document.getElementById('codLimitModal').classList.add('hidden');
+        // Tự động chọn VNPAY cho khách
+        const vnpayRadio = document.querySelector('input[name="payment_method"][value="vnpay"]');
+        if(vnpayRadio) vnpayRadio.checked = true;
+    }
 </script>
 @endsection

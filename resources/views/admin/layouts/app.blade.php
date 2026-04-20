@@ -18,11 +18,11 @@
 <body class="bg-black text-white overflow-hidden relative">
 
 <!-- PARTICLE BACKGROUND -->
-<canvas id="particles" class="absolute inset-0 z-0"></canvas>
+<canvas id="particles" class="absolute inset-0 z-0 pointer-events-none"></canvas>
 
 <!-- Glow effects -->
-<div class="absolute w-[700px] h-[700px] bg-purple-700 rounded-full blur-[200px] opacity-20 -top-60 -left-60 animate-[float_8s_ease-in-out_infinite]"></div>
-<div class="absolute w-[600px] h-[600px] bg-blue-600 rounded-full blur-[200px] opacity-20 bottom-0 right-0 animate-[float_10s_ease-in-out_infinite]"></div>
+<div class="absolute w-[700px] h-[700px] bg-purple-700 rounded-full blur-[200px] opacity-20 -top-60 -left-60 animate-[float_8s_ease-in-out_infinite] pointer-events-none"></div>
+<div class="absolute w-[600px] h-[600px] bg-blue-600 rounded-full blur-[200px] opacity-20 bottom-0 right-0 animate-[float_10s_ease-in-out_infinite] pointer-events-none"></div>
 
 <div class="relative z-10 flex h-screen">
 

@@ -139,6 +139,35 @@ Route::middleware(['auth:web', 'customer'])
         Route::post('/orders/{order}/refund', [RefundController::class, 'store'])->name('orders.refund.store');
 
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
+
+        // 🔔 Notification API routes
+        Route::get('/notifications', function () {
+            $notifications = auth('web')->user()->notifications()->latest()->take(20)->get()->map(function ($n) {
+                return [
+                    'id'        => $n->id,
+                    'read'      => !is_null($n->read_at),
+                    'icon'      => $n->data['icon'] ?? '🔔',
+                    'title'     => $n->data['title'] ?? '',
+                    'body'      => $n->data['body'] ?? '',
+                    'url'       => $n->data['url'] ?? '#',
+                    'color'     => $n->data['color'] ?? 'gray',
+                    'time'      => $n->created_at->diffForHumans(),
+                ];
+            });
+            $unread = auth('web')->user()->unreadNotifications()->count();
+            return response()->json(['notifications' => $notifications, 'unread' => $unread]);
+        })->name('notifications.index');
+
+        Route::post('/notifications/read-all', function () {
+            auth('web')->user()->unreadNotifications->markAsRead();
+            return response()->json(['success' => true]);
+        })->name('notifications.read-all');
+
+        Route::post('/notifications/{id}/read', function ($id) {
+            $n = auth('web')->user()->notifications()->where('id', $id)->first();
+            if ($n) $n->markAsRead();
+            return response()->json(['success' => true]);
+        })->name('notifications.read');
     });
 
 /*

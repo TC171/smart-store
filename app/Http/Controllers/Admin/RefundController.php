@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\RefundRequest;
+use App\Notifications\RefundStatusChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -35,17 +36,21 @@ class RefundController extends Controller
         ]);
 
         if ($refund->type === 'refund') {
-            // Chỉ hoàn tiền -> Hoàn tiền ngay
             $refund->update([
                 'status'      => 'refunded',
                 'admin_note'  => $request->admin_note,
                 'reviewed_at' => now(),
                 'reviewed_by' => auth('admin')->id(),
             ]);
-            $refund->order->update(['status' => 'refunded']);
-            return back()->with('success', 'Đã duyệt và hoàn tiền ngay cho đơn hàng.');
+            $refund->order->update([
+                'status' => 'refunded',
+            ]);
+
+            // 🔔 Gửi thông báo cho khách
+            $refund->user?->notify(new RefundStatusChanged($refund));
+
+            return back()->with('success', 'Đã duyệt và hoàn hàng ngay cho đơn hàng.');
         } else {
-            // Hoàn hàng -> Chờ người dùng gửi hàng, sinh mã trả hàng
             $returnCode = 'RTN-' . strtoupper(uniqid());
             $refund->update([
                 'status'      => 'approved_return',
@@ -54,6 +59,10 @@ class RefundController extends Controller
                 'reviewed_at' => now(),
                 'reviewed_by' => auth('admin')->id(),
             ]);
+
+            // 🔔 Gửi thông báo cho khách
+            $refund->user?->notify(new RefundStatusChanged($refund));
+
             return back()->with('success', 'Đã duyệt yêu cầu trả hàng. Đang chờ khách hàng gửi hàng bằng mã ' . $returnCode . '.');
         }
     }
@@ -64,12 +73,15 @@ class RefundController extends Controller
             return back()->with('error', 'Trạng thái yêu cầu không hợp lệ để xác nhận nhận hàng.');
         }
 
-        $refund->update([
-            'status' => 'refunded'
+        $refund->update(['status' => 'refunded']);
+        $refund->order->update([
+            'status' => 'refunded',
         ]);
-        $refund->order->update(['status' => 'refunded']);
 
-        return back()->with('success', 'Đã xác nhận nhận được hàng trả về. Đơn hàng đã được ghi nhận hoàn tiền.');
+        // 🔔 Gửi thông báo đã hoàn tiền
+        $refund->user?->notify(new RefundStatusChanged($refund));
+
+        return back()->with('success', 'Đã xác nhận nhận được hàng trả về. Đơn hàng đã được ghi nhận hoàn hàng.');
     }
 
     public function reject(RefundRequest $refund, Request $request)
@@ -86,6 +98,9 @@ class RefundController extends Controller
             'reviewed_at' => now(),
             'reviewed_by' => auth('admin')->id(),
         ]);
+
+        // 🔔 Gửi thông báo từ chối cho khách
+        $refund->user?->notify(new RefundStatusChanged($refund));
 
         return back()->with('success', 'Đã từ chối yêu cầu hoàn hàng.');
     }

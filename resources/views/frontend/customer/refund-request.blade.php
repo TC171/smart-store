@@ -10,29 +10,44 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             </a>
             <div>
-                <h1 class="text-2xl font-black text-gray-800">Yêu cầu <span class="text-orange-500">Hoàn hàng / Hoàn tiền</span></h1>
+                <h1 class="text-2xl font-black text-gray-800">Yêu cầu <span class="text-orange-500">Hoàn hàng</span></h1>
                 <p class="text-gray-500 text-sm">Đơn hàng #{{ $order->order_number }}</p>
             </div>
         </div>
 
         @if($existingRequest)
-        {{-- Already have a pending request --}}
+        {{-- Already have a pending or approved request --}}
         <div class="bg-white rounded-3xl shadow-xl p-8 border border-orange-100 mb-6">
             <div class="flex items-center gap-4 mb-6">
-                <div class="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <svg class="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <div>
-                    <h2 class="text-lg font-bold text-gray-800">Yêu cầu đang chờ xét duyệt</h2>
-                    <p class="text-sm text-gray-500">Gửi lúc {{ $existingRequest->created_at->format('H:i d/m/Y') }}</p>
-                </div>
-                <span class="ml-auto px-4 py-1.5 text-xs font-black uppercase rounded-full bg-yellow-100 text-yellow-600">Đang chờ</span>
+                @if($existingRequest->status === 'pending')
+                    <div class="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800">Yêu cầu đang chờ xét duyệt</h2>
+                        <p class="text-sm text-gray-500">Gửi lúc {{ $existingRequest->created_at->format('H:i d/m/Y') }}</p>
+                    </div>
+                    <span class="ml-auto px-4 py-1.5 text-xs font-black uppercase rounded-full bg-yellow-100 text-yellow-600">Đang chờ</span>
+                @else
+                    <div class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800">Yêu cầu đã được duyệt!</h2>
+                        <p class="text-sm text-gray-500">Mã trả hàng: <strong class="text-blue-600">{{ $existingRequest->return_code }}</strong></p>
+                    </div>
+                    <span class="ml-auto px-4 py-1.5 text-xs font-black uppercase rounded-full bg-blue-100 text-blue-600">Đã duyệt</span>
+                @endif
             </div>
             <div class="bg-gray-50 rounded-2xl p-4">
                 <p class="text-xs text-gray-400 uppercase font-bold mb-1">Loại yêu cầu</p>
-                <p class="font-semibold text-gray-700">{{ $existingRequest->type_label }}</p>
+                <p class="font-semibold text-gray-700">Hoàn hàng</p>
                 <p class="text-xs text-gray-400 uppercase font-bold mt-3 mb-1">Lý do</p>
                 <p class="text-gray-600">{{ $existingRequest->reason }}</p>
+                @if($existingRequest->status === 'rejected' && $existingRequest->admin_note)
+                <p class="text-xs text-red-400 uppercase font-bold mt-3 mb-1">Lý do từ chối (từ Admin)</p>
+                <p class="text-red-600 font-medium">{{ $existingRequest->admin_note }}</p>
+                @endif
                 @if($existingRequest->video_path)
                 <p class="text-xs text-gray-400 uppercase font-bold mt-3 mb-1">Video đính kèm</p>
                 <div class="flex items-center gap-2 text-green-600 text-sm">
@@ -79,7 +94,14 @@
                     @endif
                     <div class="flex-1 min-w-0">
                         <p class="font-semibold text-gray-800 truncate">{{ $item->product_name }}</p>
-                        <p class="text-xs text-gray-400">x{{ $item->quantity }}</p>
+                        @if($item->variant)
+                        <p class="text-xs text-gray-500 mt-1">
+                            @if($item->variant->color)Màu sắc: {{ $item->variant->color }}@endif
+                            @if($item->variant->storage) | Dung lượng: {{ $item->variant->storage }}@endif
+                            @if($item->variant->ram) | RAM: {{ $item->variant->ram }}@endif
+                        </p>
+                        @endif
+                        <p class="text-xs text-gray-400 mt-1">x{{ $item->quantity }}</p>
                     </div>
                     <span class="font-black text-orange-500">{{ number_format($item->subtotal, 0, ',', '.') }}đ</span>
                 </div>
@@ -113,35 +135,15 @@
               class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
 
             @csrf
+            
+            {{-- Hidden requested 'type' since we removed the type selection UI --}}
+            <input type="hidden" name="type" value="return">
 
             <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-white">
                 <h2 class="font-black text-gray-700 text-sm uppercase tracking-widest">Chi tiết yêu cầu</h2>
             </div>
 
             <div class="px-6 py-6 space-y-6">
-
-                {{-- Type Selection --}}
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-3">Loại yêu cầu <span class="text-red-500">*</span></label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="type" value="return" class="sr-only peer" required {{ old('type') !== 'refund' ? 'checked' : '' }}>
-                            <div class="peer-checked:border-orange-500 peer-checked:bg-orange-50 border-2 border-gray-200 rounded-2xl p-4 text-center transition-all hover:border-orange-300">
-                                <svg class="w-8 h-8 mx-auto mb-2 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"/></svg>
-                                <p class="font-bold text-gray-800 text-sm">Hoàn hàng</p>
-                                <p class="text-xs text-gray-400 mt-1">Trả sản phẩm lại</p>
-                            </div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="type" value="refund" class="sr-only peer" {{ old('type') === 'refund' ? 'checked' : '' }}>
-                            <div class="peer-checked:border-orange-500 peer-checked:bg-orange-50 border-2 border-gray-200 rounded-2xl p-4 text-center transition-all hover:border-orange-300">
-                                <svg class="w-8 h-8 mx-auto mb-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                <p class="font-bold text-gray-800 text-sm">Hoàn tiền</p>
-                                <p class="text-xs text-gray-400 mt-1">Nhận lại tiền</p>
-                            </div>
-                        </label>
-                    </div>
-                </div>
 
                 {{-- Reason --}}
                 <div>

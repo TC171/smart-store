@@ -44,7 +44,7 @@ class RefundRequest extends Model
         return [
             'pending'         => 'Chờ duyệt',
             'approved_return' => 'Chờ gửi hàng',
-            'refunded'        => 'Đã hoàn tiền',
+            'refunded'        => 'Đã hoàn hàng',
             'rejected'        => 'Từ chối',
         ][$this->status] ?? $this->status;
     }

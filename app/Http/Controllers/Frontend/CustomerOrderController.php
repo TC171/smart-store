@@ -77,33 +77,67 @@ class CustomerOrderController extends Controller
 
         $data = $request->validate([
             'product_id' => ['required', 'in:' . implode(',', $productIds)],
-            'rating' => ['required', 'integer', 'between:1,5'],
-            'title' => ['nullable', 'string', 'max:255'],
-            'comment' => ['required', 'string'],
+            'rating'     => ['required', 'integer', 'between:1,5'],
+            'title'      => ['nullable', 'string', 'max:255'],
+            'comment'    => ['required', 'string'],
+            'images'     => ['nullable', 'array', 'max:5'],
+            'images.*'   => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        $userId = auth()->id();
+        $userId    = auth()->id();
         $productId = $data['product_id'];
 
         $currentReviewCount = Review::where('user_id', $userId)
             ->where('product_id', $productId)
             ->count();
 
-        $completedOrderCount = Order::where('user_id', $userId)
+        // Lấy số lượng đơn hàng thành công và KHÔNG có yêu cầu hoàn trả (hoặc yêu cầu bị từ chối)
+        $validOrderCount = Order::where('user_id', $userId)
             ->where('status', 'completed')
             ->whereHas('items', fn($q) => $q->where('product_id', $productId))
+            ->whereDoesntHave('refundRequests', function($q) {
+                $q->whereIn('status', ['pending', 'approved_return', 'refunded']);
+            })
             ->count();
 
-        if ($currentReviewCount >= $completedOrderCount) {
+        if ($validOrderCount == 0) {
+            // Kiểm tra xem có đơn hàng nào bị chặn do đang hoàn tiền không
+            $hasRefundRequest = Order::where('user_id', $userId)
+                ->whereHas('items', fn($q) => $q->where('product_id', $productId))
+                ->whereHas('refundRequests', function($q) {
+                    $q->whereIn('status', ['pending', 'approved_return', 'refunded']);
+                })
+                ->exists();
+
+            if ($hasRefundRequest) {
+                return back()->with('error', 'Sản phẩm đang trong quá trình hoàn hàng/hoàn tiền nên không thể đánh giá.');
+            }
+            
+            return back()->with('error', 'Bạn cần mua sản phẩm này mới có thể đánh giá.');
+        }
+
+        if ($currentReviewCount >= $validOrderCount) {
             return back()->with('error', 'Bạn đã đánh giá đủ số lần cho sản phẩm này.');
         }
 
+        // Handle image uploads
+        $imagePaths = [];
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                if ($image->isValid()) {
+                    $path = $image->store('review-images', 'public');
+                    $imagePaths[] = $path;
+                }
+            }
+        }
+
         Review::create([
-            'user_id' => $userId,
-            'product_id' => $productId,
-            'rating' => $data['rating'],
-            'title' => $data['title'] ?? null,
-            'comment' => $data['comment'],
+            'user_id'     => $userId,
+            'product_id'  => $productId,
+            'rating'      => $data['rating'],
+            'title'       => $data['title'] ?? null,
+            'comment'     => $data['comment'],
+            'images'      => !empty($imagePaths) ? $imagePaths : null,
             'is_approved' => false,
         ]);
 

@@ -3,7 +3,7 @@
 @section('content')
 <div class="p-6">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-white">🔄 Yêu cầu Hoàn hàng / Hoàn tiền</h1>
+        <h1 class="text-2xl font-bold text-white">🔄 Danh sách yêu cầu</h1>
         <span class="bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-sm font-semibold">
             {{ $refunds->total() }} yêu cầu
         </span>
@@ -22,7 +22,7 @@
                 <option value="">-- Tất cả trạng thái --</option>
                 <option value="pending"  {{ request('status') === 'pending'  ? 'selected' : '' }}>🕐 Chờ xét duyệt</option>
                 <option value="approved_return" {{ request('status') === 'approved_return' ? 'selected' : '' }}>📦 Chờ gửi hàng</option>
-                <option value="refunded" {{ request('status') === 'refunded' ? 'selected' : '' }}>✅ Đã hoàn tiền</option>
+                <option value="refunded" {{ request('status') === 'refunded' ? 'selected' : '' }}>✅ Đã hoàn hàng</option>
                 <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>❌ Đã từ chối</option>
             </select>
             <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Lọc</button>
@@ -75,7 +75,7 @@
                         $statusMap = [
                             'pending'         => ['bg-yellow-500/20 text-yellow-400', '🕐 Chờ duyệt'],
                             'approved_return' => ['bg-blue-500/20 text-blue-400',     '📦 Chờ gửi hàng'],
-                            'refunded'        => ['bg-green-500/20 text-green-400',   '✅ Đã hoàn tiền'],
+                            'refunded'        => ['bg-green-500/20 text-green-400',   '✅ Đã hoàn hàng'],
                             'rejected'        => ['bg-red-500/20 text-red-400',       '❌ Từ chối'],
                         ];
                         @endphp
@@ -106,7 +106,7 @@
         <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
         </div>
-        <p class="text-gray-400 text-lg">Chưa có yêu cầu hoàn hàng nào</p>
+        <p class="text-gray-400 text-lg">Chưa có yêu cầu nào</p>
     </div>
     @endif
 </div>

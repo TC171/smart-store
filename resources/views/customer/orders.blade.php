@@ -36,14 +36,16 @@
                             @php
                             $statusLabels = [
                                 'pending' => 'Chờ xác nhận',
+                                'waiting_payment' => 'Đang chờ thanh toán',
                                 'confirmed' => 'Đã xác nhận',
                                 'shipping' => 'Đang giao hàng',
                                 'completed' => 'Hoàn thành',
                                 'cancelled' => 'Đã huỷ',
-                                'refunded' => 'Đã hoàn tiền'
+                                'refunded' => 'Đã hoàn hàng'
                             ];
                             $statusColors = [
                                 'pending' => 'bg-yellow-100 text-yellow-800',
+                                'waiting_payment' => 'bg-orange-100 text-orange-800',
                                 'confirmed' => 'bg-blue-100 text-blue-800',
                                 'shipping' => 'bg-indigo-100 text-indigo-800',
                                 'completed' => 'bg-green-100 text-green-800',
@@ -79,16 +81,25 @@
                                     Xem chi tiết
                                 </a>
 
-                                @if(in_array($order->status, ['completed', 'shipping']) && !$order->refundRequests->where('status', 'pending')->count())
-                                    <a href="{{ route('customer.orders.refund.create', $order) }}" 
-                                       title="Yêu cầu hoàn hàng"
-                                       class="text-orange-500 hover:text-orange-700 transition-all font-medium">
-                                        Hoàn hàng/Tiền
-                                    </a>
-                                @elseif($order->refundRequests->where('status', 'pending')->count())
+                                @php
+                                    $pendingRefund = $order->refundRequests->where('status', 'pending')->first();
+                                    $approvedRefund = $order->refundRequests->where('status', 'approved_return')->first();
+                                @endphp
+
+                                @if($pendingRefund)
                                     <span title="Đang chờ duyệt hoàn hàng" class="text-yellow-600 font-medium whitespace-nowrap">
                                         Đang chờ duyệt...
                                     </span>
+                                @elseif($approvedRefund)
+                                    <a href="{{ route('customer.order.detail', $order) }}" title="Đã duyệt, hãy xem chi tiết để gửi hàng" class="text-blue-600 font-medium whitespace-nowrap hover:text-blue-800">
+                                        Đã duyệt hoàn hàng
+                                    </a>
+                                @elseif(in_array($order->status, ['completed', 'shipping']))
+                                    <a href="{{ route('customer.orders.refund.create', $order) }}" 
+                                       title="Yêu cầu hoàn hàng"
+                                       class="text-orange-500 hover:text-orange-700 transition-all font-medium">
+                                        Hoàn hàng
+                                    </a>
                                 @endif
                             </div>
                         </td>

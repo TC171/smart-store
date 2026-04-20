@@ -58,7 +58,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-500">Tổng chi tiêu</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ number_format($customerTotalSpent ?? auth()->user()->orders()->sum('total_amount')) }}₫</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ number_format($customerTotalSpent ?? auth()->user()->orders()->where('status', 'completed')->sum('grand_total')) }}₫</p>
                     </div>
                 </div>
             </div>

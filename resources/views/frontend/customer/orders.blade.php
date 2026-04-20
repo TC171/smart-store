@@ -50,6 +50,8 @@
                             <div class="flex flex-col">
                                 @if($order->payment_status == 'paid')
                                     <span class="text-green-600 text-sm font-bold">● Đã thanh toán</span>
+                                @elseif($order->payment_status == 'refunded')
+                                    <span class="text-orange-500 text-sm font-bold">● Đã hoàn tiền</span>
                                 @else
                                     <span class="text-gray-400 text-sm font-medium italic">○ Chưa thanh toán</span>
                                 @endif
@@ -63,6 +65,8 @@
                                     'confirmed' => 'bg-blue-100 text-blue-600',
                                     'shipping'  => 'bg-blue-100 text-blue-600',
                                     'completed' => 'bg-green-100 text-green-600',
+                                    'failed_delivery' => 'bg-red-100 text-red-600',
+                                    'returned'  => 'bg-orange-100 text-orange-600',
                                     'cancelled' => 'bg-red-100 text-red-600',
                                     'refunded'  => 'bg-orange-100 text-orange-600',
                                 ];
@@ -71,8 +75,10 @@
                                     'confirmed' => 'Đã xác nhận',
                                     'shipping'  => 'Đang giao',
                                     'completed' => 'Hoàn thành',
+                                    'failed_delivery' => 'Giao ko thành công',
+                                    'returned'  => 'Đã hoàn hàng',
                                     'cancelled' => 'Đã hủy',
-                                    'refunded'  => 'Đã hoàn tiền',
+                                    'refunded'  => 'Đã hoàn hàng',
                                 ];
                             @endphp
                             <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase {{ $statusColors[$order->status] ?? 'bg-gray-100' }}">
@@ -93,16 +99,27 @@
                                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                          </button>
                                      </form>
-                                 @elseif(in_array($order->status, ['completed', 'shipping']) && !$order->refundRequests->where('status', 'pending')->count())
-                                     <a href="{{ route('customer.orders.refund.create', $order) }}" 
-                                        title="Yêu cầu hoàn hàng"
-                                        class="text-orange-500 hover:text-orange-700 transition-all transform hover:scale-110">
-                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                     </a>
-                                 @elseif($order->refundRequests->where('status', 'pending')->count())
-                                     <span title="Đang chờ duyệt hoàn hàng" class="text-yellow-500">
-                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                     </span>
+                                 @else
+                                     @php
+                                         $pendingRefund = $order->refundRequests->where('status', 'pending')->first();
+                                         $approvedRefund = $order->refundRequests->where('status', 'approved_return')->first();
+                                     @endphp
+                                     
+                                     @if($pendingRefund)
+                                         <span title="Đang chờ duyệt hoàn hàng" class="text-yellow-500">
+                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                         </span>
+                                     @elseif($approvedRefund)
+                                         <span title="Đã duyệt, chờ trả hàng" class="text-blue-500">
+                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                         </span>
+                                     @elseif($order->status === 'completed')
+                                         <a href="{{ route('customer.orders.refund.create', $order) }}" 
+                                            title="Yêu cầu hoàn hàng"
+                                            class="text-orange-500 hover:text-orange-700 transition-all transform hover:scale-110">
+                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                         </a>
+                                     @endif
                                  @endif
                              </div>
                         </td>

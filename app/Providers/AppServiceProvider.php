@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
                 ->where('user_id', $userId)
                 ->selectRaw('COUNT(*) as total_orders')
                 ->selectRaw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_orders")
-                ->selectRaw('COALESCE(SUM(total_amount), 0) as total_spent')
+                ->selectRaw("COALESCE(SUM(CASE WHEN status = 'completed' THEN grand_total ELSE 0 END), 0) as total_spent")
                 ->first();
 
             $view->with([

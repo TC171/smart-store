@@ -395,13 +395,86 @@
                 </div>
             </div>
 
-            @auth
+            @auth('web')
+            {{-- 🔔 NOTIFICATION BELL --}}
+            <div x-data="notificationBell()" x-init="init()" class="relative">
+                <button @click="toggle()" id="notif-bell-btn"
+                        class="relative text-gray-700 hover:text-orange-500 transition p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <span x-show="unread > 0" x-text="unread > 9 ? '9+' : unread"
+                          class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full leading-none"></span>
+                </button>
+
+                <div x-show="open" @click.away="open = false"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95 translate-y-1"
+                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+
+                    {{-- Header --}}
+                    <div class="flex items-center justify-between px-4 py-3 border-b bg-gradient-to-r from-orange-500 to-amber-500">
+                        <div class="flex items-center gap-2">
+                            <span class="text-white font-bold text-sm">🔔 Thông báo</span>
+                            <span x-show="unread > 0" x-text="unread + ' mới'"
+                                  class="bg-white/30 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
+                        </div>
+                        <button x-show="unread > 0" @click="readAll()"
+                                class="text-white/80 hover:text-white text-xs underline">Đọc tất cả</button>
+                    </div>
+
+                    {{-- List --}}
+                    <div class="max-h-80 overflow-y-auto">
+                        <template x-if="loading">
+                            <div class="p-6 text-center">
+                                <div class="animate-spin w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full mx-auto"></div>
+                            </div>
+                        </template>
+                        <template x-if="!loading && notifications.length === 0">
+                            <div class="p-8 text-center">
+                                <div class="text-4xl mb-2">🔕</div>
+                                <p class="text-gray-400 text-sm">Chưa có thông báo nào</p>
+                            </div>
+                        </template>
+                        <template x-for="n in notifications" :key="n.id">
+                            <a :href="n.url" @click="markRead(n)"
+                               :class="n.read ? 'bg-white' : 'bg-orange-50'"
+                               class="flex items-start gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition cursor-pointer block">
+                                <div :class="{
+                                        'bg-green-100 text-green-600': n.color === 'green',
+                                        'bg-blue-100 text-blue-600':  n.color === 'blue',
+                                        'bg-red-100 text-red-600':    n.color === 'red',
+                                        'bg-orange-100 text-orange-600': n.color === 'orange',
+                                        'bg-gray-100 text-gray-600':  n.color === 'gray',
+                                     }"
+                                     class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-lg">
+                                    <span x-text="n.icon"></span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-gray-800 leading-tight" x-text="n.title"></p>
+                                    <p class="text-xs text-gray-500 mt-0.5 line-clamp-2" x-text="n.body"></p>
+                                    <p class="text-[10px] text-gray-400 mt-1" x-text="n.time"></p>
+                                </div>
+                                <div x-show="!n.read" class="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0 mt-1.5"></div>
+                            </a>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            @endauth
+
+            @auth('web')
             <div x-data="{ open:false }" class="relative">
                 <button @click="open = !open" class="flex items-center gap-2 hover:text-orange-500 transition">
                     <svg class="w-7 h-7 text-gray-700 hover:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
-                    <span class="text-sm font-bold text-gray-700">{{ auth()->user()->name }}</span>
+                    <span class="text-sm font-bold text-gray-700">{{ auth('web')->user()->name }}</span>
                 </button>
 
                 <div x-show="open" @click.away="open=false"
@@ -514,9 +587,70 @@
         return createSearchBase();
     }
 
-    // =============================================
-    // 🔔 SMART STORE NOTIFICATION SYSTEM v2.0
-    // =============================================
+    // 🔔 NOTIFICATION BELL COMPONENT
+    function notificationBell() {
+        return {
+            open: false,
+            loading: false,
+            notifications: [],
+            unread: 0,
+
+            init() {
+                this.fetchNotifications();
+                // Poll every 60s for new notifications
+                setInterval(() => this.fetchNotifications(), 60000);
+            },
+
+            async fetchNotifications() {
+                try {
+                    const res = await fetch('/customer/notifications', {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.notifications = data.notifications;
+                        this.unread = data.unread;
+                    }
+                } catch (e) {}
+            },
+
+            async toggle() {
+                this.open = !this.open;
+                if (this.open && this.notifications.length === 0) {
+                    this.loading = true;
+                    await this.fetchNotifications();
+                    this.loading = false;
+                }
+            },
+
+            async readAll() {
+                await fetch('/customer/notifications/read-all', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                this.notifications = this.notifications.map(n => ({ ...n, read: true }));
+                this.unread = 0;
+            },
+
+            async markRead(n) {
+                if (!n.read) {
+                    fetch('/customer/notifications/' + n.id + '/read', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    n.read = true;
+                    this.unread = Math.max(0, this.unread - 1);
+                }
+            }
+        };
+    }
+
 
     // --- TOAST TRUNG TÂM (đăng ký, đặt hàng, lỗi) ---
     function showToast(message, type = 'success', subtitle = '') {

@@ -365,6 +365,22 @@
                 {{ $review->comment }}
             </div>
 
+            {{-- ✅ ẢNH ĐÁNH GIÁ TỪ KHÁCH HÀNG --}}
+            @php
+                $imageUrls = $review->getImageUrls();
+            @endphp
+            @if(!empty($imageUrls))
+                <div class="mt-3 flex gap-2 flex-wrap">
+                    @foreach($imageUrls as $url)
+                        <a href="{{ $url }}" target="_blank" class="block">
+                            <img src="{{ $url }}" 
+                                 class="w-20 h-20 object-cover rounded-lg border border-gray-200 hover:opacity-80 transition shadow-sm"
+                                 onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Review+Img&background=eee&color=999';">
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+
         </div>
     @empty
         <div class="text-gray-500 text-center py-6">
