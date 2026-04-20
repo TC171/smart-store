@@ -282,6 +282,11 @@ class CartController extends Controller
                 $totalAmount = collect($checkoutItems)->sum(fn ($item) => $item['price'] * $item['quantity']);
                 $grandTotal = $totalAmount - $discountAmount;
 
+                // Kiểm tra giới hạn COD 10 triệu
+                if ($request->payment_method === 'cod' && $grandTotal > 10000000) {
+                    throw new Exception('Đơn hàng trên 10.000.000đ không hỗ trợ thanh toán COD. Vui lòng chọn phương thức thanh toán điện tử.');
+                }
+
                 $createdOrder = Order::create([
                     'order_number' => 'ORD-'.now()->format('YmdHis').'-'.mt_rand(1000, 9999),
                     'user_id' => auth('web')->id(),
@@ -352,7 +357,9 @@ class CartController extends Controller
         }
 
         if ($request->payment_method === 'cod') {
-            return redirect()->route('customer.orders')->with('success', 'Đặt hàng thành công!');
+            return redirect()->route('customer.orders')->with([
+                'success' => 'Đặt hàng thành công! Cảm ơn bạn đã tin tưởng Smart Store.',
+            ]);
         }
 
         if ($request->payment_method === 'vnpay') {
@@ -402,17 +409,61 @@ class CartController extends Controller
                 }
                 return view('frontend.checkout.success', compact('order', 'request'));
             }
-            return redirect()->route('cart.index')->with('error', 'Giao dịch thất bại.');
+
+            // Xử lý khi thanh toán thất bại hoặc người dùng hủy
+            if ($order && ($order->status === 'waiting_payment' || $order->status === 'pending')) {
+                DB::transaction(function () use ($order) {
+                    // 1. Khôi phục giỏ hàng từ đơn hàng bị lỗi
+                    $cart = session('cart', []);
+                    foreach ($order->items as $item) {
+                        $cart[$item->product_variant_id] = [
+                            'id' => $item->product_variant_id,
+                            'product_id' => $item->product_id,
+                            'variant_id' => $item->product_variant_id,
+                            'name' => $item->product_name,
+                            'price' => $item->price,
+                            'quantity' => $item->quantity,
+                        ];
+                    }
+                    session(['cart' => $cart]);
+
+                    // 2. Hủy đơn hàng và khôi phục tồn kho
+                    $order->update([
+                        'status' => 'cancelled',
+                        'note' => ($order->note ? $order->note . "\n" : "") . "[Hệ thống: Thanh toán VNPay thất bại/hủy - Đã khôi phục giỏ hàng]"
+                    ]);
+
+                    foreach ($order->items as $item) {
+                        $variant = ProductVariant::find($item->product_variant_id);
+                        if ($variant) {
+                            $variant->increment('stock', $item->quantity);
+                            DB::table('inventory_history')->insert([
+                                'product_variant_id' => $variant->id,
+                                'type' => 'return',
+                                'quantity' => $item->quantity,
+                                'previous_stock' => $variant->stock - $item->quantity,
+                                'current_stock' => $variant->stock,
+                                'reference_type' => 'order_cancel',
+                                'reference_id' => $order->id,
+                                'notes' => 'Hủy tự động do thanh toán VNPay không thành công',
+                                'created_at' => now(),
+                            ]);
+                        }
+                    }
+                });
+            }
+
+            return redirect()->route('cart.index')->with('error', 'Thanh toán không thành công. Giỏ hàng của bạn đã được khôi phục.');
         }
-        return redirect()->route('cart.index')->with('error', 'Chữ ký không hợp lệ.');
+        return redirect()->route('cart.index')->with('error', 'Lỗi xác thực chữ ký VNPAY.');
     }
 
     public function cancelOrder(Request $request, $id)
     {
         $order = Order::where('id', $id)->where('user_id', auth('web')->id())->firstOrFail();
 
-        if ($order->status === 'cancelled' || $order->status === 'refunded') {
-            return back()->with('error', 'Đơn hàng này đã được xử lý và không thể hủy nữa.');
+        if (in_array($order->status, ['completed', 'cancelled', 'refunded'])) {
+            return back()->with('error', 'Đơn hàng này đã hoàn thành hoặc đã được xử lý nên không thể hủy nữa.');
         }
 
         if ($order->status === 'pending') {

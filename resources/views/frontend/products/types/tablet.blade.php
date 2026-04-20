@@ -365,6 +365,22 @@
                 {{ $review->comment }}
             </div>
 
+            {{-- ✅ ẢNH ĐÁNH GIÁ TỪ KHÁCH HÀNG --}}
+            @php
+                $imageUrls = $review->getImageUrls();
+            @endphp
+            @if(!empty($imageUrls))
+                <div class="mt-3 flex gap-2 flex-wrap">
+                    @foreach($imageUrls as $url)
+                        <a href="{{ $url }}" target="_blank" class="block">
+                            <img src="{{ $url }}" 
+                                 class="w-20 h-20 object-cover rounded-lg border border-gray-200 hover:opacity-80 transition shadow-sm"
+                                 onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Review+Img&background=eee&color=999';">
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+
         </div>
     @empty
         <div class="text-gray-500 text-center py-6">
@@ -618,13 +634,58 @@ document.addEventListener('DOMContentLoaded', function () {
     fetch(form.action, {
         method:'POST',
         body: formData,
-        headers:{'X-Requested-With':'XMLHttpRequest'}
+        headers:{
+            'X-Requested-With':'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
     })
     .then(res => res.json())
     .then(data => {
-        if(!data.success){ alert(data.message); return; }
-        if(data.redirect){ window.location.href = data.redirect; }
-        else alert(`Đã thêm ${quantity} sản phẩm vào giỏ!`);
+        if(!data.success){ 
+            if(window.showToast) window.showToast(data.message || 'Có lỗi xảy ra', 'error');
+            else alert(data.message); 
+            return; 
+        }
+        if(data.redirect){ 
+            window.location.href = data.redirect; 
+            return;
+        }
+
+        // Cập nhật giao diện giỏ hàng
+        if(window.updateMiniCartUI && data.cart) {
+            const badge = document.querySelector('.cart-badge-count');
+            if(badge) {
+                badge.innerText = data.cart_count || Object.keys(data.cart).length;
+                badge.classList.remove('animate-pulse');
+                void badge.offsetWidth; 
+                badge.classList.add('animate-pulse');
+            }
+            window.updateMiniCartUI(data.cart);
+        }
+
+        // Hiện thông báo đẹp
+        if(window.showCartToast) {
+            let itemName = data.message || 'Sản phẩm';
+            let itemImage = null;
+            let itemPrice = '';
+
+            if (variantId && data.cart && data.cart[variantId]) {
+                const item = data.cart[variantId];
+                itemName = item.name || itemName;
+                itemImage = item.image || null;
+                itemPrice = new Intl.NumberFormat('vi-VN').format(item.price) + 'đ';
+            }
+
+            window.showCartToast(itemName, itemImage, itemPrice, data.cart_count || Object.keys(data.cart).length);
+        } else if(window.showToast) {
+            window.showToast('Đã thêm sản phẩm vào giỏ hàng', 'success');
+        } else {
+            alert(`Đã thêm ${quantity} sản phẩm vào giỏ!`);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        if(window.showToast) window.showToast('Có lỗi xảy ra, vui lòng thử lại', 'error');
     });
 
     return false;

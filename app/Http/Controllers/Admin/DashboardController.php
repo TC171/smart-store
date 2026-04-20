@@ -8,8 +8,8 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $totalRevenue = \App\Models\Order::sum('grand_total');
-        $totalOrders = \App\Models\Order::count();
+        $totalRevenue = \App\Models\Order::where('status', 'completed')->sum('grand_total');
+        $totalOrders = \App\Models\Order::where('status', 'completed')->count();
         $totalProducts = \App\Models\Product::where('status', 1)->count();
         $totalCustomers = \App\Models\User::where('role', 'customer')->count();
 
@@ -19,6 +19,7 @@ class DashboardController extends Controller
             ->get();
 
         $monthlyRevenue = \App\Models\Order::selectRaw('MONTH(created_at) as month, SUM(grand_total) as revenue')
+            ->where('status', 'completed')
             ->whereYear('created_at', now()->year)
             ->groupBy('month')
             ->pluck('revenue', 'month')

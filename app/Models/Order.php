@@ -55,6 +55,11 @@ class Order extends Model
         return $this->belongsTo(Coupon::class);
     }
 
+    public function refundRequests()
+    {
+        return $this->hasMany(RefundRequest::class);
+    }
+
     // --- Helper Methods (Tiện ích bổ sung) ---
 
     /**
@@ -63,11 +68,12 @@ class Order extends Model
     public function getStatusColorAttribute()
     {
         return [
-            'pending'   => 'orange',   // Chờ xử lý cho màu cam luôn
-            'confirmed' => 'blue',
-            'shipping'  => 'indigo',
-            'completed' => 'green',
-            'cancelled' => 'gray',
+            'pending'         => 'orange',
+            'waiting_payment' => 'yellow',
+            'confirmed'       => 'blue',
+            'shipping'        => 'indigo',
+            'completed'       => 'green',
+            'cancelled'       => 'gray',
         ][$this->status] ?? 'gray';
     }
 

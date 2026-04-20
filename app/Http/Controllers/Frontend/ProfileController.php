@@ -38,7 +38,7 @@ class ProfileController extends Controller
         $totalOrders = $user->orders()->count();
         $completedOrders = $user->orders()->where('status', 'completed')->count();
         $pendingOrders = $user->orders()->whereIn('status', ['pending', 'confirmed'])->count();
-        $totalSpent = $user->orders()->where('payment_status', 'paid')->sum('grand_total');
+        $totalSpent = $user->orders()->where('status', 'completed')->sum('grand_total');
 
         $defaultAddress = $user->defaultAddress;
 
