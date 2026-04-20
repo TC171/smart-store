@@ -33,6 +33,53 @@
             </div>
         </div>
 
+        {{-- Hiển thị trạng thái giao hàng từ shipper --}}
+        @if($order->delivery_status)
+            @php
+                $deliveryStatusLabels = [
+                    'assigned' => 'Đơn mới được gán cho shipper',
+                    'picked_up' => 'Shipper đã nhận hàng',
+                    'delivering' => 'Đơn hàng đang trên đường giao tới bạn',
+                    'delivered' => 'Đơn hàng đã được giao thành công',
+                    'failed' => 'Giao hàng thất bại',
+                    'returned' => 'Đơn hàng đã trả về',
+                ];
+                $deliveryStatusColors = [
+                    'assigned' => 'bg-blue-100 text-blue-800',
+                    'picked_up' => 'bg-blue-100 text-blue-800',
+                    'delivering' => 'bg-yellow-100 text-yellow-800',
+                    'delivered' => 'bg-green-100 text-green-800',
+                    'failed' => 'bg-red-100 text-red-800',
+                    'returned' => 'bg-gray-100 text-gray-800',
+                ];
+                $deliveryIcons = [
+                    'assigned' => '📥',
+                    'picked_up' => '📦',
+                    'delivering' => '🚚',
+                    'delivered' => '✅',
+                    'failed' => '❌',
+                    'returned' => '↩️',
+                ];
+            @endphp
+            <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                <h4 class="text-sm font-semibold text-gray-700 mb-2">📍 Trạng thái giao hàng</h4>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600">
+                            <span class="font-medium">Shipper:</span>
+                            {{ $order->deliveryStaff?->name ?? 'Chưa gán' }}
+                        </p>
+                        <p class="text-gray-600 mt-1">
+                            <span class="font-medium">Trạng thái:</span>
+                            <span class="ml-2 inline-flex px-3 py-1 text-xs font-semibold rounded-full {{ $deliveryStatusColors[$order->delivery_status] ?? 'bg-gray-100 text-gray-800' }}">
+                                {{ $deliveryIcons[$order->delivery_status] ?? '' }} {{ $deliveryStatusLabels[$order->delivery_status] ?? $order->delivery_status }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="mb-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Sản phẩm đã đặt</h3>
             <div class="space-y-4">

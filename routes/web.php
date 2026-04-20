@@ -39,6 +39,8 @@ use App\Http\Controllers\Frontend\CategoryController as FrontCategoryController;
 use App\Http\Controllers\Frontend\BrandController as FrontBrandController;
 use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\ProfileController;
+use App\Http\Controllers\Frontend\RefundController;
+use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,7 +49,6 @@ use App\Http\Controllers\Frontend\ProfileController;
 
 */
 
-Route::post('/customer/orders/{id}/cancel', [App\Http\Controllers\Frontend\CartController::class, 'cancelOrder'])->name('customer.orders.cancel');
 Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware('guest:admin')->group(function () {
@@ -76,8 +77,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Cấu hình Route Order Admin chuẩn
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
-        Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::get('orders/{order}/status', function (Order $order) {
+            return redirect()->route('admin.orders.show', $order);
+        });
+        Route::post('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
+        Route::post(
+    'orders/{order}/assign-shipper',
+    [OrderController::class, 'assignShipper']
+)->name('orders.assignShipper');
+
+        // Quản lý yêu cầu hoàn hàng
+        Route::get('refunds', [AdminRefundController::class, 'index'])->name('refunds.index');
+        Route::get('refunds/{refund}', [AdminRefundController::class, 'show'])->name('refunds.show');
+        Route::post('refunds/{refund}/approve', [AdminRefundController::class, 'approve'])->name('refunds.approve');
+        Route::post('refunds/{refund}/confirm', [AdminRefundController::class, 'confirmReceived'])->name('refunds.confirm');
+        Route::post('refunds/{refund}/reject', [AdminRefundController::class, 'reject'])->name('refunds.reject');
 
         Route::resource('users', UserController::class)->except(['show']);
         Route::resource('customers', CustomerController::class);
@@ -108,24 +123,17 @@ Route::middleware('guest:web')->group(function () {
     Route::get('/forgot-password', [FrontAuthController::class, 'showForgotPassword'])->name('forgot-password');
     Route::post('/forgot-password', [FrontAuthController::class, 'processForgotPassword'])->name('forgot-password.post');
 });
-Route::middleware(['auth:web', 'customer'])
-    ->prefix('customer')
-    ->name('customer.')
-    ->group(function () {
 
-        Route::get('/dashboard', fn () => view('customer.dashboard'))->name('dashboard');
+// Customer-specific auth pages for clearer access
+Route::middleware('guest:web')->prefix('customer')->name('customer.')->group(function () {
+    Route::get('/login', [FrontAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [FrontAuthController::class, 'login'])->name('login.post');
+    Route::get('/register', [FrontAuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [FrontAuthController::class, 'register'])->name('register.post');
+    Route::get('/forgot-password', [FrontAuthController::class, 'showForgotPassword'])->name('forgot-password');
+    Route::post('/forgot-password', [FrontAuthController::class, 'processForgotPassword'])->name('forgot-password.post');
+});
 
-        Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
-        Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
-        Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
-
-        Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
-    });
-/*
-|--------------------------------------------------------------------------
-| CUSTOMER ROUTES
-|--------------------------------------------------------------------------
-*/
 Route::middleware(['auth:web', 'customer'])
     ->prefix('customer')
     ->name('customer.')
@@ -139,7 +147,13 @@ Route::middleware(['auth:web', 'customer'])
 
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
+        Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
+
+        // Hoàn hàng / Hoàn tiền
+        Route::get('/orders/{order}/refund', [RefundController::class, 'create'])->name('orders.refund.create');
+        Route::post('/orders/{order}/refund', [RefundController::class, 'store'])->name('orders.refund.store');
+
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
     });
 
@@ -425,5 +439,85 @@ Route::get('/api/search/suggestions', function () {
     ]);
 });
 
-// 🔥 CHI TIẾT SẢN PHẨM (LUÔN ĐỂ CUỐI CÙNG ĐỂ KHÔNG CHẶN CÁC ROUTE KHÁC)
-Route::get('/{categorySlug}/{productSlug}', [FrontProductController::class, 'show'])->name('products.show');
+/*
+|--------------------------------------------------------------------------
+| DELIVERY ROUTES (SHIPPER) - HỆ THỐNG AUTH RIÊNG
+|--------------------------------------------------------------------------
+*/
+
+use App\Http\Controllers\Delivery\DeliveryController;
+use App\Http\Controllers\Delivery\AuthController as DeliveryAuthController;
+
+Route::prefix('delivery')
+    ->name('delivery.')
+    ->group(function () {
+
+        // Guest routes - Auth riêng cho delivery
+        Route::middleware(['guest:delivery'])->group(function () {
+            Route::get('/login', [DeliveryAuthController::class, 'showLogin'])->name('login');
+            Route::post('/login', [DeliveryAuthController::class, 'login']);
+            Route::get('/register', [DeliveryAuthController::class, 'showRegister'])->name('register');
+            Route::post('/register', [DeliveryAuthController::class, 'register']);
+        });
+
+        // Protected routes - Chỉ shipper đã đăng nhập
+        Route::middleware(['auth:delivery', 'shipper'])->group(function () {
+            Route::get('/dashboard', [DeliveryController::class, 'dashboard'])
+                ->name('dashboard');
+
+            Route::get('/orders', [DeliveryController::class, 'index'])
+                ->name('orders.index');
+
+            Route::post('/orders/{order}/pickup', [DeliveryController::class, 'pickup'])
+                ->name('orders.pickup');
+
+            Route::post('/orders/{order}/delivering', [DeliveryController::class, 'delivering'])
+                ->name('orders.delivering');
+
+            Route::post('/orders/{order}/done', [DeliveryController::class, 'done'])
+                ->name('orders.done');
+
+            Route::post('/orders/{order}/fail', [DeliveryController::class, 'fail'])
+                ->name('orders.fail');
+
+            Route::post('/orders/{order}/returned', [DeliveryController::class, 'returned'])
+                ->name('orders.returned');
+
+            Route::get('/orders/{order}', [DeliveryController::class, 'show'])
+                ->name('orders.show');
+
+            Route::post('/logout', [DeliveryAuthController::class, 'logout'])
+                ->name('logout');
+            
+            // Test route
+            Route::get('/test', function() {
+                return view('delivery.test');
+            })->name('test');
+
+            // Test POST route
+            Route::post('/test-post', function() {
+                \Log::info('TEST POST route called successfully!', [
+                    'user_id' => auth('delivery')->id(),
+                ]);
+                return back()->with('success', '✅ POST request worked!');
+            })->name('test-post');
+        });
+    });
+
+/*
+|--------------------------------------------------------------------------
+| LOGOUT CHUNG (WEB USERS: customer + shipper)
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/logout',
+    [FrontAuthController::class, 'logout']
+)->name('logout');    
+
+
+// 🔥 PHẢI ĐỂ CUỐI CÙNG - CHI TIẾT SẢN PHẨM
+
+Route::get('/{categorySlug}/{productSlug}', [FrontProductController::class, 'show'])
+    ->where('categorySlug', '^(?!delivery|admin|customer|api|login|register|checkout|forgot-password|gio-hang|ve-chung-toi|chinh-sach|lien-he|danh-muc|thuong-hieu|san-pham-noi-bat|tim-kiem).+$')
+    ->where('productSlug', '.+')
+    ->name('products.show');

@@ -52,7 +52,7 @@ class AuthController extends Controller
                     ->subject('Mật khẩu mới của bạn - Smart Store');
         });
 
-        return redirect()->route('login')->with('success', 'Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.');
+        return redirect()->route('customer.login')->with('success', 'Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.');
     }
 
     // ===== LOGIN =====
@@ -66,13 +66,14 @@ class AuthController extends Controller
 
             $user = Auth::guard('web')->user();
 
-            if ($user->role !== 'customer') {
+            // Redirect based on role
+            if ($user->role === 'customer') {
+                return redirect()->route('customer.dashboard');
+            } else {
+                // Không cho phép shipper đăng nhập qua hệ thống customer
                 Auth::guard('web')->logout();
-
-                return back()->with('error', 'Không đúng quyền');
+                return back()->with('error', 'Vui lòng sử dụng hệ thống đăng nhập dành cho giao hàng.');
             }
-
-            return redirect()->route('home');
         }
 
         return back()->with('error', 'Sai tài khoản hoặc mật khẩu');
@@ -94,7 +95,7 @@ class AuthController extends Controller
             'role' => 'customer', // 🔥 bắt buộc
         ]);
 
-        return redirect()->route('login')->with('success', 'Đăng ký thành công');
+        return redirect()->route('customer.login')->with('success', 'Đăng ký thành công');
     }
 
     // ===== LOGOUT =====

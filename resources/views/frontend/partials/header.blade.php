@@ -420,13 +420,13 @@
             </div>
             @else
             <div class="flex items-center gap-3">
-                <a href="{{ route('login') }}" class="flex items-center gap-1 text-sm font-medium hover:text-orange-500 transition text-gray-700">
+                <a href="{{ route('customer.login') }}" class="flex items-center gap-1 text-sm font-medium hover:text-orange-500 transition text-gray-700">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                     Đăng nhập
                 </a>
-                <a href="{{ route('register') }}"
+                <a href="{{ route('customer.register') }}"
                    class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 transition shadow-sm font-medium">
                     Đăng ký
                 </a>

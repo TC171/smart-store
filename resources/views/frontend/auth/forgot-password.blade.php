@@ -15,7 +15,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('forgot-password.post') }}">
+        <form method="POST" action="{{ route('customer.forgot-password.post') }}">
             @csrf
             
             <p class="text-sm text-gray-600 mb-4 text-center">
@@ -35,7 +35,7 @@
         </form>
 
         <p class="text-sm text-center mt-4">
-            <a href="{{ route('login') }}" class="text-red-500 hover:underline">Quay lại đăng nhập</a>
+            <a href="{{ route('customer.login') }}" class="text-red-500 hover:underline">Quay lại đăng nhập</a>
         </p>
 
     </div>

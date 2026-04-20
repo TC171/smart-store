@@ -285,4 +285,85 @@ class HomeController extends Controller
 
         return view('frontend.search', compact('products', 'query', 'categories', 'brands'));
     }
+
+    public function shop(Request $request)
+    {
+        $productsQuery = Product::where('status', 1)
+            ->with([
+                'category',
+                'brand',
+                'variants' => fn ($q) => $q->where('status', 1),
+            ]);
+
+        // Filters
+        if ($request->filled('category')) {
+            $productsQuery->whereHas('category', function ($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
+        }
+
+        if ($request->filled('brand')) {
+            $productsQuery->whereHas('brand', function ($q) use ($request) {
+                $q->where('slug', $request->brand);
+            });
+        }
+
+        if ($request->filled('price_range') && $request->price_range !== 'all') {
+            $productsQuery->whereHas('variants', function ($q) use ($request) {
+                $q->where('status', 1);
+
+                switch ($request->price_range) {
+                    case 'under_2m':
+                        $q->whereRaw('COALESCE(sale_price, price) < ?', [2000000]);
+                        break;
+                    case '2m_4m':
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [2000000, 4000000]);
+                        break;
+                    case '4m_7m':
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [4000000, 7000000]);
+                        break;
+                    case '7m_13m':
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [7000000, 13000000]);
+                        break;
+                    case '13m_20m':
+                        $q->whereRaw('COALESCE(sale_price, price) BETWEEN ? AND ?', [13000000, 20000000]);
+                        break;
+                    case 'over_20m':
+                        $q->whereRaw('COALESCE(sale_price, price) > ?', [20000000]);
+                        break;
+                }
+            });
+        }
+
+        switch ($request->get('sort')) {
+            case 'price_asc':
+                $productsQuery->withMin(['variants as min_variant_price' => fn($q) => $q->where('status', 1)], 'price')
+                      ->orderBy('min_variant_price');
+                break;
+
+            case 'price_desc':
+                $productsQuery->withMax(['variants as max_variant_price' => fn($q) => $q->where('status', 1)], 'price')
+                      ->orderByDesc('max_variant_price');
+                break;
+
+            case 'best_seller':
+                $productsQuery->orderByDesc('sold_count')->latest();
+                break;
+
+            case 'newest':
+                $productsQuery->latest();
+                break;
+
+            default:
+                $productsQuery->latest();
+                break;
+        }
+
+        $products = $productsQuery->paginate(24)->withQueryString();
+
+        $categories = Category::where('status', 1)->orderBy('name')->get();
+        $brands = Brand::where('status', 1)->orderBy('name')->get();
+
+        return view('frontend.shop', compact('products', 'categories', 'brands'));
+    }
 }

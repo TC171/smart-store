@@ -20,7 +20,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('login.post') }}">
+        <form method="POST" action="{{ route('customer.login.post') }}">
     @csrf
 
     <input type="email" name="email" placeholder="Email"
@@ -30,7 +30,7 @@
         class="w-full border px-4 py-2 mb-3 rounded-lg">
 
     <div class="flex justify-end w-full mb-3">
-        <a href="{{ route('forgot-password') }}" class="text-sm text-red-500 hover:underline">Quên mật khẩu?</a>
+        <a href="{{ route('customer.forgot-password') }}" class="text-sm text-red-500 hover:underline">Quên mật khẩu?</a>
     </div>
 
     @error('email')
@@ -44,7 +44,7 @@
 
         <p class="text-sm text-center mt-4">
             Chưa có tài khoản?
-            <a href="{{ route('register') }}" class="text-red-500">Đăng ký</a>
+            <a href="{{ route('customer.register') }}" class="text-red-500">Đăng ký</a>
         </p>
 
     </div>

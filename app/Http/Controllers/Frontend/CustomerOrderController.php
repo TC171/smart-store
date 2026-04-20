@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Review;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CustomerOrderController extends Controller
 {
@@ -13,7 +14,13 @@ class CustomerOrderController extends Controller
     {
         $this->authorize('viewAny', Order::class);
 
-        $orders = auth('web')->user()->orders()->latest()->paginate(10);
+        $orders = auth('web')->user()
+            ->orders()
+            ->with(['items', 'refundRequests', 'deliveryStaff'])
+            ->latest()
+            ->paginate(10);
+
+        // Dùng view đang hoạt động (customer.orders có refund button)
         return view('customer.orders', compact('orders'));
     }
 
@@ -21,7 +28,7 @@ class CustomerOrderController extends Controller
     {
         $this->authorize('view', $order);
 
-        $order->load(['items.variant.product']);
+        $order->load(['items.variant.product', 'refundRequests', 'deliveryStaff']);
 
         $productIds = $order->items->pluck('product_id')->filter()->unique();
 
@@ -42,6 +49,19 @@ class CustomerOrderController extends Controller
         }
 
         return view('customer.order-detail', compact('order', 'reviewCounts', 'completedOrderCounts'));
+    }
+
+    public function cancel(Request $request, Order $order)
+    {
+        $this->authorize('view', $order);
+
+        if ($order->status !== 'pending') {
+            return back()->with('error', 'Chỉ có thể hủy đơn hàng đang chờ xử lý.');
+        }
+
+        $order->update(['status' => 'cancelled']);
+
+        return back()->with('success', 'Đơn hàng #' . $order->order_number . ' đã được hủy thành công.');
     }
 
     public function storeReview(Request $request, Order $order)

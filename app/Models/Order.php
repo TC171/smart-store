@@ -12,6 +12,8 @@ class Order extends Model
         'email',
         'coupon_id',
         'coupon_code', // Bổ sung thêm cột này vì Controller của bạn đang dùng
+            'delivery_user_id', // 🚚 thêm dòng này
+            'delivery_status',      // ✅ FIX: thêm vào fillable để shipper cập nhật được
         'total_amount',
         'subtotal',
         'shipping_fee',
@@ -44,10 +46,20 @@ class Order extends Model
     {
         return $this->belongsTo(User::class);
     }
+        public function deliveryStaff()
+        {
+            return $this->belongsTo(User::class, 'delivery_user_id');
+        }
 
     public function items()
     {
         return $this->hasMany(OrderItem::class, 'order_id');
+    }
+
+    
+    public function refundRequests()
+    {
+        return $this->hasMany(RefundRequest::class, 'order_id');
     }
 
     public function coupon()
@@ -69,6 +81,36 @@ class Order extends Model
             'completed' => 'green',
             'cancelled' => 'gray',
         ][$this->status] ?? 'gray';
+    }
+
+    /**
+     * Label tiếng Việt cho delivery_status (dùng trong view admin & customer)
+     */
+    public function getDeliveryStatusLabelAttribute(): string
+    {
+        return [
+            'assigned'   => 'Đã gán shipper',
+            'picked_up'  => 'Shipper đã nhận hàng',
+            'delivering' => 'Đang giao hàng',
+            'delivered'  => 'Giao thành công',
+            'failed'     => 'Giao thất bại',
+            'returned'   => 'Đã trả về kho',
+        ][$this->delivery_status ?? ''] ?? '—';
+    }
+ 
+    /**
+     * Badge color cho delivery_status
+     */
+    public function getDeliveryStatusColorAttribute(): string
+    {
+        return [
+            'assigned'   => 'info',
+            'picked_up'  => 'primary',
+            'delivering' => 'warning',
+            'delivered'  => 'success',
+            'failed'     => 'danger',
+            'returned'   => 'secondary',
+        ][$this->delivery_status ?? ''] ?? 'secondary';
     }
 
     /**

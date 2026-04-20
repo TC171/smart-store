@@ -19,7 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'customer' => \App\Http\Middleware\IsCustumer::class, // ✅ thêm dòng này
+            'customer' => \App\Http\Middleware\IsCustumer::class,
+            'shipper' => \App\Http\Middleware\ShipperMiddleware::class,
+            'auth' => \App\Http\Middleware\Authenticate::class,
         ]);
     })
 

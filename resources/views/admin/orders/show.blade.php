@@ -60,6 +60,43 @@
             </div>
         </div>
     </div>
+    
+    @if($order->status != 'completed')
+
+<form method="POST"
+      action="{{ route('admin.orders.assignShipper', $order) }}"
+      style="margin-top:20px;">
+
+    @csrf
+
+    <label><b>Chọn nhân viên giao hàng:</b></label>
+
+    <select name="delivery_user_id" required>
+
+        <option value="">
+            -- Chọn shipper --
+        </option>
+
+        @foreach($shippers as $shipper)
+
+            <option value="{{ $shipper->id }}"
+                {{ $order->delivery_user_id == $shipper->id ? 'selected' : '' }}>
+
+                {{ $shipper->name }}
+            </option>
+
+        @endforeach
+
+    </select>
+
+    <button type="submit">
+        🚚 Gán shipper
+    </button>
+
+</form>
+
+@endif
+
 
     {{-- Địa chỉ giao hàng --}}
     <div class="bg-gray-900 p-6 rounded-xl shadow-lg mb-6">
@@ -153,11 +190,122 @@
     {{-- Trạng thái --}}
     <div class="grid grid-cols-1 gap-6 mb-6">
         <div class="bg-gray-900 p-6 rounded-xl shadow-lg">
+            <h3 class="text-lg font-semibold text-cyan-400 mb-4">📦 Trạng thái giao hàng</h3>
+
+            {{-- Trạng thái delivery từ shipper --}}
+            @if($order->delivery_status)
+                @php
+                    $deliveryStatusLabels = [
+                        'assigned' => 'Đơn mới nhận',
+                        'picked_up' => 'Đã nhận hàng',
+                        'delivering' => 'Đang giao',
+                        'delivered' => 'Đã giao',
+                        'failed' => 'Giao thất bại',
+                        'returned' => 'Đã trả về',
+                    ];
+                    $deliveryStatusColors = [
+                        'assigned' => 'bg-info',
+                        'picked_up' => 'bg-primary',
+                        'delivering' => 'bg-warning',
+                        'delivered' => 'bg-success',
+                        'failed' => 'bg-danger',
+                        'returned' => 'bg-secondary',
+                    ];
+                @endphp
+                <div class="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700">
+                    <p class="text-gray-300 mb-2">
+                        <span class="font-medium">Nhân viên giao hàng:</span>
+                        {{ $order->deliveryStaff?->name ?? 'Chưa gán' }}
+                    </p>
+                    <p class="text-gray-300">
+                        <span class="font-medium">Trạng thái:</span>
+                        <span class="ml-2 inline-block px-3 py-1 rounded-full text-white text-sm font-semibold 
+                            @switch($order->delivery_status)
+                                @case('assigned')
+                                    bg-blue-500
+                                    @break
+                                @case('picked_up')
+                                    bg-blue-600
+                                    @break
+                                @case('delivering')
+                                    bg-amber-500
+                                    @break
+                                @case('delivered')
+                                    bg-green-500
+                                    @break
+                                @case('failed')
+                                    bg-red-500
+                                    @break
+                                @case('returned')
+                                    bg-gray-500
+                                    @break
+                                @default
+                                    bg-gray-400
+                            @endswitch
+                        ">
+                            {{ $deliveryStatusLabels[$order->delivery_status] ?? $order->delivery_status }}
+                        </span>
+                    </p>
+                </div>
+            @endif
+
             <h3 class="text-lg font-semibold text-cyan-400 mb-4">Cập nhật trạng thái đơn hàng</h3>
 
-            <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="space-y-5">
+            {{-- Gán shipper khi đơn đã xác nhận --}}
+            @if($order->status === 'confirmed')
+
+            <div class="mb-6 border-b border-gray-700 pb-6">
+
+                <h3 class="text-lg font-semibold text-yellow-400 mb-4">
+                    Gán nhân viên giao hàng 🚚
+                </h3>
+
+                <form method="POST"
+                      action="{{ route('admin.orders.assignShipper', $order->id) }}"
+                      class="space-y-4">
+
+                    @csrf
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            Chọn nhân viên giao hàng
+                        </label>
+
+                        <select name="delivery_user_id"
+                                class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3"
+                                required>
+
+                            <option value="">
+                                -- Chọn shipper --
+                            </option>
+
+                            @foreach($shippers as $shipper)
+
+                                <option value="{{ $shipper->id }}">
+                                    {{ $shipper->name }}
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+                    </div>
+
+                    <button type="submit"
+                            class="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-3 rounded-lg font-semibold">
+
+                        Gán giao hàng
+
+                    </button>
+
+                </form>
+
+            </div>
+
+            @endif
+
+            <form action="{{ route('admin.orders.updateStatus', $order->id) }}" method="POST" class="space-y-5">
                 @csrf
-                @method('PATCH')
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\User; // thêm trên đầu file
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Orders\UpdateOrderPaymentStatusRequest;
 use App\Http\Requests\Admin\Orders\UpdateOrderStatusRequest;
@@ -19,7 +20,7 @@ class OrderController extends Controller
     {
         $this->authorize('viewAny', Order::class);
 
-        $query = Order::with('user', 'items');
+        $query = Order::with('user', 'items', 'deliveryStaff');
 
         if ($request->status) {
             $query->where('status', $request->status);
@@ -43,15 +44,26 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders'));
     }
 
-    public function show(Order $order)
-    {
-        $this->authorize('view', $order);
+    
+public function show(Order $order)
+{
+    $this->authorize('view', $order);
 
-        $order->load(['user', 'items', 'items.variant']);
+    $order->load([
+        'user',
+        'items',
+        'items.variant',
+        'deliveryStaff'
+    ]);
 
-        return view('admin.orders.show', compact('order'));
-    }
+    // 🔥 Lấy danh sách shipper
+    $shippers = User::where('role', 'shipper')->get();
 
+    return view(
+        'admin.orders.show',
+        compact('order', 'shippers')
+    );
+}
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order)
     {
         $this->authorize('update', $order);
@@ -134,4 +146,27 @@ class OrderController extends Controller
         return redirect()->route('admin.orders.index')
             ->with('success', 'Xóa đơn hàng thành công');
     }
+
+public function assignShipper(Request $request, Order $order)
+{
+    $request->validate([
+        'delivery_user_id' => 'required|exists:users,id'
+    ]);
+
+    $order->update([
+        'delivery_user_id' => $request->delivery_user_id,
+
+        // trạng thái đơn
+        'status' => 'shipping',
+
+        // 🔥 sửa ở đây (đúng ENUM)
+        'delivery_status' => 'assigned'
+    ]);
+
+    return back()->with(
+        'success',
+        'Đã gán nhân viên giao hàng thành công 🚚'
+    );
+}
+
 }

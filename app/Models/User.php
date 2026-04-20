@@ -79,4 +79,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(\App\Models\UserAddress::class)->where('is_default', 1);
     }
+
+   
+
+
 }
+    
+

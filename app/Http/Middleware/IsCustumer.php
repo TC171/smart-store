@@ -14,7 +14,7 @@ class IsCustumer
     {
         // Nếu chưa login
         if (! auth()->check()) {
-            return redirect()->route('login');
+            return redirect()->route('customer.login');
         }
 
         // Nếu KHÔNG phải customer

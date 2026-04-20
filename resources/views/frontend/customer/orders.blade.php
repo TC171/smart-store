@@ -58,13 +58,6 @@
                         </td>
                         <td class="px-6 py-4">
                             @php
-                                $statusColors = [
-                                    'pending' => 'bg-gray-100 text-gray-600',
-                                    'confirmed' => 'bg-blue-100 text-blue-600',
-                                    'shipping' => 'bg-orange-100 text-orange-600',
-                                    'completed' => 'bg-green-100 text-green-600',
-                                    'cancelled' => 'bg-red-100 text-red-600'
-                                ];
                                 $statusLabels = [
                                     'pending' => 'Chờ xử lý',
                                     'confirmed' => 'Đã xác nhận',
@@ -72,9 +65,41 @@
                                     'completed' => 'Hoàn thành',
                                     'cancelled' => 'Đã hủy'
                                 ];
+                                $statusColors = [
+                                    'pending' => 'bg-gray-100 text-gray-600',
+                                    'confirmed' => 'bg-blue-100 text-blue-600',
+                                    'shipping' => 'bg-orange-100 text-orange-600',
+                                    'completed' => 'bg-green-100 text-green-600',
+                                    'cancelled' => 'bg-red-100 text-red-600'
+                                ];
+                                
+                                // Hiển thị delivery_status nếu có
+                                $displayStatus = $order->status;
+                                $displayLabel = $statusLabels[$order->status] ?? $order->status;
+                                $displayColor = $statusColors[$order->status] ?? 'bg-gray-100';
+                                
+                                if ($order->delivery_status) {
+                                    $deliveryStatusLabels = [
+                                        'assigned' => 'Shipper nhận',
+                                        'picked_up' => 'Shipper có hàng',
+                                        'delivering' => 'Đang giao',
+                                        'delivered' => 'Đã giao',
+                                        'failed' => 'Giao thất bại',
+                                        'returned' => 'Trả về',
+                                    ];
+                                    $displayLabel = $deliveryStatusLabels[$order->delivery_status] ?? $order->delivery_status;
+                                    $displayColor = match($order->delivery_status) {
+                                        'assigned', 'picked_up' => 'bg-blue-100 text-blue-600',
+                                        'delivering' => 'bg-yellow-100 text-yellow-600',
+                                        'delivered' => 'bg-green-100 text-green-600',
+                                        'failed' => 'bg-red-100 text-red-600',
+                                        'returned' => 'bg-gray-100 text-gray-600',
+                                        default => 'bg-gray-100 text-gray-600',
+                                    };
+                                }
                             @endphp
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase {{ $statusColors[$order->status] ?? 'bg-gray-100' }}">
-                                {{ $statusLabels[$order->status] ?? $order->status }}
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase {{ $displayColor }}">
+                                {{ $displayLabel }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-center">

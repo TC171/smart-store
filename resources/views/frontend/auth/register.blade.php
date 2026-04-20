@@ -5,7 +5,7 @@
 
     <h2 class="text-2xl font-bold mb-6 text-center">Đăng ký</h2>
 
-    <form method="POST" action="{{ route('register.post') }}">
+    <form method="POST" action="{{ route('customer.register.post') }}">
         @csrf
 
         <input type="text" name="name" placeholder="Tên"
