@@ -57,6 +57,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 
     Route::middleware(['auth:admin', 'admin'])->group(function () {
+        Route::post(
+        'upload-image',
+        [ProductController::class, 'uploadImage']
+    )->name('upload.image');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -112,7 +116,19 @@ Route::middleware('guest:web')->group(function () {
     Route::get('/forgot-password', [FrontAuthController::class, 'showForgotPassword'])->name('forgot-password');
     Route::post('/forgot-password', [FrontAuthController::class, 'processForgotPassword'])->name('forgot-password.post');
 });
+Route::middleware(['auth:web', 'customer'])
+    ->prefix('customer')
+    ->name('customer.')
+    ->group(function () {
 
+        Route::get('/dashboard', fn () => view('customer.dashboard'))->name('dashboard');
+
+        Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
+        Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
+        Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
+
+        Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
+    });
 /*
 |--------------------------------------------------------------------------
 | CUSTOMER ROUTES
@@ -175,6 +191,8 @@ Route::middleware(['auth:web', 'customer'])
 | FRONTEND PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
+
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
 Route::get('/tim-kiem', [HomeController::class, 'search'])->name('search');

@@ -117,6 +117,19 @@
     {{-- Preview --}}
     <div id="preview-images" class="grid grid-cols-3 md:grid-cols-6 gap-4 mt-4"></div>
 </div>
+{{-- Thông số kỹ thuật --}}
+<div>
+    <label class="block text-sm font-medium text-gray-300 mb-2">
+        Thông số kỹ thuật
+    </label>
+
+    <div id="specs-wrapper" class="space-y-3"></div>
+
+    <button type="button" onclick="addCustomSpec()" 
+        class="mt-3 bg-green-500 hover:bg-green-600 px-4 py-2 rounded text-black font-semibold">
+        + Thêm thông số
+    </button>
+</div>
 
         {{-- Meta --}}
         <div>
@@ -244,4 +257,129 @@ function removeImage(button, fileName) {
     // xoá preview
     button.parentElement.remove();
 }
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    function renderSpecs(specs = []) {
+        const wrapper = document.getElementById('specs-wrapper');
+        wrapper.innerHTML = '';
+
+        specs.forEach(spec => {
+            const div = document.createElement('div');
+            div.classList.add('flex', 'gap-2', 'items-center');
+
+            div.innerHTML = `
+                <input type="hidden" name="spec_name[]" value="${spec}">
+
+                <div class="w-1/3 text-gray-300 font-semibold">
+                    ${spec}
+                </div>
+
+                <input type="text" name="spec_value[]"
+                    placeholder="Nhập ${spec}"
+                    class="w-2/3 bg-gray-800 text-white border border-gray-700 rounded px-3 py-2">
+            `;
+
+            wrapper.appendChild(div);
+        });
+    }
+
+    const category = document.querySelector('select[name="category_id"]');
+
+    category.addEventListener('change', function () {
+        const categoryText = this.options[this.selectedIndex].text.toLowerCase();
+
+        if (categoryText.includes('điện thoại') || categoryText.includes('phone')) {
+            renderSpecs([
+                'Màn hình',
+                'CPU',
+                'RAM',
+                'Bộ nhớ',
+                'Camera sau',
+                'Camera trước',
+                'Pin',
+                'Hệ điều hành',
+                'SIM',
+                'Kết nối'
+            ]);
+        }
+        else if (categoryText.includes('laptop')) {
+            renderSpecs([
+                'CPU',
+                'RAM',
+                'Ổ cứng',
+                'GPU',
+                'Màn hình',
+                'Hệ điều hành',
+                'Pin',
+                'Cổng kết nối',
+                'Trọng lượng'
+            ]);
+        }
+        else {
+            renderSpecs([
+                'Thông số 1',
+                'Thông số 2',
+                'Thông số 3'
+            ]);
+        }
+    });
+
+    // trigger lần đầu
+    category.dispatchEvent(new Event('change'));
+});
+document.addEventListener('DOMContentLoaded', function () {
+
+    const specsWrapper = document.getElementById('specs-wrapper');
+
+    // hàm thêm 1 dòng thông số
+    function addCustomSpec(name = '', value = '') {
+        const div = document.createElement('div');
+        div.classList.add('flex', 'gap-2', 'items-center');
+
+        div.innerHTML = `
+            <input type="text" name="spec_name[]" value="${name}" placeholder="Tên thông số"
+                class="w-1/3 bg-gray-800 text-white border border-gray-700 rounded px-3 py-2">
+            <input type="text" name="spec_value[]" value="${value}" placeholder="Giá trị"
+                class="w-2/3 bg-gray-800 text-white border border-gray-700 rounded px-3 py-2">
+            <button type="button"
+                class="bg-red-500 hover:bg-red-600 px-3 rounded text-white">X</button>
+        `;
+
+        // gắn event cho nút X
+        div.querySelector('button').addEventListener('click', function() {
+            div.remove();
+        });
+
+        specsWrapper.appendChild(div);
+    }
+
+    // hàm render specs mặc định theo category
+    function renderSpecs(specs = []) {
+        specsWrapper.innerHTML = ''; // xoá hết specs cũ
+        specs.forEach(spec => addCustomSpec(spec, ''));
+    }
+
+    const categorySelect = document.querySelector('select[name="category_id"]');
+    categorySelect.addEventListener('change', function () {
+        const categoryText = this.options[this.selectedIndex].text.toLowerCase();
+
+        if (categoryText.includes('điện thoại') || categoryText.includes('phone')) {
+            renderSpecs(['Màn hình','CPU','RAM','Bộ nhớ','Camera sau','Camera trước','Pin','Hệ điều hành','SIM','Kết nối']);
+        } else if (categoryText.includes('laptop')) {
+            renderSpecs(['CPU','RAM','Ổ cứng','GPU','Màn hình','Hệ điều hành','Pin','Cổng kết nối','Trọng lượng']);
+        } else {
+            renderSpecs(['Thông số 1','Thông số 2','Thông số 3']);
+        }
+    });
+
+    // trigger lần đầu
+    categorySelect.dispatchEvent(new Event('change'));
+
+    // gắn nút + Thêm thông số
+    document.querySelector('button[onclick="addCustomSpec()"]').addEventListener('click', function() {
+        addCustomSpec();
+    });
+});
 </script>
