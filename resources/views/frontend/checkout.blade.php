@@ -166,9 +166,15 @@
                                 <span>Giảm giá</span>
                                 <span id="discount-amount" class="font-bold">-0đ</span>
                             </div>
-                            <div class="flex justify-between text-gray-600">
-                                <span>Vận chuyển</span>
-                                <span class="font-semibold text-green-600">Miễn phí</span>
+                            <div class="flex justify-between items-center bg-green-50/50 p-3 rounded-xl border border-green-100/50">
+                                <div class="flex items-center gap-2 text-gray-600">
+                                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span class="text-sm font-medium">Vận chuyển</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="block text-sm font-bold text-green-600 uppercase tracking-wider">Miễn phí</span>
+                                    <span class="text-[10px] text-green-500 font-medium">Đặc quyền Smart Store</span>
+                                </div>
                             </div>
                             <div class="flex justify-between items-end pt-3 border-t border-gray-200 mt-2">
                                 <span class="font-bold text-gray-800">Tổng cộng</span>

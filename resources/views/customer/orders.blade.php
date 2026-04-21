@@ -30,7 +30,7 @@
                             {{ $order->created_at->format('d/m/Y H:i') }}
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-900 font-medium">
-                            {{ number_format($order->total_amount) }}₫
+                            {{ number_format($order->grand_total ?? $order->total_amount) }}₫
                         </td>
                         <td class="px-4 py-3">
                             @php

@@ -124,12 +124,16 @@
             </div>
 
             {{-- Phí vận chuyển --}}
-            @if ($order->shipping_cost || $order->shipping_fee)
             <div class="w-full flex justify-between text-gray-300">
                 <span>Phí vận chuyển:</span>
-                <span class="font-medium">{{ number_format($order->shipping_cost ?? $order->shipping_fee) }}₫</span>
+                <span class="font-medium">
+                    @if (($order->shipping_cost ?? $order->shipping_fee) > 0)
+                        {{ number_format($order->shipping_cost ?? $order->shipping_fee) }}₫
+                    @else
+                        <span class="text-green-400 font-bold">Miễn phí</span>
+                    @endif
+                </span>
             </div>
-            @endif
 
             {{-- Mã giảm giá --}}
             @if ($order->discount_amount > 0)

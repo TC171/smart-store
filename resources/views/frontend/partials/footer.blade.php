@@ -31,6 +31,9 @@
                     <li><a href="{{ route('page.about') }}" class="hover:text-white">Về chúng tôi</a></li>
                     <li><a href="{{ route('page.warranty') }}" class="hover:text-white">Chính sách bảo hành</a></li>
                     <li><a href="{{ route('page.return-policy') }}" class="hover:text-white">Chính sách đổi trả</a></li>
+                    <li><a href="{{ route('page.shipping') }}" class="hover:text-white">Chính sách vận chuyển</a></li>
+                    <li><a href="{{ route('page.privacy') }}" class="hover:text-white">Chính sách bảo mật</a></li>
+                    <li><a href="{{ route('page.terms') }}" class="hover:text-white">Điều khoản dịch vụ</a></li>
                     <li><a href="{{ route('page.contact') }}" class="hover:text-white">Liên hệ</a></li>
                 </ul>
             </div>

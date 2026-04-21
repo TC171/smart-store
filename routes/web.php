@@ -224,6 +224,9 @@ Route::middleware('auth:web')->group(function () {
 Route::get('/ve-chung-toi', [PageController::class, 'about'])->name('page.about');
 Route::get('/chinh-sach-bao-hanh', [PageController::class, 'warranty'])->name('page.warranty');
 Route::get('/chinh-sach-doi-tra', [PageController::class, 'returnPolicy'])->name('page.return-policy');
+Route::get('/chinh-sach-bao-mat', [PageController::class, 'privacy'])->name('page.privacy');
+Route::get('/chinh-sach-van-chuyen', [PageController::class, 'shipping'])->name('page.shipping');
+Route::get('/dieu-khoan-dich-vu', [PageController::class, 'terms'])->name('page.terms');
 Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
 
 /*

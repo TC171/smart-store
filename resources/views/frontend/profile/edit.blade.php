@@ -88,24 +88,35 @@
                 <section class="xl:col-span-8 space-y-6">
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
-                            <p class="text-sm text-slate-500">Tổng đơn hàng</p>
-                            <h3 class="text-3xl font-bold text-slate-900 mt-2">{{ $totalOrders ?? 0 }}</h3>
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 xl:p-5 transition-all hover:shadow-md">
+                            <p class="text-xs md:text-sm text-slate-500 font-medium">Tổng đơn hàng</p>
+                            <h3 class="text-2xl xl:text-3xl font-bold text-slate-900 mt-2">{{ $totalOrders ?? 0 }}</h3>
                         </div>
 
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
-                            <p class="text-sm text-slate-500">Đơn hoàn thành</p>
-                            <h3 class="text-3xl font-bold text-green-600 mt-2">{{ $completedOrders ?? 0 }}</h3>
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 xl:p-5 transition-all hover:shadow-md">
+                            <p class="text-xs md:text-sm text-slate-500 font-medium">Đơn hoàn thành</p>
+                            <h3 class="text-2xl xl:text-3xl font-bold text-green-600 mt-2">{{ $completedOrders ?? 0 }}</h3>
                         </div>
 
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
-                            <p class="text-sm text-slate-500">Tổng chi tiêu</p>
-                            <h3 class="text-3xl font-bold text-orange-500 mt-2">{{ number_format($totalSpent ?? 0) }}đ</h3>
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 xl:p-5 transition-all hover:shadow-md min-w-0">
+                            <p class="text-xs md:text-sm text-slate-500 font-medium">Tổng chi tiêu</p>
+                            <h3 class="text-2xl xl:text-3xl font-bold text-orange-500 mt-2" title="{{ number_format($totalSpent ?? 0) }}đ">
+                                @php
+                                    $spent = $totalSpent ?? 0;
+                                    if ($spent >= 1000000000) {
+                                        echo number_format($spent / 1000000000, 1, '.', '') . ' tỷ';
+                                    } elseif ($spent >= 1000000) {
+                                        echo number_format($spent / 1000000, 1, '.', '') . ' tr';
+                                    } else {
+                                        echo number_format($spent) . 'đ';
+                                    }
+                                @endphp
+                            </h3>
                         </div>
 
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
-                            <p class="text-sm text-slate-500">Đơn chờ xử lý</p>
-                            <h3 class="text-3xl font-bold text-amber-500 mt-2">{{ $pendingOrders ?? 0 }}</h3>
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 xl:p-5 transition-all hover:shadow-md">
+                            <p class="text-xs md:text-sm text-slate-500 font-medium">Đơn chờ xử lý</p>
+                            <h3 class="text-2xl xl:text-3xl font-bold text-amber-500 mt-2">{{ $pendingOrders ?? 0 }}</h3>
                         </div>
                     </div>
 
@@ -351,8 +362,28 @@
                                                 <td class="py-4 text-slate-600">{{ $order->created_at?->format('d/m/Y') }}</td>
                                                 <td class="py-4 font-semibold text-slate-900">{{ number_format($order->grand_total) }}đ</td>
                                                 <td class="py-4">
-                                                    <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-600">
-                                                        {{ ucfirst($order->status) }}
+                                                    @php
+                                                        $statusLabels = [
+                                                            'pending' => 'Chờ xác nhận',
+                                                            'confirmed' => 'Đã xác nhận',
+                                                            'shipping' => 'Đang giao hàng',
+                                                            'completed' => 'Hoàn thành',
+                                                            'cancelled' => 'Đã huỷ',
+                                                            'refunded' => 'Đã hoàn hàng',
+                                                            'failed_delivery' => 'Giao không thành công'
+                                                        ];
+                                                        $statusColors = [
+                                                            'pending' => 'bg-amber-50 text-amber-600',
+                                                            'confirmed' => 'bg-blue-50 text-blue-600',
+                                                            'shipping' => 'bg-indigo-50 text-indigo-600',
+                                                            'completed' => 'bg-green-50 text-green-600',
+                                                            'cancelled' => 'bg-red-50 text-red-600',
+                                                            'refunded' => 'bg-slate-50 text-slate-600',
+                                                            'failed_delivery' => 'bg-rose-50 text-rose-600'
+                                                        ];
+                                                    @endphp
+                                                    <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$order->status] ?? 'bg-slate-50 text-slate-600' }}">
+                                                        {{ $statusLabels[$order->status] ?? ucfirst($order->status) }}
                                                     </span>
                                                 </td>
                                                 <td class="py-4 text-right">
