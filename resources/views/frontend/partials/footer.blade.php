@@ -17,10 +17,10 @@
             <div>
                 <h4 class="font-semibold text-white mb-4">Sản phẩm</h4>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="hover:text-white">Điện thoại</a></li>
-                    <li><a href="#" class="hover:text-white">Laptop</a></li>
-                    <li><a href="#" class="hover:text-white">Máy tính bảng</a></li>
-                    <li><a href="#" class="hover:text-white">Phụ kiện</a></li>
+                    <li><a href="{{ route('category.products', 'dien-thoai') }}" class="hover:text-white transition-colors">Điện thoại</a></li>
+                    <li><a href="{{ route('category.products', 'laptop') }}" class="hover:text-white transition-colors">Laptop</a></li>
+                    <li><a href="{{ route('category.products', 'may-tinh-bang') }}" class="hover:text-white transition-colors">Máy tính bảng</a></li>
+                    <li><a href="{{ route('category.products', 'phu-kien') }}" class="hover:text-white transition-colors">Phụ kiện</a></li>
                 </ul>
             </div>
 
@@ -42,7 +42,7 @@
             <div>
                 <h4 class="font-semibold text-white mb-4">Liên hệ</h4>
                 <p class="text-sm">Hotline: <span class="text-white font-medium">1900 1234</span></p>
-                <p class="text-sm mt-1">Email: nguyenductinh08092005@gmail.com</p>
+                <p class="text-sm mt-1">Email: chammut0009@gmail.com</p>
                 <p class="text-sm mt-4">Cao đẳng FPT, Trịnh Văn Bô, Nam Từ Liêm, Hà Nội</p>
             </div>
         </div>

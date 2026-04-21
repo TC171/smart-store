@@ -40,6 +40,7 @@ use App\Http\Controllers\Frontend\BrandController as FrontBrandController;
 use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\ProfileController;
 use App\Http\Controllers\Frontend\RefundController;
+use App\Http\Controllers\Frontend\NewsletterController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 
 /*
@@ -228,6 +229,8 @@ Route::get('/chinh-sach-bao-mat', [PageController::class, 'privacy'])->name('pag
 Route::get('/chinh-sach-van-chuyen', [PageController::class, 'shipping'])->name('page.shipping');
 Route::get('/dieu-khoan-dich-vu', [PageController::class, 'terms'])->name('page.terms');
 Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
+Route::post('/lien-he', [PageController::class, 'submitContact'])->name('page.contact.submit');
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 
 /*
 |--------------------------------------------------------------------------

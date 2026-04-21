@@ -39,7 +39,12 @@
                             </div>
                             <div class="md:col-span-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Số điện thoại <span class="text-red-500">*</span></label>
-                                <input type="text" name="phone" value="{{ auth('web')->check() ? auth('web')->user()->phone ?? '' : '' }}" required class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none transition-all text-sm">
+                                <input type="text" name="phone" id="phone_input" 
+                                       value="{{ auth('web')->check() ? auth('web')->user()->phone ?? '' : '' }}" 
+                                       placeholder="Ví dụ: 0987 654 321"
+                                       required 
+                                       class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none transition-all text-sm">
+                                <p id="phone_error" class="text-[11px] text-red-500 mt-1 hidden font-medium">Số điện thoại không hợp lệ (phải có 10 chữ số và bắt đầu bằng số 0).</p>
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Địa chỉ Email <span class="text-red-500">*</span></label>
@@ -316,8 +321,33 @@
         const districtSelect = document.getElementById('district');
         const wardSelect = document.getElementById('ward');
         const streetInput = document.getElementById('street_address');
+        const phoneInput = document.getElementById('phone_input');
+        const phoneError = document.getElementById('phone_error');
         const finalAddress = document.getElementById('final_address');
         const form = document.getElementById('checkout-form');
+
+        // Logic Validate và Định dạng Số điện thoại
+        phoneInput.addEventListener('input', function(e) {
+            // Chỉ giữ lại số
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,4})(\d{0,3})(\d{0,3})/);
+            
+            // Tự động thêm dấu cách: 0987 654 321
+            if (x[1]) {
+                e.target.value = x[1] + (x[2] ? ' ' + x[2] : '') + (x[3] ? ' ' + x[3] : '');
+            }
+
+            // Kiểm tra tính hợp lệ (Regex VN: bắt đầu bằng 0, có 10 số)
+            const rawValue = e.target.value.replace(/\s/g, '');
+            const vnPhoneRegex = /^(0[3|5|7|8|9])[0-9]{8}$/;
+            
+            if (rawValue.length > 0 && !vnPhoneRegex.test(rawValue)) {
+                phoneInput.classList.add('border-red-500', 'bg-red-50');
+                phoneError.classList.remove('hidden');
+            } else {
+                phoneInput.classList.remove('border-red-500', 'bg-red-50');
+                phoneError.classList.add('hidden');
+            }
+        });
 
         const fetchAPI = async (url) => {
             try {

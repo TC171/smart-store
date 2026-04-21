@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Coupons\StoreCouponRequest;
 use App\Http\Requests\Admin\Coupons\UpdateCouponRequest;
 use App\Models\Coupon;
+use App\Models\Subscriber;
+use App\Mail\DiscountNotification;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 
 class CouponController extends Controller
@@ -34,10 +37,21 @@ class CouponController extends Controller
 
     public function store(StoreCouponRequest $request)
     {
-        Coupon::create($request->only([
+        $coupon = Coupon::create($request->only([
             'code', 'type', 'value', 'min_order_amount', 'max_discount',
             'usage_limit', 'starts_at', 'expires_at', 'status',
         ]));
+
+        if ($request->send_notification == 1) {
+            $subscribers = Subscriber::where('status', 1)->get();
+            foreach ($subscribers as $subscriber) {
+                try {
+                    Mail::to($subscriber->email)->send(new DiscountNotification($coupon));
+                } catch (\Exception $e) {
+                    \Log::error('Mail sending failed for ' . $subscriber->email . ': ' . $e->getMessage());
+                }
+            }
+        }
 
         return redirect()->route('admin.coupons.index')
             ->with('success', 'Thêm mã giảm giá thành công');

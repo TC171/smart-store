@@ -153,6 +153,20 @@
             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
             @enderror
         </div>
+        
+        {{-- Gửi thông báo --}}
+        <div class="p-4 bg-cyan-900/20 border border-cyan-800/50 rounded-xl">
+            <label class="flex items-center cursor-pointer">
+                <input type="checkbox" name="send_notification" value="1" 
+                    class="w-5 h-5 text-cyan-500 rounded bg-gray-800 border-gray-700">
+                <span class="ml-3 text-sm font-bold text-cyan-400">
+                    🚀 Gửi thông báo ưu đãi đến tất cả khách hàng đã đăng ký?
+                </span>
+            </label>
+            <p class="text-[11px] text-gray-400 mt-2 ml-8 italic">
+                * Hệ thống sẽ tự động gửi mẫu Email "siêu phẩm" kèm mã giảm giá này.
+            </p>
+        </div>
 
         {{-- Buttons --}}
         <div class="flex justify-end gap-4">

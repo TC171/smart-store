@@ -54,6 +54,7 @@
                      x-transition:leave="transition ease-in duration-150"
                      x-transition:leave-start="opacity-100 transform scale-100"
                      x-transition:leave-end="opacity-0 transform scale-95"
+                     x-cloak
                      class="absolute top-full left-0 right-0 mt-3 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 max-h-[480px] flex flex-col overflow-hidden">
 
                     <!-- Gợi ý tìm kiếm (Danh mục + Thương hiệu) -->
@@ -125,6 +126,7 @@
                      x-transition:leave="transition ease-in duration-150"
                      x-transition:leave-start="opacity-100 transform scale-100"
                      x-transition:leave-end="opacity-0 transform scale-95"
+                     x-cloak
                      class="absolute top-full left-0 right-0 mt-3 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 max-h-96 overflow-hidden">
 
                     <div x-show="results.products.length > 0 || results.categories.length > 0 || results.brands.length > 0" class="max-h-72 overflow-y-auto">
@@ -246,6 +248,7 @@
                      x-transition:leave="transition ease-in duration-150"
                      x-transition:leave-start="opacity-100 transform scale-100"
                      x-transition:leave-end="opacity-0 transform scale-95"
+                     x-cloak
                      class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border z-50 max-h-80 flex flex-col overflow-hidden">
 
                     <!-- Gợi ý tìm kiếm (Danh mục + Thương hiệu) -->
@@ -297,6 +300,7 @@
                      x-transition:leave="transition ease-in duration-150"
                      x-transition:leave-start="opacity-100 transform scale-100"
                      x-transition:leave-end="opacity-0 transform scale-95"
+                     x-cloak
                      class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border z-50 max-h-64 overflow-hidden">
 
                     <div x-show="results.products.length > 0 || results.categories.length > 0 || results.brands.length > 0" class="max-h-56 overflow-y-auto">
@@ -359,7 +363,7 @@
                     </span>
                 </button>
 
-                <div x-show="open" @click.away="open=false"
+                <div x-show="open" @click.away="open=false" x-cloak
                      class="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl border overflow-hidden z-50">
 
                     <div class="p-4 border-b bg-gray-50">
@@ -405,7 +409,7 @@
                               d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                     </svg>
                     <span x-show="unread > 0" x-text="unread > 9 ? '9+' : unread"
-                          class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full leading-none"></span>
+                          class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full leading-none" x-cloak></span>
                 </button>
 
                 <div x-show="open" @click.away="open = false"
@@ -415,6 +419,7 @@
                      x-transition:leave="transition ease-in duration-150"
                      x-transition:leave-start="opacity-100 scale-100"
                      x-transition:leave-end="opacity-0 scale-95"
+                     x-cloak
                      class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
 
                     {{-- Header --}}
@@ -422,10 +427,10 @@
                         <div class="flex items-center gap-2">
                             <span class="text-white font-bold text-sm">🔔 Thông báo</span>
                             <span x-show="unread > 0" x-text="unread + ' mới'"
-                                  class="bg-white/30 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
+                                  class="bg-white/30 text-white text-[10px] font-bold px-2 py-0.5 rounded-full" x-cloak></span>
                         </div>
                         <button x-show="unread > 0" @click="readAll()"
-                                class="text-white/80 hover:text-white text-xs underline">Đọc tất cả</button>
+                                class="text-white/80 hover:text-white text-xs underline" x-cloak>Đọc tất cả</button>
                     </div>
 
                     {{-- List --}}
@@ -460,7 +465,7 @@
                                     <p class="text-xs text-gray-500 mt-0.5 line-clamp-2" x-text="n.body"></p>
                                     <p class="text-[10px] text-gray-400 mt-1" x-text="n.time"></p>
                                 </div>
-                                <div x-show="!n.read" class="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0 mt-1.5"></div>
+                                <div x-show="!n.read" class="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0 mt-1.5" x-cloak></div>
                             </a>
                         </template>
                     </div>
@@ -477,7 +482,7 @@
                     <span class="text-sm font-bold text-gray-700">{{ auth('web')->user()->name }}</span>
                 </button>
 
-                <div x-show="open" @click.away="open=false"
+                <div x-show="open" @click.away="open=false" x-cloak
                      class="absolute right-0 mt-3 w-48 bg-white border rounded-xl shadow-lg py-2 text-sm z-50">
 
                     <a href="{{ route('customer.dashboard') }}" class="block px-4 py-2 hover:bg-gray-100">Tài khoản</a>
