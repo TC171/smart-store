@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AIAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,12 +41,18 @@ use App\Http\Controllers\Frontend\BrandController as FrontBrandController;
 use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\ProfileController;
 
+
 /*
 |--------------------------------------------------------------------------
 | ADMIN ROUTES
 |--------------------------------------------------------------------------
 
 */
+use App\Http\Controllers\Frontend\AIController;
+
+Route::post('/chat-ai', [AIController::class, 'chat']);
+Route::get('/test-ai', [AIController::class, 'chat']);
+Route::get('/ai/history', [AIController::class, 'history']);
 
 Route::post('/customer/orders/{id}/cancel', [App\Http\Controllers\Frontend\CartController::class, 'cancelOrder'])->name('customer.orders.cancel');
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -62,6 +69,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     )->name('upload.image');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+       Route::get('/revenue-chart', [DashboardController::class, 'revenueChart'])
+    ->name('revenue.chart');
 
         Route::resource('products', ProductController::class);
         Route::patch('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus');
@@ -92,6 +101,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::view('password', 'admin.password')->name('password');
 
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+        Route::prefix('ai')->name('ai.')->group(function () {
+
+    // ⚙️ settings
+    Route::get('/settings', [AIAdminController::class, 'settings'])->name('settings');
+    Route::post('/toggle', [AIAdminController::class, 'toggle'])->name('toggle');
+
+    // 👥 users chat
+    Route::get('/users', [AIAdminController::class, 'users'])->name('users');
+
+    // 💬 chat detail
+    Route::get('/users/{id}', [AIAdminController::class, 'detail'])->name('detail');
+
+});
     });
 });
 
