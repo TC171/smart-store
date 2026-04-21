@@ -8,10 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('reviews', function (Blueprint $table) {
-            // Store multiple images as JSON array of paths
-            $table->json('images')->nullable()->after('comment');
-        });
+        if (!Schema::hasColumn('reviews', 'images')) {
+            Schema::table('reviews', function (Blueprint $table) {
+                // Store multiple images as JSON array of paths
+                $table->json('images')->nullable()->after('comment');
+            });
+        }
     }
 
     public function down(): void

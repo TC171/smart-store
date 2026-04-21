@@ -160,12 +160,14 @@
                             <span>Tạm tính:</span>
                             <span>{{ number_format($order->total_amount) }}₫</span>
                         </div>
-                        @if($order->shipping_fee)
                         <div class="flex justify-between text-sm">
                             <span>Phí vận chuyển:</span>
-                            <span>{{ number_format($order->shipping_fee) }}₫</span>
+                            @if($order->shipping_fee > 0)
+                                <span>{{ number_format($order->shipping_fee) }}₫</span>
+                            @else
+                                <span class="text-green-600 font-bold">Miễn phí</span>
+                            @endif
                         </div>
-                        @endif
                         @if($order->discount_amount)
                         <div class="flex justify-between text-sm text-green-600">
                             <span>Giảm giá:</span>

@@ -260,14 +260,22 @@ class CartController extends Controller
 
     public function placeOrder(Request $request)
     {
+        // Làm sạch số điện thoại (xóa dấu cách) trước khi validate
+        if ($request->has('phone')) {
+            $request->merge([
+                'phone' => str_replace(' ', '', $request->phone)
+            ]);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => ['required', 'regex:/^[0-9]{10,11}$/'],
+            'phone' => ['required', 'regex:/^(0[3|5|7|8|9])[0-9]{8}$/'],
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
             'payment_method' => 'required|in:cod,vnpay',
         ], [
-            'phone.regex' => 'Số điện thoại không hợp lệ. Vui lòng chỉ nhập số (từ 10 đến 11 số).'
+            'phone.required' => 'Vui lòng nhập số điện thoại.',
+            'phone.regex' => 'Số điện thoại không hợp lệ (phải đủ 10 số và bắt đầu bằng đầu số nhà mạng VN).'
         ]);
 
         $checkoutItems = session('checkout_items', []);

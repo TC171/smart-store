@@ -237,20 +237,75 @@
         @endforelse
     </section>
 
-    {{-- ================= NEWSLETTER ================= --}}
     <section data-aos="fade-up">
         <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-10 rounded-3xl text-center">
             <h2 class="text-3xl font-bold mb-4">Đăng ký nhận ưu đãi</h2>
 
-            <form class="flex gap-4 justify-center">
-                <input type="email" placeholder="Email" class="px-4 py-3 rounded-xl text-black w-1/2">
+            <form id="newsletter-form" class="flex gap-4 justify-center">
+                @csrf
+                <input type="email" name="email" id="subscriber-email" placeholder="Nhập email của bạn..." class="px-4 py-3 rounded-xl text-black w-full md:w-1/2 outline-none focus:ring-2 focus:ring-orange-500 transition-all" required>
 
-                <button class="bg-orange-500 px-6 py-3 rounded-xl font-bold">
-                    Đăng ký
+                <button type="submit" class="bg-orange-500 px-6 py-3 rounded-xl font-bold hover:bg-orange-600 transition-all whitespace-nowrap">
+                    Đăng ký ngay
                 </button>
             </form>
         </div>
     </section>
+
+    <script>
+        document.getElementById('newsletter-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('subscriber-email').value;
+            const btn = this.querySelector('button');
+            const originalText = btn.innerText;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+
+            fetch("{{ route('newsletter.subscribe') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ email: email })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    Swal.fire({
+                        title: 'Đăng ký thành công!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonColor: '#f97316',
+                        confirmButtonText: 'Tuyệt vời!'
+                    });
+                    document.getElementById('subscriber-email').value = '';
+                } else {
+                    Swal.fire({
+                        title: 'Thất bại',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonColor: '#f97316'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Lỗi hệ thống',
+                    text: 'Vui lòng thử lại sau giây lát.',
+                    icon: 'error',
+                    confirmButtonColor: '#f97316'
+                });
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            });
+        });
+    </script>
 
 </div>
 
