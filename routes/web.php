@@ -71,9 +71,12 @@ Route::prefix('shipper')->name('shipper.')->group(function () {
         Route::post('/deliveries/{delivery}/pickup', [DeliveryController::class, 'pickup'])->name('deliveries.pickup');
         Route::post('/deliveries/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('deliveries.updateStatus');
 
-        // Hoàn hàng — chỉ xem, Admin mới có quyền sửa trạng thái
-        Route::get('/returns',          [ShipperReturnController::class, 'index'])->name('returns.index');
-        Route::get('/returns/{return}', [ShipperReturnController::class, 'show'])->name('returns.show');
+        // Hoàn hàng — Shipper có thể cập nhật trạng thái quá trình hoàn
+        Route::get('/returns',                          [ShipperReturnController::class, 'index'])->name('returns.index');
+        Route::get('/returns/{return}',                 [ShipperReturnController::class, 'show'])->name('returns.show');
+        Route::post('/returns/{return}/pickup',         [ShipperReturnController::class, 'confirmPickup'])->name('returns.pickup');
+        Route::post('/returns/{return}/returning',      [ShipperReturnController::class, 'confirmReturning'])->name('returns.returning');
+        Route::post('/returns/{return}/delivered',      [ShipperReturnController::class, 'confirmDelivered'])->name('returns.delivered');
 
         Route::post('/logout', [ShipperAuthController::class, 'logout'])->name('logout');
     });

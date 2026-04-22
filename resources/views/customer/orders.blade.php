@@ -39,7 +39,9 @@
                                 'waiting_payment' => 'Đang chờ thanh toán',
                                 'confirmed' => 'Đã xác nhận',
                                 'shipping' => 'Đang giao hàng',
+                                'picked_up' => 'Shipper đã nhận hàng',
                                 'completed' => 'Hoàn thành',
+                                'failed_delivery' => 'Giao không thành công',
                                 'cancelled' => 'Đã huỷ',
                                 'refunded' => 'Đã hoàn hàng'
                             ];
@@ -48,7 +50,9 @@
                                 'waiting_payment' => 'bg-orange-100 text-orange-800',
                                 'confirmed' => 'bg-blue-100 text-blue-800',
                                 'shipping' => 'bg-indigo-100 text-indigo-800',
+                                'picked_up' => 'bg-cyan-100 text-cyan-800',
                                 'completed' => 'bg-green-100 text-green-800',
+                                'failed_delivery' => 'bg-red-100 text-red-800',
                                 'cancelled' => 'bg-red-100 text-red-800',
                                 'refunded' => 'bg-orange-100 text-orange-800'
                             ];

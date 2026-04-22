@@ -75,7 +75,7 @@
                                     'confirmed' => 'Đã xác nhận',
                                     'shipping'  => 'Đang giao',
                                     'completed' => 'Hoàn thành',
-                                    'failed_delivery' => 'Giao ko thành công',
+                                    'failed_delivery' => 'Giao hàng không thành công',
                                     'returned'  => 'Đã hoàn hàng',
                                     'cancelled' => 'Đã hủy',
                                     'refunded'  => 'Đã hoàn hàng',
