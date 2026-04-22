@@ -117,36 +117,48 @@
 
     {{-- Tổng tiền --}}
     <div class="bg-gray-900 p-6 rounded-xl shadow-lg mb-6">
-        <div class="flex justify-end max-w-md ml-auto space-y-3">
+        <div class="flex flex-col items-end max-w-md ml-auto space-y-3">
+            {{-- Tạm tính --}}
             <div class="w-full flex justify-between text-gray-300">
                 <span>Tạm tính:</span>
-                <span>{{ number_format($order->subtotal ?? $order->total_amount) }}₫</span>
+                <span class="font-medium">{{ number_format($order->subtotal ?? $order->total_amount) }}₫</span>
             </div>
 
-            @if ($order->tax_amount)
-            <div class="w-full flex justify-between text-gray-300">
-                <span>Thuế:</span>
-                <span>{{ number_format($order->tax_amount) }}₫</span>
-            </div>
-            @endif
-
-            @if ($order->shipping_cost)
+            {{-- Phí vận chuyển --}}
             <div class="w-full flex justify-between text-gray-300">
                 <span>Phí vận chuyển:</span>
-                <span>{{ number_format($order->shipping_cost) }}₫</span>
+                <span class="font-medium">
+                    @if (($order->shipping_cost ?? $order->shipping_fee) > 0)
+                        {{ number_format($order->shipping_cost ?? $order->shipping_fee) }}₫
+                    @else
+                        <span class="text-green-400 font-bold">Miễn phí</span>
+                    @endif
+                </span>
+            </div>
+
+            {{-- Mã giảm giá --}}
+            @if ($order->discount_amount > 0)
+            <div class="w-full flex flex-col items-end text-green-400 text-sm">
+                <div class="w-full flex justify-between">
+                    <span>
+                        Mã giảm giá: 
+                        @if($order->coupon_code)
+                            <code class="bg-gray-800 px-1 rounded text-green-400">{{ $order->coupon_code }}</code>
+                        @else
+                            <span class="italic text-gray-500">(Áp dụng)</span>
+                        @endif
+                    </span>
+                    <span>-{{ number_format($order->discount_amount) }}₫</span>
+                </div>
             </div>
             @endif
 
-            @if ($order->discount_amount)
-            <div class="w-full flex justify-between text-green-400">
-                <span>Giảm giá:</span>
-                <span>-{{ number_format($order->discount_amount) }}₫</span>
-            </div>
-            @endif
-
-            <div class="w-full flex justify-between border-t border-gray-700 pt-3">
-                <span class="font-semibold text-white">Tổng cộng:</span>
-                <span class="font-semibold text-cyan-400 text-lg">{{ number_format($order->total_amount) }}₫</span>
+            {{-- Tổng cộng --}}
+            <div class="w-full flex justify-between border-t border-gray-700 pt-3 mt-2">
+                <span class="font-bold text-white text-lg">Tổng cộng:</span>
+                <span class="font-bold text-cyan-400 text-2xl">
+                    {{ number_format($order->grand_total ?? ($order->subtotal ?? $order->total_amount) + ($order->shipping_cost ?? $order->shipping_fee ?? 0) - $order->discount_amount) }}₫
+                </span>
             </div>
         </div>
     </div>
@@ -163,16 +175,29 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-2">Trạng thái đơn hàng</label>
+                        @php
+                            $statusHierarchy = [
+                                'pending' => 1,
+                                'waiting_payment' => 1,
+                                'confirmed' => 2,
+                                'shipping' => 3,
+                                'completed' => 4,
+                            ];
+                            $currentStatusLevel = $statusHierarchy[$order->status] ?? 99; // 99 for cancelled / refunded
+                        @endphp
                         <select name="status"
                                 class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500">
                             <option value="">-- Chọn trạng thái --</option>
-                            <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Chờ xác nhận</option>
-                            <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }}>Đã xác nhận</option>
-                            <option value="shipping" {{ $order->status === 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
-                            <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>Hoàn thành</option>
-                            <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Đã huỷ</option>
-                            <option value="refunded" {{ $order->status === 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
+                            <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }} {{ $currentStatusLevel > 1 ? 'disabled class=text-gray-500' : '' }}>Chờ xác nhận</option>
+                            <option value="waiting_payment" {{ $order->status === 'waiting_payment' ? 'selected' : '' }} {{ $currentStatusLevel > 1 ? 'disabled class=text-gray-500' : '' }}>Đang chờ thanh toán</option>
+                            <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }} {{ $currentStatusLevel > 2 ? 'disabled class=text-gray-500' : '' }}>Đã xác nhận</option>
+                            <option value="shipping" {{ $order->status === 'shipping' ? 'selected' : '' }} {{ $currentStatusLevel > 3 ? 'disabled class=text-gray-500' : '' }}>Đang giao hàng</option>
+                            <option value="failed_delivery" {{ $order->status === 'failed_delivery' ? 'selected' : '' }} {{ in_array($order->status, ['completed']) ? 'disabled class=text-gray-500' : '' }}>Giao hàng không thành công</option>
+                            <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }} {{ $currentStatusLevel > 4 ? 'disabled class=text-gray-500' : '' }}>Hoàn thành</option>
+                            <option value="refunded" {{ $order->status === 'refunded' ? 'selected' : '' }}>Đã hoàn hàng</option>
+                            <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }} {{ in_array($order->status, ['completed']) ? 'disabled class=text-gray-500' : '' }}>Đã huỷ</option>
                         </select>
+                        <p class="text-xs text-red-400 mt-1">* Các trạng thái xám là trạng thái đã qua, không thể lùi lại.</p>
                     </div>
 
                     <div>
@@ -180,8 +205,8 @@
                         <select name="payment_status"
                                 class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500">
                             <option value="">-- Chọn trạng thái thanh toán --</option>
-                            <option value="unpaid" {{ $order->payment_status === 'unpaid' ? 'selected' : '' }}>Chưa thanh toán</option>
-                            <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
+                            <option value="unpaid" {{ $order->payment_status === 'unpaid' ? 'selected' : '' }} {{ in_array($order->payment_status, ['paid', 'refunded']) ? 'disabled class=text-gray-500' : '' }}>Chưa thanh toán</option>
+                            <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }} {{ $order->payment_status === 'refunded' ? 'disabled class=text-gray-500' : '' }}>Đã thanh toán</option>
                             <option value="refunded" {{ $order->payment_status === 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
                         </select>
                     </div>
@@ -192,6 +217,39 @@
                     Cập nhật đơn hàng
                 </button>
             </form>
+
+            @if($order->refundRequests && $order->refundRequests->isNotEmpty())
+            <div class="mt-6 border-t border-gray-700 pt-6">
+                <h3 class="text-lg font-semibold text-orange-400 mb-4">Quản lý Yêu cầu</h3>
+                <div class="space-y-3">
+                    @foreach($order->refundRequests as $refund)
+                    <div class="bg-gray-800 p-4 rounded-lg flex items-center justify-between border border-gray-700">
+                        <div>
+                            <p class="text-white font-medium">Yêu cầu #{{ $refund->id }}</p>
+                            @php
+                                $rfMap = [
+                                    'pending' => 'Đang chờ duyệt',
+                                    'approved_return' => 'Khách đang trả hàng',
+                                    'refunded' => 'Đã hoàn hàng',
+                                    'rejected' => 'Đã từ chối'
+                                ];
+                                $rfColors = [
+                                    'pending' => 'text-yellow-400',
+                                    'approved_return' => 'text-blue-400',
+                                    'refunded' => 'text-green-400',
+                                    'rejected' => 'text-red-400'
+                                ];
+                            @endphp
+                            <p class="text-sm {{ $rfColors[$refund->status] ?? 'text-gray-400' }}">Trạng thái: {{ $rfMap[$refund->status] ?? $refund->status }}</p>
+                        </div>
+                        <a href="{{ route('admin.refunds.show', $refund) }}" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-md whitespace-nowrap">
+                            Xem / Xử lý yêu cầu
+                        </a>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
 
             @if($order->note)
                 <div class="mt-6 bg-gray-800 p-4 rounded-lg border border-gray-700">

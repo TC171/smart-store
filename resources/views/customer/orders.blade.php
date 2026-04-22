@@ -30,20 +30,22 @@
                             {{ $order->created_at->format('d/m/Y H:i') }}
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-900 font-medium">
-                            {{ number_format($order->total_amount) }}₫
+                            {{ number_format($order->grand_total ?? $order->total_amount) }}₫
                         </td>
                         <td class="px-4 py-3">
                             @php
                             $statusLabels = [
                                 'pending' => 'Chờ xác nhận',
+                                'waiting_payment' => 'Đang chờ thanh toán',
                                 'confirmed' => 'Đã xác nhận',
                                 'shipping' => 'Đang giao hàng',
                                 'completed' => 'Hoàn thành',
                                 'cancelled' => 'Đã huỷ',
-                                'refunded' => 'Đã hoàn tiền'
+                                'refunded' => 'Đã hoàn hàng'
                             ];
                             $statusColors = [
                                 'pending' => 'bg-yellow-100 text-yellow-800',
+                                'waiting_payment' => 'bg-orange-100 text-orange-800',
                                 'confirmed' => 'bg-blue-100 text-blue-800',
                                 'shipping' => 'bg-indigo-100 text-indigo-800',
                                 'completed' => 'bg-green-100 text-green-800',
@@ -73,10 +75,33 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 text-sm">
-                            <a href="{{ route('customer.order.detail', $order) }}"
-                               class="text-blue-600 hover:text-blue-800 font-medium">
-                                Xem chi tiết
-                            </a>
+                            <div class="flex items-center gap-3">
+                                <a href="{{ route('customer.order.detail', $order) }}"
+                                   class="text-blue-600 hover:text-blue-800 font-medium">
+                                    Xem chi tiết
+                                </a>
+
+                                @php
+                                    $pendingRefund = $order->refundRequests->where('status', 'pending')->first();
+                                    $approvedRefund = $order->refundRequests->where('status', 'approved_return')->first();
+                                @endphp
+
+                                @if($pendingRefund)
+                                    <span title="Đang chờ duyệt hoàn hàng" class="text-yellow-600 font-medium whitespace-nowrap">
+                                        Đang chờ duyệt...
+                                    </span>
+                                @elseif($approvedRefund)
+                                    <a href="{{ route('customer.order.detail', $order) }}" title="Đã duyệt, hãy xem chi tiết để gửi hàng" class="text-blue-600 font-medium whitespace-nowrap hover:text-blue-800">
+                                        Đã duyệt hoàn hàng
+                                    </a>
+                                @elseif(in_array($order->status, ['completed', 'shipping']))
+                                    <a href="{{ route('customer.orders.refund.create', $order) }}" 
+                                       title="Yêu cầu hoàn hàng"
+                                       class="text-orange-500 hover:text-orange-700 transition-all font-medium">
+                                        Hoàn hàng
+                                    </a>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @endforeach

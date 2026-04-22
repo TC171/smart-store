@@ -40,6 +40,9 @@ use App\Http\Controllers\Frontend\CategoryController as FrontCategoryController;
 use App\Http\Controllers\Frontend\BrandController as FrontBrandController;
 use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\ProfileController;
+use App\Http\Controllers\Frontend\RefundController;
+use App\Http\Controllers\Frontend\NewsletterController;
+use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 
 
 /*
@@ -56,7 +59,6 @@ Route::post('/chat-ai', [AIController::class, 'chat']);
 Route::get('/test-ai', [AIController::class, 'chat']);
 Route::get('/ai/history', [AIController::class, 'history']);
 
-Route::post('/customer/orders/{id}/cancel', [App\Http\Controllers\Frontend\CartController::class, 'cancelOrder'])->name('customer.orders.cancel');
 Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware('guest:admin')->group(function () {
@@ -90,9 +92,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
 
-Route::post('orders/{order}/assign-shipper', [OrderController::class, 'assignShipper'])
-    ->name('orders.assignShipper');
-
+        // Quản lý yêu cầu hoàn hàng
+        Route::get('refunds', [AdminRefundController::class, 'index'])->name('refunds.index');
+        Route::get('refunds/{refund}', [AdminRefundController::class, 'show'])->name('refunds.show');
+        Route::post('refunds/{refund}/approve', [AdminRefundController::class, 'approve'])->name('refunds.approve');
+        Route::post('refunds/{refund}/confirm', [AdminRefundController::class, 'confirmReceived'])->name('refunds.confirm');
+        Route::post('refunds/{refund}/reject', [AdminRefundController::class, 'reject'])->name('refunds.reject');
 
         Route::resource('users', UserController::class)->except(['show']);
         Route::resource('customers', CustomerController::class);
@@ -167,8 +172,43 @@ Route::middleware(['auth:web', 'customer'])
 
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
+        Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
+
+        // Hoàn hàng / Hoàn tiền
+        Route::get('/orders/{order}/refund', [RefundController::class, 'create'])->name('orders.refund.create');
+        Route::post('/orders/{order}/refund', [RefundController::class, 'store'])->name('orders.refund.store');
+
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
+
+        // 🔔 Notification API routes
+        Route::get('/notifications', function () {
+            $notifications = auth('web')->user()->notifications()->latest()->take(20)->get()->map(function ($n) {
+                return [
+                    'id'        => $n->id,
+                    'read'      => !is_null($n->read_at),
+                    'icon'      => $n->data['icon'] ?? '🔔',
+                    'title'     => $n->data['title'] ?? '',
+                    'body'      => $n->data['body'] ?? '',
+                    'url'       => $n->data['url'] ?? '#',
+                    'color'     => $n->data['color'] ?? 'gray',
+                    'time'      => $n->created_at->diffForHumans(),
+                ];
+            });
+            $unread = auth('web')->user()->unreadNotifications()->count();
+            return response()->json(['notifications' => $notifications, 'unread' => $unread]);
+        })->name('notifications.index');
+
+        Route::post('/notifications/read-all', function () {
+            auth('web')->user()->unreadNotifications->markAsRead();
+            return response()->json(['success' => true]);
+        })->name('notifications.read-all');
+
+        Route::post('/notifications/{id}/read', function ($id) {
+            $n = auth('web')->user()->notifications()->where('id', $id)->first();
+            if ($n) $n->markAsRead();
+            return response()->json(['success' => true]);
+        })->name('notifications.read');
     });
 
 /*
@@ -209,7 +249,12 @@ Route::middleware('auth:web')->group(function () {
 Route::get('/ve-chung-toi', [PageController::class, 'about'])->name('page.about');
 Route::get('/chinh-sach-bao-hanh', [PageController::class, 'warranty'])->name('page.warranty');
 Route::get('/chinh-sach-doi-tra', [PageController::class, 'returnPolicy'])->name('page.return-policy');
+Route::get('/chinh-sach-bao-mat', [PageController::class, 'privacy'])->name('page.privacy');
+Route::get('/chinh-sach-van-chuyen', [PageController::class, 'shipping'])->name('page.shipping');
+Route::get('/dieu-khoan-dich-vu', [PageController::class, 'terms'])->name('page.terms');
 Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
+Route::post('/lien-he', [PageController::class, 'submitContact'])->name('page.contact.submit');
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 
 /*
 |--------------------------------------------------------------------------

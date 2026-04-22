@@ -38,7 +38,7 @@ class ProfileController extends Controller
         $totalOrders = $user->orders()->count();
         $completedOrders = $user->orders()->where('status', 'completed')->count();
         $pendingOrders = $user->orders()->whereIn('status', ['pending', 'confirmed'])->count();
-        $totalSpent = $user->orders()->where('payment_status', 'paid')->sum('grand_total');
+        $totalSpent = $user->orders()->where('status', 'completed')->sum('grand_total');
 
         $defaultAddress = $user->defaultAddress;
 
@@ -57,9 +57,16 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        // Làm sạch số điện thoại trước khi validate
+        if ($request->has('phone')) {
+            $request->merge([
+                'phone' => str_replace(' ', '', $request->phone)
+            ]);
+        }
+
         $validated = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
-            'phone'         => ['nullable', 'string', 'max:20'],
+            'phone'         => ['nullable', 'regex:/^(0[3|5|7|8|9])[0-9]{8}$/'],
             'gender'        => ['nullable', 'in:male,female,other'],
             'date_of_birth' => ['nullable', 'date'],
             'address'       => ['nullable', 'string'],
@@ -67,6 +74,8 @@ class ProfileController extends Controller
             'district'      => ['nullable', 'string', 'max:100'],
             'ward'          => ['nullable', 'string', 'max:100'],
             'postal_code'   => ['nullable', 'string', 'max:20'],
+        ], [
+            'phone.regex'   => 'Số điện thoại không hợp lệ (phải đủ 10 số và bắt đầu bằng đầu số nhà mạng VN).'
         ]);
 
         $user->update([
@@ -126,7 +135,7 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $request->validate([
-            'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
+            'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:10240'],
         ]);
 
         if (!empty($user->avatar)) {

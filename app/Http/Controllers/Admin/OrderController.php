@@ -64,6 +64,31 @@ class OrderController extends Controller
         $oldStatus = $order->status;
         $oldPaymentStatus = $order->payment_status;
 
+        // Prevent backward order status updates
+        $statusHierarchy = [
+            'pending' => 1,
+            'confirmed' => 2,
+            'shipping' => 3,
+            'completed' => 4,
+        ];
+        
+        $oldLevel = $statusHierarchy[$oldStatus] ?? 99;
+        $newLevel = $statusHierarchy[$request->status] ?? 99;
+
+        if ($newLevel < $oldLevel && !in_array($request->status, ['cancelled', 'refunded'])) {
+            return back()->with('error', 'Không thể cập nhật lùi trạng thái đơn hàng đã qua.');
+        }
+
+        // Prevent backward payment status updates
+        if ($request->filled('payment_status')) {
+            if ($oldPaymentStatus === 'paid' && $request->payment_status === 'unpaid') {
+                return back()->with('error', 'Không thể chuyển từ Đã thanh toán về Chưa thanh toán.');
+            }
+            if ($oldPaymentStatus === 'refunded' && in_array($request->payment_status, ['unpaid', 'paid'])) {
+                return back()->with('error', 'Đơn hàng đã hoàn tiền không thể chuyển lại trạng thái thanh toán khác.');
+            }
+        }
+
         $updateData = ['status' => $request->status];
         if ($request->filled('payment_status')) {
             $updateData['payment_status'] = $request->payment_status;
@@ -82,8 +107,10 @@ class OrderController extends Controller
             }
         }
 
+        // Xử lý kho hàng và trạng thái thanh toán
         if ($request->status === 'completed' && $oldStatus !== 'completed') {
-            // completed logic
+            // Đã hoàn thành -> Tự động đánh dấu đã thanh toán
+            $order->update(['payment_status' => 'paid']);
         } elseif ($request->status === 'cancelled' && $oldStatus !== 'cancelled') {
             foreach ($order->items as $item) {
                 $variant = ProductVariant::find($item->product_variant_id);
