@@ -44,6 +44,7 @@ use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ShipperController;
 use App\Http\Controllers\Shipper\AuthController as ShipperAuthController;
 use App\Http\Controllers\Shipper\DeliveryController;
+use App\Http\Controllers\Shipper\ReturnController as ShipperReturnController;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,6 +70,10 @@ Route::prefix('shipper')->name('shipper.')->group(function () {
         Route::get('/deliveries/{delivery}',         [DeliveryController::class, 'show'])->name('deliveries.show');
         Route::post('/deliveries/{delivery}/pickup', [DeliveryController::class, 'pickup'])->name('deliveries.pickup');
         Route::post('/deliveries/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('deliveries.updateStatus');
+
+        // Hoàn hàng — chỉ xem, Admin mới có quyền sửa trạng thái
+        Route::get('/returns',          [ShipperReturnController::class, 'index'])->name('returns.index');
+        Route::get('/returns/{return}', [ShipperReturnController::class, 'show'])->name('returns.show');
 
         Route::post('/logout', [ShipperAuthController::class, 'logout'])->name('logout');
     });

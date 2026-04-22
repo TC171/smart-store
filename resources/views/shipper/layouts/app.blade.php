@@ -26,6 +26,10 @@
                    class="px-3 py-1.5 rounded-lg text-sm {{ request()->routeIs('shipper.deliveries.*') ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} transition">
                     📦 Đơn giao hàng
                 </a>
+                <a href="{{ route('shipper.returns.index') }}"
+                   class="px-3 py-1.5 rounded-lg text-sm {{ request()->routeIs('shipper.returns.*') ? 'bg-orange-500/20 text-orange-400' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} transition">
+                    🔄 Hoàn hàng
+                </a>
             </div>
         </div>
 
@@ -56,6 +60,10 @@
     <a href="{{ route('shipper.deliveries.index') }}"
        class="flex-1 text-center py-2 rounded-lg text-sm {{ request()->routeIs('shipper.deliveries.*') ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400' }} transition">
         📦 Đơn hàng
+    </a>
+    <a href="{{ route('shipper.returns.index') }}"
+       class="flex-1 text-center py-2 rounded-lg text-sm {{ request()->routeIs('shipper.returns.*') ? 'bg-orange-500/20 text-orange-400' : 'text-gray-400' }} transition">
+        🔄 Hoàn hàng
     </a>
 </div>
 
