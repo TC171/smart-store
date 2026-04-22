@@ -45,6 +45,7 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+    
     ],
 
     /*
@@ -74,6 +75,7 @@ return [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
+     
     ],
 
     /*

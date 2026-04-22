@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderConfirmed;
 use App\Mail\OrderStatusUpdated;
+use App\Models\User;
+use App\Models\Shipper; // ✅ THÊM MỚI
 
 class OrderController extends Controller
 {
@@ -49,7 +51,10 @@ class OrderController extends Controller
 
         $order->load(['user', 'items', 'items.variant']);
 
-        return view('admin.orders.show', compact('order'));
+        // ✅ FIX: dùng Shipper model riêng
+        $shippers = Shipper::where('status', 'active')->get();
+
+        return view('admin.orders.show', compact('order', 'shippers'));
     }
 
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order)
@@ -66,7 +71,6 @@ class OrderController extends Controller
 
         $order->update($updateData);
 
-        // 🔥 LOGIC GỬI MAIL KHI ADMIN CẬP NHẬT TRẠNG THÁI
         if ($request->status !== $oldStatus) {
             try {
                 $recipient = $order->email ?: ($order->user->email ?? null);
@@ -78,11 +82,9 @@ class OrderController extends Controller
             }
         }
 
-        // Xử lý kho hàng
         if ($request->status === 'completed' && $oldStatus !== 'completed') {
-            // Đã hoàn thành
+            // completed logic
         } elseif ($request->status === 'cancelled' && $oldStatus !== 'cancelled') {
-            // Hủy đơn - Hoàn tồn kho
             foreach ($order->items as $item) {
                 $variant = ProductVariant::find($item->product_variant_id);
                 if ($variant) {
@@ -102,11 +104,6 @@ class OrderController extends Controller
                     ]);
                 }
             }
-        }
-
-        if ($request->filled('payment_status') && $request->payment_status !== $oldPaymentStatus) {
-            // Nếu chỉ thay đổi trạng thái thanh toán mà không thay đổi trạng thái đơn hàng,
-            // thì vẫn cập nhật nhưng không gửi email trạng thái đơn hàng.
         }
 
         return back()->with('success', 'Cập nhật trạng thái đơn hàng thành công');
@@ -133,5 +130,29 @@ class OrderController extends Controller
 
         return redirect()->route('admin.orders.index')
             ->with('success', 'Xóa đơn hàng thành công');
+    }
+
+    public function assignShipper(Request $request, Order $order)
+    {
+        $this->authorize('update', $order);
+
+        // ✅ FIX: validate theo bảng shippers
+        $request->validate([
+            'shipper_id' => 'required|exists:shippers,id'
+        ]);
+
+        // ✅ FIX: dùng Shipper model riêng
+        $shipper = Shipper::where('id', $request->shipper_id)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$shipper) {
+            return back()->with('error', 'Shipper không hợp lệ');
+        }
+
+        $order->shipper_id = $shipper->id;
+        $order->save();
+
+        return back()->with('success', 'Gán shipper thành công');
     }
 }

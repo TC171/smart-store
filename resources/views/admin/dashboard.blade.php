@@ -209,11 +209,20 @@
         </button>
     </div>
 
- <div class="h-[420px] overflow-x-auto">
-    <div id="chartWrapper" class="min-w-[1200px] h-full">
-       <canvas id="revenueChart" class="w-full h-full"></canvas>
+    
+
+ <!-- CHART -->
+    <div class="chart-container relative h-[420px] flex">
+        <!-- FIXED Y AXIS -->
+        <canvas id="yAxisCanvas" class="z-20 pointer-events-none" style="width:100px;"></canvas>
+
+        <!-- SCROLL CHART -->
+        <div class="h-full overflow-x-auto flex-1">
+            <div id="chartWrapper" class="min-w-[1200px] h-full">
+                <canvas id="revenueChart" class="w-full h-full"></canvas>
+            </div>
+        </div>
     </div>
-</div>
 
 </div>
 
@@ -311,6 +320,7 @@ async function loadChart(){
 
         const labels = data.map(i => i.label);
           const values = data.map(i => Number(i.total));
+const prevValues = data.map(i => Number(i.prev_total));
 
 const wrapper = document.getElementById('chartWrapper');
 const minWidth = Math.max(labels.length * 60, 1200);
@@ -334,6 +344,36 @@ wrapper.style.width = minWidth + 'px';
         if(chart) chart.destroy();
 const canvas = document.getElementById('revenueChart');
 const ctx = canvas.getContext('2d');
+// Plugin custom để vẽ trục Y cố định khi scroll
+const fixedYAxisPlugin = {
+    id: 'fixedYAxis',
+    beforeDraw(chart, args, options) {
+        const { ctx, chartArea: { top, bottom, left } } = chart;
+
+        // lưu trạng thái cũ
+        ctx.save();
+
+        // vẽ background trục Y
+        ctx.fillStyle = options.backgroundColor || 'rgba(20,20,20,0.85)';
+        ctx.fillRect(left - options.width, top, options.width, bottom - top);
+
+        // style chữ trục Y
+        ctx.fillStyle = options.fontColor || '#ccc';
+        ctx.font = options.font || '12px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
+        // lấy ticks Y
+        const yAxis = chart.scales.y;
+        yAxis.ticks.forEach((tick, index) => {
+            const y = yAxis.getPixelForTick(index);
+            const label = tick.label || tick.value || tick;
+            ctx.fillText(label, left - 6, y);
+        });
+
+        ctx.restore();
+    }
+};
 
         chart = new Chart(ctx, {
             type: 'bar', // 🔥 CHUYỂN SANG BAR CHART
@@ -359,24 +399,64 @@ const ctx = canvas.getContext('2d');
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                
     layout: {
-        padding: 10
-         },
+        padding: {
+            left: 100 // 🔥 phải >= width canvas Y
+        }
+    },
                 plugins: {
 
                     legend: {
                         labels: { color: '#ccc' }
                     },
 
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => {
-                                return currentMetric === 'revenue'
-                                    ? formatMoney(ctx.raw)
-                                    : ctx.raw;
-                            }
-                        }
-                    }
+                 tooltip: {
+    callbacks: {
+        label: function(ctx) {
+            const value = ctx.raw;
+            const index = ctx.dataIndex;
+            const prev = prevValues[index];
+
+            const mainLabel = currentMetric === 'revenue'
+                ? 'Doanh thu: ' + formatMoney(value)
+                : 'Số lượng: ' + value;
+
+            if (index === 0) return mainLabel;
+
+            let percent = 0;
+
+            if (prev > 0) {
+                percent = ((value - prev) / prev) * 100;
+            } else {
+                percent = value > 0 ? 100 : 0;
+            }
+
+            let trend = '';
+            if (percent > 0) trend = `📈 +${percent.toFixed(1)}%`;
+            else if (percent < 0) trend = `📉 ${percent.toFixed(1)}%`;
+            else trend = `⏸ 0%`;
+
+            return [
+                mainLabel,
+                `So với kỳ trước: ${trend}`
+            ];
+        }
+    }, // 🔥 THÊM DẤU PHẨY Ở ĐÂY
+
+    labelColor: function(ctx) {
+        const index = ctx.dataIndex;
+        const value = ctx.raw;
+        const prev = prevValues[index];
+
+        if (value > prev) {
+            return { borderColor: '#22c55e', backgroundColor: '#22c55e' };
+        } else {
+            return { borderColor: '#ef4444', backgroundColor: '#ef4444' };
+        }
+    }
+}
+                    
                 },
 
               scales: {
@@ -407,19 +487,17 @@ const ctx = canvas.getContext('2d');
     }
 },
 
-    y: {
-        ticks: {
-            color: '#aaa',
-            callback: (v) =>
-                currentMetric === 'revenue'
-                    ? v.toLocaleString('vi-VN')
-                    : v
-        },
-
-        grid: {
-            color: 'rgba(255,255,255,0.05)'
-        }
+y: {
+    display: true, // phải true để có ticks
+    grid: {
+        drawTicks: false,
+        drawBorder: false
+    },
+    ticks: {
+        color: 'transparent' // ẩn chữ gốc nhưng vẫn có ticks để dùng canvas vẽ lại
     }
+}
+
 }
             }
         });
@@ -429,12 +507,34 @@ const ctx = canvas.getContext('2d');
     }finally{
         setLoading(false);
     }
+    chart.options.animation.onComplete = () => drawYAxis();
 }
 
 document.addEventListener("DOMContentLoaded", loadChart);
 
+function drawYAxis() {
+    const canvas = document.getElementById('yAxisCanvas');
+    const ctx = canvas.getContext('2d');
+    const parent = canvas.parentElement;
 
+    canvas.height = parent.clientHeight;
+    canvas.width = 100; // cố định bằng padding-left của chart
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    const yScale = chart.scales.y;
+    if (!yScale) return; // bảo vệ trường hợp chart chưa render
+
+    ctx.fillStyle = '#ccc';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+
+    yScale.ticks.forEach((tick, index) => {
+        const y = yScale.getPixelForTick(index);
+        const label = currentMetric === 'revenue' ? formatMoney(tick.value) : tick.value;
+        ctx.fillText(label, canvas.width - 6, y);
+    });
+}
 
 const btn = document.getElementById('toggleFullscreen');
 const box = document.getElementById('chartBox');
@@ -442,19 +542,11 @@ const box = document.getElementById('chartBox');
 function toggleFullscreen() {
     const isFull = box.classList.toggle('fullscreen');
 
-    // khóa scroll nền
     document.body.style.overflow = isFull ? 'hidden' : '';
 
-    // đổi text button
     btn.innerText = isFull ? '❐ Thu nhỏ' : '⛶ Phóng to';
 
-    // resize chart kiểu trading
-    setTimeout(() => {
-        if (chart) {
-            chart.resize();
-            chart.update('none');
-        }
-    }, 80);
+    resizeChartProperly();
 }
 
 // click
@@ -469,52 +561,60 @@ document.addEventListener('keydown', (e) => {
 
 
 document.addEventListener('click', (e) => {
-    if (box.classList.contains('fullscreen')) {
-        if (!box.contains(e.target) && e.target !== btn) {
-            toggleFullscreen();
-        }
+    if (!box.classList.contains('fullscreen')) return;
+
+    if (!box.contains(e.target)) {
+        toggleFullscreen();
     }
 });
+function resizeChartProperly() {
+    const yCanvas = document.getElementById('yAxisCanvas');
+yCanvas.height = box.clientHeight;
+    if (!chart) return;
+
+    // delay để DOM render xong
+    setTimeout(() => {
+        chart.resize();
+
+        // fix scale + redraw
+        chart.update('none');
+
+        drawYAxis();
+    }, 150);
+}
 </script>
 @endsection
 <style>
 #chartBox.fullscreen {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     z-index: 9999;
 
-    background: rgba(10, 10, 20, 0.85);
-    backdrop-filter: blur(14px);
+    background: #0b0b1a;
 
     display: flex;
     flex-direction: column;
 
-    padding: 16px;
-    overflow: hidden;
+    padding: 20px;
     border-radius: 0;
-
-    animation: tvZoom 0.2s ease;
 }
 
-@keyframes tvZoom {
-    from {
-        transform: scale(0.98);
-        opacity: 0.6;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-#chartBox.fullscreen #chartWrapper {
+/* vùng chart phải co giãn đúng */
+#chartBox.fullscreen .chart-container {
     flex: 1;
-    min-height: 0;
-    width: 100% !important;
+    display: flex;
+    overflow: hidden;
 }
 
-#chartBox.fullscreen canvas {
-    width: 100% !important;
-    height: 100% !important;
+
+
+#revenueChart {
+    margin-left: -100px; /* kéo chart về đúng vị trí */
 }
+
+
+
 </style>

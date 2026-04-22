@@ -88,10 +88,20 @@ $todayProducts = \App\Models\OrderItem::whereDate('created_at', now())
     $to = $request->to
         ? Carbon::parse($request->to)->endOfDay()
         : now()->endOfYear();
+        // ===== KỲ TRƯỚC =====
+$diffDays = $from->diffInDays($to);
+
+// clone để không bị mutate
+$prevFrom = $from->copy()->subDays($diffDays + 1);
+$prevTo   = $to->copy()->subDays($diffDays + 1);
 
     $query = \App\Models\Order::where('status', 'completed')
         ->where('payment_status', 'paid')
         ->whereBetween('created_at', [$from, $to]);
+
+        $prevQuery = \App\Models\Order::where('status', 'completed')
+    ->where('payment_status', 'paid')
+    ->whereBetween('created_at', [$prevFrom, $prevTo]);
 
     $tz = '+07:00';
 
@@ -101,122 +111,173 @@ $todayProducts = \App\Models\OrderItem::whereDate('created_at', now())
     switch ($type) {
 
         case 'day':
-            $raw = $query
-                ->selectRaw("DATE(CONVERT_TZ(created_at, '+00:00', '$tz')) as label, SUM(grand_total) as total")
-                ->groupBy('label')
-                ->pluck('total', 'label')
-                ->toArray();
 
-            // ===== FILL MISSING DAYS =====
-            $result = [];
-            $period = CarbonPeriod::create($from->copy()->startOfDay(), $to->copy()->startOfDay());
+    $raw = $query
+        ->selectRaw("DATE(CONVERT_TZ(created_at, '+00:00', '$tz')) as label, SUM(grand_total) as total")
+        ->groupBy('label')
+        ->pluck('total', 'label')
+        ->toArray();
 
-            foreach ($period as $date) {
-                $key = $date->format('Y-m-d');
+    $prevRaw = $prevQuery
+        ->selectRaw("DATE(CONVERT_TZ(created_at, '+00:00', '$tz')) as label, SUM(grand_total) as total")
+        ->groupBy('label')
+        ->pluck('total', 'label')
+        ->toArray();
 
-                $result[] = [
-                    'label' => $key,
-                    'total' => $raw[$key] ?? 0
-                ];
-            }
+    $result = [];
+    $period = CarbonPeriod::create($from->copy()->startOfDay(), $to->copy()->startOfDay());
 
-            return response()->json($result);
+    foreach ($period as $date) {
 
-        case 'week':
-            $raw = $query
-                ->selectRaw("YEARWEEK(CONVERT_TZ(created_at, '+00:00', '$tz'), 1) as label, SUM(grand_total) as total")
-                ->groupBy('label')
-                ->pluck('total', 'label')
-                ->toArray();
+        $currentKey = $date->format('Y-m-d');
 
-            $result = [];
+        // map sang ngày kỳ trước
+      $prevKey = $date->copy()->subDay()->format('Y-m-d');
 
-            $start = $from->copy()->startOfWeek();
-            $end = $to->copy()->endOfWeek();
+        $result[] = [
+            'label' => $currentKey,
+            'total' => $raw[$currentKey] ?? 0,
+            'prev_total' => $prevRaw[$prevKey] ?? 0
+        ];
+    }
 
-            while ($start <= $end) {
+    return response()->json($result);
 
-                $key = $start->format('oW');
+      case 'week':
 
-                $result[] = [
-                    'label' => $key,
-                    'total' => $raw[$key] ?? 0
-                ];
+    $raw = $query
+        ->selectRaw("YEARWEEK(CONVERT_TZ(created_at, '+00:00', '$tz'), 1) as label, SUM(grand_total) as total")
+        ->groupBy('label')
+        ->pluck('total', 'label')
+        ->toArray();
 
-                $start->addWeek();
-            }
+    $prevRaw = $prevQuery
+        ->selectRaw("YEARWEEK(CONVERT_TZ(created_at, '+00:00', '$tz'), 1) as label, SUM(grand_total) as total")
+        ->groupBy('label')
+        ->pluck('total', 'label')
+        ->toArray();
 
-            return response()->json($result);
+    $result = [];
 
-        case 'month':
-            $raw = $query
-                ->selectRaw("DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '$tz'), '%Y-%m') as label, SUM(grand_total) as total")
-                ->groupBy('label')
-                ->pluck('total', 'label')
-                ->toArray();
+    $start = $from->copy()->startOfWeek();
+    $end = $to->copy()->endOfWeek();
 
-            $result = [];
+    while ($start <= $end) {
 
-            $start = $from->copy()->startOfMonth();
-            $end = $to->copy()->startOfMonth();
+        $currentKey = $start->format('oW');
+        $prevKey = $start->copy()->subWeeks(1)->format('oW');
 
-            while ($start <= $end) {
+        $result[] = [
+            'label' => $currentKey,
+            'total' => $raw[$currentKey] ?? 0,
+            'prev_total' => $prevRaw[$prevKey] ?? 0
+        ];
 
-                $key = $start->format('Y-m');
+        $start->addWeek();
+    }
 
-                $result[] = [
-                    'label' => $key,
-                    'total' => $raw[$key] ?? 0
-                ];
+    return response()->json($result);
 
-                $start->addMonth();
-            }
+       case 'month':
 
-            return response()->json($result);
+    $raw = $query
+        ->selectRaw("DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '$tz'), '%Y-%m') as label, SUM(grand_total) as total")
+        ->groupBy('label')
+        ->pluck('total', 'label')
+        ->toArray();
 
-        case 'quarter':
-            $raw = $query
-                ->selectRaw("CONCAT(YEAR(CONVERT_TZ(created_at, '+00:00', '$tz')), '-Q', QUARTER(CONVERT_TZ(created_at, '+00:00', '$tz'))) as label, SUM(grand_total) as total")
-                ->groupBy('label')
-                ->pluck('total', 'label')
-                ->toArray();
+    $prevRaw = $prevQuery
+        ->selectRaw("DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '$tz'), '%Y-%m') as label, SUM(grand_total) as total")
+        ->groupBy('label')
+        ->pluck('total', 'label')
+        ->toArray();
 
-            $result = [];
+    $result = [];
 
-            $startYear = $from->year;
-            $endYear = $to->year;
+    $start = $from->copy()->startOfMonth();
+    $end = $to->copy()->startOfMonth();
 
-            for ($y = $startYear; $y <= $endYear; $y++) {
-                for ($q = 1; $q <= 4; $q++) {
+    while ($start <= $end) {
 
-                    $key = $y . '-Q' . $q;
+        $currentKey = $start->format('Y-m');
+        $prevKey = $start->copy()->subMonth()->format('Y-m');
 
-                    $result[] = [
-                        'label' => $key,
-                        'total' => $raw[$key] ?? 0
-                    ];
-                }
-            }
+        $result[] = [
+            'label' => $currentKey,
+            'total' => $raw[$currentKey] ?? 0,
+            'prev_total' => $prevRaw[$prevKey] ?? 0
+        ];
 
-            return response()->json($result);
+        $start->addMonth();
+    }
+
+    return response()->json($result);
+
+       case 'quarter':
+
+    $raw = $query
+        ->selectRaw("CONCAT(YEAR(CONVERT_TZ(created_at, '+00:00', '$tz')), '-Q', QUARTER(CONVERT_TZ(created_at, '+00:00', '$tz'))) as label, SUM(grand_total) as total")
+        ->groupBy('label')
+        ->pluck('total', 'label')
+        ->toArray();
+
+    $prevRaw = $prevQuery
+        ->selectRaw("CONCAT(YEAR(CONVERT_TZ(created_at, '+00:00', '$tz')), '-Q', QUARTER(CONVERT_TZ(created_at, '+00:00', '$tz'))) as label, SUM(grand_total) as total")
+        ->groupBy('label')
+        ->pluck('total', 'label')
+        ->toArray();
+
+    $result = [];
+
+    $start = $from->copy()->startOfQuarter();
+    $end = $to->copy()->startOfQuarter();
+
+    while ($start <= $end) {
+
+        $currentKey = $start->format('Y') . '-Q' . $start->quarter;
+
+        $prev = $start->copy()->subQuarter();
+        $prevKey = $prev->format('Y') . '-Q' . $prev->quarter;
+
+        $result[] = [
+            'label' => $currentKey,
+            'total' => $raw[$currentKey] ?? 0,
+            'prev_total' => $prevRaw[$prevKey] ?? 0
+        ];
+
+        $start->addQuarter();
+    }
+
+    return response()->json($result);
 
         case 'year':
-            $raw = $query
-                ->selectRaw("YEAR(CONVERT_TZ(created_at, '+00:00', '$tz')) as label, SUM(grand_total) as total")
-                ->groupBy('label')
-                ->pluck('total', 'label')
-                ->toArray();
 
-            $result = [];
+    $raw = $query
+        ->selectRaw("YEAR(CONVERT_TZ(created_at, '+00:00', '$tz')) as label, SUM(grand_total) as total")
+        ->groupBy('label')
+        ->pluck('total', 'label')
+        ->toArray();
 
-            for ($y = $from->year; $y <= $to->year; $y++) {
-                $result[] = [
-                    'label' => (string)$y,
-                    'total' => $raw[$y] ?? 0
-                ];
-            }
+    $prevRaw = $prevQuery
+        ->selectRaw("YEAR(CONVERT_TZ(created_at, '+00:00', '$tz')) as label, SUM(grand_total) as total")
+        ->groupBy('label')
+        ->pluck('total', 'label')
+        ->toArray();
 
-            return response()->json($result);
+    $result = [];
+
+    for ($y = $from->year; $y <= $to->year; $y++) {
+
+        $prevYear = $y - 1;
+
+        $result[] = [
+            'label' => (string)$y,
+            'total' => $raw[$y] ?? 0,
+            'prev_total' => $prevRaw[$prevYear] ?? 0
+        ];
+    }
+
+    return response()->json($result);
     }
 
     return response()->json([]);

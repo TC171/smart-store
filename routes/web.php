@@ -50,6 +50,8 @@ use App\Http\Controllers\Frontend\ProfileController;
 */
 use App\Http\Controllers\Frontend\AIController;
 
+ 
+
 Route::post('/chat-ai', [AIController::class, 'chat']);
 Route::get('/test-ai', [AIController::class, 'chat']);
 Route::get('/ai/history', [AIController::class, 'history']);
@@ -87,6 +89,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
+
+Route::post('orders/{order}/assign-shipper', [OrderController::class, 'assignShipper'])
+    ->name('orders.assignShipper');
+
 
         Route::resource('users', UserController::class)->except(['show']);
         Route::resource('customers', CustomerController::class);
