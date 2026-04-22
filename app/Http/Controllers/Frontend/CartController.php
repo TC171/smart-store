@@ -307,6 +307,7 @@ class CartController extends Controller
                     'tax_amount' => 0,
                     'status' => 'pending',
                     'payment_status' => 'unpaid',
+                    'payment_method' => $request->payment_method,
                     'shipping_name' => $request->name,
                     'shipping_phone' => $request->phone,
                     'shipping_address' => $request->address,
@@ -412,7 +413,8 @@ class CartController extends Controller
         if ($secureHash == $request->vnp_SecureHash) {
             if ($request->vnp_ResponseCode == '00') {
                 if ($order && $order->payment_status !== 'paid') {
-                    $order->update(['payment_status' => 'paid', 'status' => 'confirmed']);
+                    // Thanh toán thành công qua VNPay, giữ trạng thái đơn hàng là 'pending' (Chờ xác nhận)
+                    $order->update(['payment_status' => 'paid', 'status' => 'pending']);
                     if ($order->coupon_id) Coupon::where('id', $order->coupon_id)->increment('used_count');
                 }
                 return view('frontend.checkout.success', compact('order', 'request'));

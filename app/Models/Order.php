@@ -28,6 +28,7 @@ class Order extends Model
         'shipping_district',
         'shipping_postal_code',
         'shipping_country',
+        'payment_method',
         'note',
         'ordered_at',
         'completed_at',

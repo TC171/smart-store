@@ -56,6 +56,12 @@
                         <span class="text-gray-400">Cập nhật lần cuối:</span>
                         <span class="ml-2">{{ $order->updated_at->format('d/m/Y H:i') }}</span>
                     </div>
+                    <div>
+                        <span class="text-gray-400">Phương thức thanh toán:</span>
+                        <span class="ml-2 font-bold {{ $order->payment_method === 'vnpay' ? 'text-blue-400' : 'text-orange-400' }}">
+                            {{ $order->payment_method === 'vnpay' ? 'VNPay' : 'Thanh toán khi nhận hàng (COD)' }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -175,28 +181,32 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-2">Trạng thái đơn hàng</label>
                         @php
-                            $statusHierarchy = [
-                                'pending' => 1,
-                                'waiting_payment' => 1,
-                                'confirmed' => 2,
-                                'shipping' => 3,
-                                'completed' => 4,
-                            ];
-                            $currentStatusLevel = $statusHierarchy[$order->status] ?? 99; // 99 for cancelled / refunded
+                            $allowedNext = [
+                                'pending'         => ['confirmed'],
+                                'confirmed'       => ['shipping', 'cancelled'],
+                                'shipping'        => ['completed', 'failed_delivery'],
+                                'completed'       => ['refunded'],
+                                'failed_delivery' => [],
+                                'cancelled'       => [],
+                                'refunded'        => [],
+                            ][$order->status] ?? [];
                         @endphp
-                        <select name="status"
-                                class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500">
-                            <option value="">-- Chọn trạng thái --</option>
-                            <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }} {{ $currentStatusLevel > 1 ? 'disabled class=text-gray-500' : '' }}>Chờ xác nhận</option>
-                            <option value="waiting_payment" {{ $order->status === 'waiting_payment' ? 'selected' : '' }} {{ $currentStatusLevel > 1 ? 'disabled class=text-gray-500' : '' }}>Đang chờ thanh toán</option>
-                            <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }} {{ $currentStatusLevel > 2 ? 'disabled class=text-gray-500' : '' }}>Đã xác nhận</option>
-                            <option value="shipping" {{ $order->status === 'shipping' ? 'selected' : '' }} {{ $currentStatusLevel > 3 ? 'disabled class=text-gray-500' : '' }}>Đang giao hàng</option>
-                            <option value="failed_delivery" {{ $order->status === 'failed_delivery' ? 'selected' : '' }} {{ in_array($order->status, ['completed']) ? 'disabled class=text-gray-500' : '' }}>Giao hàng không thành công</option>
-                            <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }} {{ $currentStatusLevel > 4 ? 'disabled class=text-gray-500' : '' }}>Hoàn thành</option>
-                            <option value="refunded" {{ $order->status === 'refunded' ? 'selected' : '' }}>Đã hoàn hàng</option>
-                            <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }} {{ in_array($order->status, ['completed']) ? 'disabled class=text-gray-500' : '' }}>Đã huỷ</option>
+                        <select name="status" class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-cyan-500 {{ empty($allowedNext) ? 'opacity-70 cursor-not-allowed' : '' }}"
+                            {{ empty($allowedNext) ? 'disabled' : '' }}>
+                            <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }} {{ !in_array('pending', $allowedNext) && $order->status !== 'pending' ? 'disabled class=text-gray-500' : '' }}>Chờ xác nhận</option>
+                            <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }} {{ !in_array('confirmed', $allowedNext) && $order->status !== 'confirmed' ? 'disabled class=text-gray-500' : '' }}>Đã xác nhận</option>
+                            <option value="shipping" {{ $order->status === 'shipping' ? 'selected' : '' }} {{ !in_array('shipping', $allowedNext) && $order->status !== 'shipping' ? 'disabled class=text-gray-500' : '' }}>Đang giao hàng</option>
+                            <option value="failed_delivery" {{ $order->status === 'failed_delivery' ? 'selected' : '' }} {{ !in_array('failed_delivery', $allowedNext) && $order->status !== 'failed_delivery' ? 'disabled class=text-gray-500' : '' }}>Giao hàng không thành công</option>
+                            <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }} {{ !in_array('completed', $allowedNext) && $order->status !== 'completed' ? 'disabled class=text-gray-500' : '' }}>Hoàn thành</option>
+                            <option value="refunded" {{ $order->status === 'refunded' ? 'selected' : '' }} {{ !in_array('refunded', $allowedNext) && $order->status !== 'refunded' ? 'disabled class=text-gray-500' : '' }}>Đã hoàn hàng</option>
+                            <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }} {{ !in_array('cancelled', $allowedNext) && $order->status !== 'cancelled' ? 'disabled class=text-gray-500' : '' }}>Đã huỷ</option>
                         </select>
-                        <p class="text-xs text-red-400 mt-1">* Các trạng thái xám là trạng thái đã qua, không thể lùi lại.</p>
+                        @if(empty($allowedNext))
+                            <input type="hidden" name="status" value="{{ $order->status }}">
+                            <p class="text-xs text-yellow-400 mt-1">* Đơn hàng đã ở trạng thái cuối cùng, không thể thay đổi.</p>
+                        @else
+                            <p class="text-xs text-cyan-400 mt-1">* Chỉ các trạng thái hợp lệ mới có thể chọn.</p>
+                        @endif
                     </div>
 
                     <div>
@@ -205,9 +215,19 @@
                                 class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500">
                             <option value="">-- Chọn trạng thái thanh toán --</option>
                             <option value="unpaid" {{ $order->payment_status === 'unpaid' ? 'selected' : '' }} {{ in_array($order->payment_status, ['paid', 'refunded']) ? 'disabled class=text-gray-500' : '' }}>Chưa thanh toán</option>
-                            <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }} {{ $order->payment_status === 'refunded' ? 'disabled class=text-gray-500' : '' }}>Đã thanh toán</option>
-                            <option value="refunded" {{ $order->payment_status === 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
+                            <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }} 
+                                {{ ($order->payment_status === 'refunded') || ($order->payment_method === 'cod' && $order->status !== 'completed' && $order->payment_status !== 'paid') ? 'disabled class=text-gray-500' : '' }}>
+                                Đã thanh toán
+                            </option>
+                            @php
+                                $canRefundUI = ($order->status === 'refunded') || ($order->payment_method === 'vnpay' && in_array($order->status, ['failed_delivery', 'cancelled']));
+                            @endphp
+                            <option value="refunded" {{ $order->payment_status === 'refunded' ? 'selected' : '' }} 
+                                {{ ($order->payment_status !== 'refunded' && !$canRefundUI) || ($order->payment_status !== 'paid' && $order->payment_status !== 'refunded') ? 'disabled class=text-gray-500' : '' }}>
+                                Đã hoàn tiền
+                            </option>
                         </select>
+
                     </div>
                 </div>
 
