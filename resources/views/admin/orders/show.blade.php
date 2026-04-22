@@ -76,6 +76,7 @@
             <p>{{ $order->shipping_country ?? '' }}</p>
         </div>
     </div>
+    
 
     {{-- Sản phẩm --}}
     <div class="bg-gray-900 p-6 rounded-xl shadow-lg mb-6">
