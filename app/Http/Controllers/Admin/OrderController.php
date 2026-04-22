@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderConfirmed;
 use App\Mail\OrderStatusUpdated;
 use App\Models\User;
-use App\Models\Shipper; // ✅ THÊM MỚI
+
 
 class OrderController extends Controller
 {
@@ -51,10 +51,10 @@ class OrderController extends Controller
 
         $order->load(['user', 'items', 'items.variant']);
 
-        // ✅ FIX: dùng Shipper model riêng
-        $shippers = Shipper::where('status', 'active')->get();
+        
 
-        return view('admin.orders.show', compact('order', 'shippers'));
+
+        return view('admin.orders.show', compact('order'));
     }
 
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order)
@@ -64,25 +64,71 @@ class OrderController extends Controller
         $oldStatus = $order->status;
         $oldPaymentStatus = $order->payment_status;
 
-        // Prevent backward order status updates
-        $statusHierarchy = [
-            'pending' => 1,
-            'confirmed' => 2,
-            'shipping' => 3,
-            'completed' => 4,
-        ];
-        
-        $oldLevel = $statusHierarchy[$oldStatus] ?? 99;
-        $newLevel = $statusHierarchy[$request->status] ?? 99;
+        // Nếu đơn hàng đã ở trạng thái cuối, chỉ cho phép cập nhật trạng thái thanh toán
+        if (in_array($oldStatus, ['cancelled', 'refunded', 'failed_delivery'])) {
+            if ($request->status !== $oldStatus) {
+                return back()->with('error', 'Đơn hàng đã ở trạng thái cuối cùng, không thể thay đổi trạng thái đơn hàng nữa.');
+            }
+            
+            // Nếu trạng thái đơn hàng không đổi, nhưng có yêu cầu đổi trạng thái thanh toán thì tiếp tục xử lý bên dưới
+            if (!$request->filled('payment_status') || $request->payment_status === $oldPaymentStatus) {
+                return back()->with('info', 'Không có thông tin nào được thay đổi.');
+            }
+        } else {
+            // Thực thi quy trình nghiêm ngặt (Strict State Machine) cho các đơn hàng chưa ở trạng thái cuối
+            $allowedTransitions = [
+                'pending'         => ['confirmed'],
+                'confirmed'       => ['shipping', 'cancelled'],
+                'shipping'        => ['completed', 'failed_delivery'],
+                'completed'       => ['refunded'],
+            ];
 
-        if ($newLevel < $oldLevel && !in_array($request->status, ['cancelled', 'refunded'])) {
-            return back()->with('error', 'Không thể cập nhật lùi trạng thái đơn hàng đã qua.');
+            $allowedNext = $allowedTransitions[$oldStatus] ?? [];
+
+            if ($request->status !== $oldStatus && !in_array($request->status, $allowedNext)) {
+                $statusNames = [
+                    'pending'         => 'Chờ xác nhận',
+                    'confirmed'       => 'Đã xác nhận',
+                    'shipping'        => 'Đang giao hàng',
+                    'completed'       => 'Hoàn thành',
+                    'failed_delivery' => 'Giao hàng không thành công',
+                    'cancelled'       => 'Đã hủy',
+                    'refunded'        => 'Đã hoàn hàng',
+                ];
+                $currentName = $statusNames[$oldStatus] ?? $oldStatus;
+                return back()->with('error', "Từ trạng thái \"$currentName\" không được phép chuyển sang trạng thái đã chọn.");
+            }
         }
 
-        // Prevent backward payment status updates
+        // Prevent backward payment status updates and restrict refunded status
         if ($request->filled('payment_status')) {
             if ($oldPaymentStatus === 'paid' && $request->payment_status === 'unpaid') {
                 return back()->with('error', 'Không thể chuyển từ Đã thanh toán về Chưa thanh toán.');
+            }
+            if ($request->payment_status === 'refunded') {
+                $isVNPay = ($order->payment_method === 'vnpay');
+                $status = $order->status;
+
+                $canRefund = false;
+                if ($status === 'refunded') {
+                    $canRefund = true; // Cả 2 đều được hoàn tiền khi "Đã hoàn hàng"
+                } elseif ($isVNPay && in_array($status, ['failed_delivery', 'cancelled'])) {
+                    $canRefund = true; // VNPay được hoàn tiền khi "Giao thất bại" hoặc "Đã hủy"
+                }
+
+                if (!$canRefund) {
+                    if ($status === 'refunded') {
+                        // Trường hợp này không xảy ra do logic trên, nhưng để cho chắc chắn
+                    } elseif (in_array($status, ['failed_delivery', 'cancelled'])) {
+                        return back()->with('error', 'Chỉ đơn hàng VNPay mới được phép chuyển sang "Đã hoàn tiền" khi Giao thất bại hoặc Đã hủy.');
+                    } else {
+                        return back()->with('error', 'Chỉ được cập nhật "Đã hoàn tiền" khi đơn hàng ở trạng thái Đã hoàn hàng (hoặc Giao thất bại/Đã hủy đối với VNPay).');
+                    }
+                }
+                
+                if ($oldPaymentStatus !== 'paid') {
+                    return back()->with('error', 'Chỉ có thể hoàn tiền cho những đơn hàng đã thanh toán.');
+                }
             }
             if ($oldPaymentStatus === 'refunded' && in_array($request->payment_status, ['unpaid', 'paid'])) {
                 return back()->with('error', 'Đơn hàng đã hoàn tiền không thể chuyển lại trạng thái thanh toán khác.');
@@ -139,6 +185,33 @@ class OrderController extends Controller
     public function updatePaymentStatus(UpdateOrderPaymentStatusRequest $request, Order $order)
     {
         $this->authorize('update', $order);
+
+        $oldPaymentStatus = $order->payment_status;
+
+        // 🔥 Chặn cập nhật trạng thái "Đã thanh toán" thủ công cho đơn hàng COD khi chưa hoàn thành
+        if ($order->payment_method === 'cod' && $request->payment_status === 'paid' && $order->status !== 'completed') {
+            return back()->with('error', 'Đơn hàng COD chỉ có thể chuyển sang "Đã thanh toán" khi đơn hàng thực tế đã được giao thành công (Hoàn thành).');
+        }
+
+        if ($request->payment_status === 'refunded') {
+            $isVNPay = ($order->payment_method === 'vnpay');
+            $status = $order->status;
+
+            $canRefund = false;
+            if ($status === 'refunded') {
+                $canRefund = true;
+            } elseif ($isVNPay && in_array($status, ['failed_delivery', 'cancelled'])) {
+                $canRefund = true;
+            }
+
+            if (!$canRefund) {
+                return back()->with('error', 'Chỉ được cập nhật "Đã hoàn tiền" khi đơn hàng ở trạng thái Đã hoàn hàng (hoặc Giao thất bại/Đã hủy đối với VNPay).');
+            }
+
+            if ($oldPaymentStatus !== 'paid') {
+                return back()->with('error', 'Chỉ có thể hoàn tiền cho những đơn hàng đã thanh toán.');
+            }
+        }
 
         $order->update(['payment_status' => $request->payment_status]);
 

@@ -55,8 +55,8 @@ class CustomerOrderController extends Controller
     {
         $this->authorize('view', $order);
 
-        if ($order->status !== 'pending') {
-            return back()->with('error', 'Chỉ có thể hủy đơn hàng đang chờ xử lý.');
+        if (in_array($order->status, ['shipping', 'completed', 'failed_delivery', 'refunded', 'cancelled'])) {
+            return back()->with('error', 'Đơn hàng đã được vận chuyển hoặc xử lý, không thể hủy.');
         }
 
         $order->update(['status' => 'cancelled']);
