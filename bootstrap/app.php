@@ -18,8 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // vì nó làm frontend redirect về admin
 
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'customer' => \App\Http\Middleware\IsCustumer::class, // ✅ thêm dòng này
+            'admin'   => \App\Http\Middleware\AdminMiddleware::class,
+            'customer' => \App\Http\Middleware\IsCustumer::class,
+            'shipper' => \App\Http\Middleware\ShipperMiddleware::class,
         ]);
     })
 

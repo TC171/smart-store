@@ -184,8 +184,7 @@
                                 class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500">
                             <option value="">-- Chọn trạng thái --</option>
                             <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }} {{ $currentStatusLevel > 1 ? 'disabled class=text-gray-500' : '' }}>Chờ xác nhận</option>
-                            <option value="waiting_payment" {{ $order->status === 'waiting_payment' ? 'selected' : '' }} {{ $currentStatusLevel > 1 ? 'disabled class=text-gray-500' : '' }}>Đang chờ thanh toán</option>
-                            <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }} {{ $currentStatusLevel > 2 ? 'disabled class=text-gray-500' : '' }}>Đã xác nhận</option>
+                                             <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }} {{ $currentStatusLevel > 2 ? 'disabled class=text-gray-500' : '' }}>Đã xác nhận</option>
                             <option value="shipping" {{ $order->status === 'shipping' ? 'selected' : '' }} {{ $currentStatusLevel > 3 ? 'disabled class=text-gray-500' : '' }}>Đang giao hàng</option>
                             <option value="failed_delivery" {{ $order->status === 'failed_delivery' ? 'selected' : '' }} {{ in_array($order->status, ['completed']) ? 'disabled class=text-gray-500' : '' }}>Giao hàng không thành công</option>
                             <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }} {{ $currentStatusLevel > 4 ? 'disabled class=text-gray-500' : '' }}>Hoàn thành</option>
@@ -245,6 +244,67 @@
                 </div>
             </div>
             @endif
+
+            {{-- SHIPPER INFO BLOCK --}}
+            <div class="mt-6 border-t border-gray-700 pt-6">
+                <h3 class="text-lg font-semibold text-cyan-400 mb-4">🚴 Thông tin Shipper</h3>
+
+                @if($order->shipper)
+                {{-- Đã có shipper --}}
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-5">
+                    <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+                                {{ strtoupper(substr($order->shipper->name, 0, 1)) }}
+                            </div>
+                            <div>
+                                <div class="text-white font-semibold">{{ $order->shipper->name }}</div>
+                                <div class="text-gray-400 text-sm">{{ $order->shipper->phone ?? '–' }}</div>
+                            </div>
+                        </div>
+                        @php
+                            $shipColors = [
+                                'shipping'        => 'bg-indigo-500/20 text-indigo-400',
+                                'completed'       => 'bg-green-500/20 text-green-400',
+                                'failed_delivery' => 'bg-red-500/20 text-red-400',
+                            ];
+                            $shipLabels = [
+                                'shipping'        => '🚴 Đang giao hàng',
+                                'completed'       => '✅ Giao thành công',
+                                'failed_delivery' => '❌ Giao thất bại',
+                            ];
+                        @endphp
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold {{ $shipColors[$order->status] ?? 'bg-gray-500/20 text-gray-400' }}">
+                            {{ $shipLabels[$order->status] ?? $order->status }}
+                        </span>
+                    </div>
+                    @if($order->status === 'completed' && $order->completed_at)
+                    <div class="text-green-400 text-sm">✅ Giao xong lúc: {{ $order->completed_at->format('H:i, d/m/Y') }}</div>
+                    @endif
+                    <div class="mt-3">
+                        <a href="{{ route('admin.shippers.deliveries', ['search' => $order->order_number]) }}"
+                           class="text-cyan-400 hover:text-cyan-300 text-sm transition">
+                            Xem trong trang theo dõi →
+                        </a>
+                    </div>
+                </div>
+
+                @elseif($order->status === 'confirmed')
+                {{-- Chưa có shipper, đơn đã confirmed --}}
+                <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-5">
+                    <p class="text-yellow-400 text-sm mb-4">⚠️ Đơn hàng đã xác nhận nhưng chưa được phân công shipper.</p>
+                    <a href="{{ route('admin.shippers.assign', ['search' => $order->order_number]) }}"
+                       class="inline-block bg-cyan-500 hover:bg-cyan-600 text-white px-5 py-2 rounded-lg text-sm font-semibold transition">
+                        📦 Phân công Shipper ngay
+                    </a>
+                </div>
+
+                @else
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
+                    <p class="text-gray-400 text-sm">Đơn hàng này chưa được phân công shipper.</p>
+                </div>
+                @endif
+            </div>
 
             @if($order->note)
                 <div class="mt-6 bg-gray-800 p-4 rounded-lg border border-gray-700">

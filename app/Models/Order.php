@@ -9,9 +9,10 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'user_id',
+        'shipper_id',
         'email',
         'coupon_id',
-        'coupon_code', // Bổ sung thêm cột này vì Controller của bạn đang dùng
+        'coupon_code',
         'total_amount',
         'subtotal',
         'shipping_fee',
@@ -34,8 +35,8 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'ordered_at' => 'datetime',
-        'completed_at' => 'datetime',
+        'ordered_at'  => 'datetime',
+        'completed_at'=> 'datetime',
     ];
 
     // --- Relationships ---
@@ -43,6 +44,11 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function shipper()
+    {
+        return $this->belongsTo(User::class, 'shipper_id');
     }
 
     public function items()
@@ -60,26 +66,48 @@ class Order extends Model
         return $this->hasMany(RefundRequest::class);
     }
 
-    // --- Helper Methods (Tiện ích bổ sung) ---
+    // --- Status Helpers ---
 
-    /**
-     * Lấy màu sắc tương ứng với trạng thái đơn hàng (Dành cho view màu Cam)
-     */
-    public function getStatusColorAttribute()
+    public static function statusLabels(): array
     {
         return [
-            'pending'         => 'orange',
-            'waiting_payment' => 'yellow',
-            'confirmed'       => 'blue',
-            'shipping'        => 'indigo',
-            'completed'       => 'green',
-            'cancelled'       => 'gray',
-        ][$this->status] ?? 'gray';
+            'pending'         => 'Chờ xác nhận',
+            'waiting_payment' => 'Chờ thanh toán',
+            'confirmed'       => 'Đã xác nhận',
+            'picked_up'       => 'Shipper đã nhận hàng',
+            'shipping'        => 'Đang giao hàng',
+            'failed_delivery' => 'Giao không thành công',
+            'completed'       => 'Hoàn thành',
+            'cancelled'       => 'Đã huỷ',
+            'refunded'        => 'Đã hoàn hàng',
+        ];
     }
 
-    /**
-     * Định dạng tiền tệ VND (Để view gọi cho gọn)
-     */
+    public static function statusColors(): array
+    {
+        return [
+            'pending'         => 'bg-yellow-500/20 text-yellow-400',
+            'waiting_payment' => 'bg-orange-500/20 text-orange-400',
+            'confirmed'       => 'bg-blue-500/20 text-blue-400',
+            'picked_up'       => 'bg-cyan-500/20 text-cyan-400',
+            'shipping'        => 'bg-indigo-500/20 text-indigo-400',
+            'failed_delivery' => 'bg-red-500/20 text-red-400',
+            'completed'       => 'bg-green-500/20 text-green-400',
+            'cancelled'       => 'bg-gray-500/20 text-gray-400',
+            'refunded'        => 'bg-orange-500/20 text-orange-400',
+        ];
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return self::statusLabels()[$this->status] ?? $this->status;
+    }
+
+    public function getStatusColorAttribute(): string
+    {
+        return self::statusColors()[$this->status] ?? 'bg-gray-500/20 text-gray-400';
+    }
+
     public function formatPrice($field)
     {
         return number_format($this->$field, 0, ',', '.') . 'đ';

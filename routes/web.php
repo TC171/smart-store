@@ -41,6 +41,9 @@ use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\ProfileController;
 use App\Http\Controllers\Frontend\RefundController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
+use App\Http\Controllers\Admin\ShipperController;
+use App\Http\Controllers\Shipper\AuthController as ShipperAuthController;
+use App\Http\Controllers\Shipper\DeliveryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +51,28 @@ use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 |--------------------------------------------------------------------------
 
 */
+
+// =================== SHIPPER PORTAL ROUTES ===================
+Route::prefix('shipper')->name('shipper.')->group(function () {
+
+    // Guest (chưa đăng nhập)
+    Route::middleware('guest:shipper')->group(function () {
+        Route::get('/login',  [ShipperAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [ShipperAuthController::class, 'login'])->name('login.post');
+    });
+
+    // Đã đăng nhập
+    Route::middleware(['auth:shipper', 'shipper'])->group(function () {
+        Route::get('/dashboard', [DeliveryController::class, 'dashboard'])->name('dashboard');
+
+        Route::get('/deliveries',                    [DeliveryController::class, 'index'])->name('deliveries.index');
+        Route::get('/deliveries/{delivery}',         [DeliveryController::class, 'show'])->name('deliveries.show');
+        Route::post('/deliveries/{delivery}/pickup', [DeliveryController::class, 'pickup'])->name('deliveries.pickup');
+        Route::post('/deliveries/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('deliveries.updateStatus');
+
+        Route::post('/logout', [ShipperAuthController::class, 'logout'])->name('logout');
+    });
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
 
@@ -96,6 +121,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('product-attributes', ProductAttributeController::class)->except(['show']);
         Route::resource('inventory-history', InventoryHistoryController::class)->except(['edit', 'update']);
         Route::resource('admins', AdminController::class);
+
+        // =================== SHIPPER MANAGEMENT ===================
+        Route::prefix('shippers')->name('shippers.')->group(function () {
+            Route::get('/',       [ShipperController::class, 'index'])->name('index');
+            Route::get('/create', [ShipperController::class, 'create'])->name('create');
+            Route::post('/',      [ShipperController::class, 'store'])->name('store');
+            Route::get('/{shipper}/edit', [ShipperController::class, 'edit'])->name('edit');
+            Route::put('/{shipper}',      [ShipperController::class, 'update'])->name('update');
+            Route::delete('/{shipper}',   [ShipperController::class, 'destroy'])->name('destroy');
+
+            Route::get('/deliveries',       [ShipperController::class, 'deliveries'])->name('deliveries');
+            Route::get('/assign',           [ShipperController::class, 'assign'])->name('assign');
+            Route::post('/assign',          [ShipperController::class, 'assignStore'])->name('assign.store');
+        });
         Route::view('profile', 'admin.profile')->name('profile');
         Route::view('password', 'admin.password')->name('password');
 
@@ -468,85 +507,5 @@ Route::get('/api/search/suggestions', function () {
     ]);
 });
 
-
-/*
-|--------------------------------------------------------------------------
-| DELIVERY ROUTES (SHIPPER) - HỆ THỐNG AUTH RIÊNG
-|--------------------------------------------------------------------------
-*/
-
-use App\Http\Controllers\Delivery\DeliveryController;
-use App\Http\Controllers\Delivery\AuthController as DeliveryAuthController;
-
-Route::prefix('delivery')
-    ->name('delivery.')
-    ->group(function () {
-
-        // Guest routes - Auth riêng cho delivery
-        Route::middleware(['guest:delivery'])->group(function () {
-            Route::get('/login', [DeliveryAuthController::class, 'showLogin'])->name('login');
-            Route::post('/login', [DeliveryAuthController::class, 'login']);
-            Route::get('/register', [DeliveryAuthController::class, 'showRegister'])->name('register');
-            Route::post('/register', [DeliveryAuthController::class, 'register']);
-        });
-
-        // Protected routes - Chỉ shipper đã đăng nhập
-        Route::middleware(['auth:delivery', 'shipper'])->group(function () {
-            Route::get('/dashboard', [DeliveryController::class, 'dashboard'])
-                ->name('dashboard');
-
-            Route::get('/orders', [DeliveryController::class, 'index'])
-                ->name('orders.index');
-
-            Route::post('/orders/{order}/pickup', [DeliveryController::class, 'pickup'])
-                ->name('orders.pickup');
-
-            Route::post('/orders/{order}/delivering', [DeliveryController::class, 'delivering'])
-                ->name('orders.delivering');
-
-            Route::post('/orders/{order}/done', [DeliveryController::class, 'done'])
-                ->name('orders.done');
-
-            Route::post('/orders/{order}/fail', [DeliveryController::class, 'fail'])
-                ->name('orders.fail');
-
-            Route::post('/orders/{order}/returned', [DeliveryController::class, 'returned'])
-                ->name('orders.returned');
-
-            Route::get('/orders/{order}', [DeliveryController::class, 'show'])
-                ->name('orders.show');
-
-            Route::post('/logout', [DeliveryAuthController::class, 'logout'])
-            // 
-                ->name('logout');
-            
-            // Test route
-            Route::get('/test', function() {
-                return view('delivery.test');
-            })->name('test');
-
-            // Test POST route
-            Route::post('/test-post', function() {
-                \Log::info('TEST POST route called successfully!', [
-                    'user_id' => auth('delivery')->id(),
-                ]);
-                return back()->with('success', '✅ POST request worked!');
-            })->name('test-post');
-        });
-    });
-
-/*
-|--------------------------------------------------------------------------
-| LOGOUT CHUNG (WEB USERS: customer + shipper)
-|--------------------------------------------------------------------------
-*/
-
-Route::post('/logout',
-    [FrontAuthController::class, 'logout']
-)->name('logout');    
-
-
-
 // 🔥 CHI TIẾT SẢN PHẨM (LUÔN ĐỂ CUỐI CÙNG ĐỂ KHÔNG CHẶN CÁC ROUTE KHÁC)
 Route::get('/{categorySlug}/{productSlug}', [FrontProductController::class, 'show'])->name('products.show');
-

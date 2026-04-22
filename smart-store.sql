@@ -383,6 +383,30 @@ INSERT INTO `orders` (`id`, `order_number`, `user_id`, `coupon_id`, `total_amoun
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `shipper_orders`
+--
+
+CREATE TABLE `shipper_orders` (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `order_id` bigint UNSIGNED NOT NULL,
+  `shipper_id` bigint UNSIGNED NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'assigned' COMMENT 'assigned,picked_up,delivering,delivered,failed',
+  `note` text DEFAULT NULL,
+  `assigned_at` timestamp NULL DEFAULT NULL,
+  `picked_up_at` timestamp NULL DEFAULT NULL,
+  `delivered_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `shipper_orders_order_id_foreign` (`order_id`),
+  KEY `shipper_orders_shipper_id_foreign` (`shipper_id`),
+  CONSTRAINT `shipper_orders_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `shipper_orders_shipper_id_foreign` FOREIGN KEY (`shipper_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `order_items`
 --
 
@@ -755,7 +779,7 @@ CREATE TABLE `users` (
   `email` varchar(255) NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('admin','staff','customer') DEFAULT 'customer',
+  `role` enum('admin','staff','customer','shipper') DEFAULT 'customer',
   `phone` varchar(20) DEFAULT NULL,
   `avatar` varchar(255) DEFAULT NULL,
   `gender` enum('male','female','other') DEFAULT NULL,
