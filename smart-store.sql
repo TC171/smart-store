@@ -2600,35 +2600,7 @@ COMMIT;
 -- --
 -- -- Constraints for table `categories`
 -- --
--- ALTER TABLE `categories`
---   ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL;
-
--- --
--- -- Constraints for table `inventory_history`
--- --
--- ALTER TABLE `inventory_history`
---   ADD CONSTRAINT `inventory_history_ibfk_1` FOREIGN KEY (`product_variant_id`) REFERENCES `product_variants` (`id`) ON DELETE CASCADE,
---   ADD CONSTRAINT `inventory_history_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
-
--- --
--- -- Constraints for table `orders`
--- --
--- ALTER TABLE `orders`
---   ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
---   ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`coupon_id`) REFERENCES `coupons` (`id`);
-
--- --
--- -- Constraints for table `order_items`
--- --
--- ALTER TABLE `order_items`
---   ADD CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
---   ADD CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`),
---   ADD CONSTRAINT `order_items_ibfk_3` FOREIGN KEY (`product_variant_id`) REFERENCES `product_variants` (`id`);
-
--- --
--- -- Constraints for table `payments`
--- --
--- ALTER TABLE `payments`
+-
 --   ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE;
 
 -- --
@@ -2670,15 +2642,663 @@ COMMIT;
 --   ADD CONSTRAINT `stock_histories_ibfk_1` FOREIGN KEY (`product_variant_id`) REFERENCES `product_variants` (`id`) ON DELETE CASCADE;
 
 -- --
--- -- Constraints for table `user_addresses`
--- --
--- ALTER TABLE `user_addresses`
---   ADD CONSTRAINT `user_addresses_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+-- -- Con
+
+--   ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL;
 
 -- --
--- -- Constraints for table `wishlists`
+-- -- Constraints for table `inventory_history`
 -- --
--- ALTER TABLE `wishlists`
---   ADD CONSTRAINT `wishlists_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
---   ADD CONSTRAINT `wishlists_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
--- COMMIT;
+-- ALTER TABLE `inventory_history`
+--   ADD CONSTRAINT `inventory_history_ibfk_1` FOREIGN KEY (`product_variant_id`) REFERENCES `product_variants` (`id`) ON DELETE CASCADE,
+--   ADD CONSTRAINT `inventory_history_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+-- --
+-- -- Constraints for table `orders`
+-- --
+-- ALTER TABLE `orders`
+--   ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+--   ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`coupon_id`) REFERENCES `coupons` (`id`);
+
+-- --
+-- -- Constraints for table `order_items`
+-- --
+-- ALTER TABLE `order_items`
+--   ADD CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+--   ADD CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`),
+--   ADD CONSTRAINT `order_items_ibfk_3` FOREIGN KEY (`product_variant_id`) REFERENCES `product_variants` (`id`);
+
+-- --
+-- -- Constraints for table `payments`
+-- --
+-- ALTER TABLE `payments`
+
+-   `created_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `banners`
+-- --
+
+-- CREATE TABLE `banners` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `title` varchar(255) DEFAULT NULL,
+--   `image` varchar(255) DEFAULT NULL,
+--   `link` varchar(255) DEFAULT NULL,
+--   `position` varchar(100) DEFAULT NULL,
+--   `sort_order` int DEFAULT '0',
+--   `status` tinyint(1) DEFAULT '1',
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --
+-- -- Dumping data for table `banners`
+-- --
+
+-- INSERT INTO `banners` (`id`, `title`, `image`, `link`, `position`, `sort_order`, `status`, `created_at`, `updated_at`) VALUES
+-- (1, 'tiêu đề', 'banners/8xW6O7VsXuQPd00Iqd83B7GQB3Mbe7zuUNHTkKJD.png', 'https://google.com', 'header', 1, 1, '2026-03-13 02:38:37', '2026-03-13 02:38:37'),
+-- (4, '3.', 'banners/5lvkBNqR7Ex9DPmWAvmOWp1oPvXhTgKokx6aiWMA.png', NULL, 'header', 0, 1, '2026-03-21 12:53:36', '2026-03-21 12:53:36');
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `brands`
+-- --
+
+-- CREATE TABLE `brands` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `name` varchar(255) NOT NULL,
+--   `slug` varchar(255) NOT NULL,
+--   `logo` varchar(255) DEFAULT NULL,
+--   `description` text,
+--   `website` varchar(255) DEFAULT NULL,
+--   `country` varchar(100) DEFAULT NULL,
+--   `status` tinyint(1) DEFAULT '1',
+--   `meta_title` varchar(255) DEFAULT NULL,
+--   `meta_description` text,
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL,
+--   `deleted_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --
+-- -- Dumping data for table `brands`
+-- --
+
+-- INSERT INTO `brands` (`id`, `name`, `slug`, `logo`, `description`, `website`, `country`, `status`, `meta_title`, `meta_description`, `created_at`, `updated_at`, `deleted_at`) VALUES
+-- (1, 'Apple', 'apple', NULL, NULL, NULL, 'USA', 0, NULL, NULL, '2026-03-01 04:30:46', '2026-03-13 02:46:12', NULL),
+-- (2, 'Samsung', 'samsung', NULL, NULL, NULL, 'Hàn Quốc', 1, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL),
+-- (3, 'Dell', 'dell', NULL, NULL, NULL, 'USA', 1, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL),
+-- (4, 'Xiaomi', 'xiaomi', NULL, NULL, NULL, 'Trung Quốc', 1, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL),
+-- (5, 'Asus', 'asus', NULL, NULL, NULL, 'Đài Loan', 1, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL);
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `cache`
+-- --
+
+-- CREATE TABLE `cache` (
+--   `key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `value` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `expiration` int NOT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `cache_locks`
+-- --
+
+-- CREATE TABLE `cache_locks` (
+--   `key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `owner` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `expiration` int NOT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `carts`
+-- --
+
+-- CREATE TABLE `carts` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `user_id` bigint UNSIGNED NOT NULL,
+--   `session_id` varchar(255) DEFAULT NULL,
+--   `total_items` int DEFAULT '0',
+--   `total_price` decimal(15,2) DEFAULT '0.00',
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `cart_items`
+-- --
+
+-- CREATE TABLE `cart_items` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `cart_id` bigint UNSIGNED NOT NULL,
+--   `product_variant_id` bigint UNSIGNED NOT NULL,
+--   `price` decimal(15,2) NOT NULL,
+--   `quantity` int NOT NULL,
+--   `subtotal` decimal(15,2) NOT NULL,
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `categories`
+-- --
+
+-- CREATE TABLE `categories` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `name` varchar(255) NOT NULL,
+--   `slug` varchar(255) NOT NULL,
+--   `description` text,
+--   `image` varchar(255) DEFAULT NULL,
+--   `icon` varchar(255) DEFAULT NULL,
+--   `parent_id` bigint UNSIGNED DEFAULT NULL,
+--   `is_featured` tinyint(1) DEFAULT '0',
+--   `status` tinyint(1) DEFAULT '1',
+--   `sort_order` int DEFAULT '0',
+--   `meta_title` varchar(255) DEFAULT NULL,
+--   `meta_description` text,
+--   `meta_keywords` text,
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL,
+--   `deleted_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --
+-- -- Dumping data for table `categories`
+-- --
+
+-- INSERT INTO `categories` (`id`, `name`, `slug`, `description`, `image`, `icon`, `parent_id`, `is_featured`, `status`, `sort_order`, `meta_title`, `meta_description`, `meta_keywords`, `created_at`, `updated_at`, `deleted_at`) VALUES
+-- (1, 'Điện thoại', 'dien-thoai', NULL, 'categories/T3hEmh5ViJgWEuVZZKDo6N3m7p9sBvBRUC4Cvleg.png', NULL, NULL, 1, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-21 12:44:30', NULL),
+-- (2, 'Laptop', 'laptop', NULL, 'categories/SuOwbAXQfPd8I8KqTnBH5WEwKjkLeyEii22yPWuo.jpg', NULL, NULL, 1, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-24 02:57:59', NULL),
+-- (3, 'Máy tính bảng', 'may-tinh-bang', NULL, 'categories/JFOql8b3bmLCSFmyj2Ey0gQ9XRm2VG6nEvXAShU0.jpg', NULL, NULL, 1, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-24 02:58:20', NULL),
+-- (4, 'Phụ kiện', 'phu-kien', NULL, 'categories/KTIgsedXtQ6QiI6nYlwhcBkaKiQhhybqEgZk7JdC.jpg', NULL, NULL, 1, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-24 02:58:33', NULL),
+-- (5, 'Đồng hồ thông minh', 'dong-ho', NULL, NULL, NULL, NULL, 0, 1, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-05 18:56:38', '2026-03-05 18:56:38');
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `coupons`
+-- --
+
+-- CREATE TABLE `coupons` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `code` varchar(50) NOT NULL,
+--   `type` enum('fixed','percent') NOT NULL,
+--   `value` decimal(15,2) NOT NULL,
+--   `min_order_amount` decimal(15,2) DEFAULT NULL,
+--   `max_discount` decimal(15,2) DEFAULT NULL,
+--   `usage_limit` int DEFAULT NULL,
+--   `used_count` int DEFAULT '0',
+--   `starts_at` timestamp NULL DEFAULT NULL,
+--   `expires_at` timestamp NULL DEFAULT NULL,
+--   `status` tinyint(1) DEFAULT '1',
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --
+-- -- Dumping data for table `coupons`
+-- --
+
+-- INSERT INTO `coupons` (`id`, `code`, `type`, `value`, `min_order_amount`, `max_discount`, `usage_limit`, `used_count`, `starts_at`, `expires_at`, `status`, `created_at`, `updated_at`) VALUES
+-- (1, 'TEST970', 'percent', '10.00', '100.00', '50.00', 100, 0, '2026-03-13 03:11:34', '2026-04-12 03:11:34', 1, '2026-03-13 03:11:34', '2026-03-13 03:11:34'),
+-- (2, 'Sale50', 'percent', '50.00', '15000000.00', '2000000.00', 5, 0, '2026-03-13 03:10:00', '2026-03-14 03:00:00', 1, '2026-03-13 03:12:13', '2026-03-13 03:12:13');
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `failed_jobs`
+-- --
+
+-- CREATE TABLE `failed_jobs` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `uuid` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `connection` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `queue` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `exception` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `failed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `inventory_history`
+-- --
+
+-- CREATE TABLE `inventory_history` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `product_variant_id` bigint UNSIGNED NOT NULL,
+--   `type` enum('in','out','adjustment','return','sale','purchase') NOT NULL,
+--   `quantity` int NOT NULL,
+--   `previous_stock` int NOT NULL,
+--   `current_stock` int NOT NULL,
+--   `reference_type` varchar(255) DEFAULT NULL,
+--   `reference_id` bigint UNSIGNED DEFAULT NULL,
+--   `notes` text,
+--   `user_id` bigint UNSIGNED DEFAULT NULL,
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --
+-- -- Dumping data for table `inventory_history`
+-- --
+
+-- INSERT INTO `inventory_history` (`id`, `product_variant_id`, `type`, `quantity`, `previous_stock`, `current_stock`, `reference_type`, `reference_id`, `notes`, `user_id`, `created_at`, `updated_at`) VALUES
+-- (1, 23, 'sale', 1, 1, 0, 'order', 2, 'Đơn hàng mẫu #1', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (2, 4, 'sale', 2, 25, 23, 'order', 3, 'Đơn hàng mẫu #2', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (3, 1, 'sale', 2, 20, 18, 'order', 5, 'Đơn hàng mẫu #4', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (4, 29, 'sale', 3, 5, 2, 'order', 6, 'Đơn hàng mẫu #5', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (5, 4, 'sale', 2, 23, 21, 'order', 7, 'Đơn hàng mẫu #6', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (6, 1, 'sale', 2, 18, 16, 'order', 8, 'Đơn hàng mẫu #7', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (7, 4, 'sale', 2, 21, 19, 'order', 8, 'Đơn hàng mẫu #7', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (8, 4, 'sale', 3, 19, 16, 'order', 9, 'Đơn hàng mẫu #8', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (9, 18, 'sale', 1, 1, 0, 'order', 9, 'Đơn hàng mẫu #8', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (10, 1, 'sale', 1, 16, 15, 'order', 10, 'Đơn hàng mẫu #9', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (11, 28, 'sale', 2, 2, 0, 'order', 10, 'Đơn hàng mẫu #9', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54');
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `jobs`
+-- --
+
+-- CREATE TABLE `jobs` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `queue` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `attempts` tinyint UNSIGNED NOT NULL,
+--   `reserved_at` int UNSIGNED DEFAULT NULL,
+--   `available_at` int UNSIGNED NOT NULL,
+--   `created_at` int UNSIGNED NOT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `job_batches`
+-- --
+
+-- CREATE TABLE `job_batches` (
+--   `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `total_jobs` int NOT NULL,
+--   `pending_jobs` int NOT NULL,
+--   `failed_jobs` int NOT NULL,
+--   `failed_job_ids` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `options` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+--   `cancelled_at` int DEFAULT NULL,
+--   `created_at` int NOT NULL,
+--   `finished_at` int DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `migrations`
+-- --
+
+-- CREATE TABLE `migrations` (
+--   `id` int UNSIGNED NOT NULL,
+--   `migration` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `batch` int NOT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --
+-- -- Dumping data for table `migrations`
+-- --
+
+-- INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
+-- (1, '0001_01_01_000000_create_users_table', 1),
+-- (2, '0001_01_01_000001_create_cache_table', 1),
+-- (3, '0001_01_01_000002_create_jobs_table', 1),
+-- (5, '2026_01_24_201734_create_personal_access_tokens_table', 2),
+-- (6, '2026_02_28_225901_add_role_to_users_table', 2),
+-- (7, '2026_03_13_094836_create_product_attributes_table', 3);
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `orders`
+-- --
+
+-- CREATE TABLE `orders` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `order_number` varchar(100) NOT NULL,
+--   `user_id` bigint UNSIGNED NOT NULL,
+--   `email` varchar(255) DEFAULT NULL,
+--   `coupon_id` bigint UNSIGNED DEFAULT NULL,
+--   `total_amount` decimal(15,2) NOT NULL,
+--   `shipping_fee` decimal(15,2) DEFAULT '0.00',
+--   `discount_amount` decimal(15,2) DEFAULT '0.00',
+--   `tax_amount` decimal(15,2) DEFAULT '0.00',
+--   `grand_total` decimal(15,2) NOT NULL,
+--   `status` enum('pending','confirmed','shipping','completed','cancelled','refunded') DEFAULT 'pending',
+--   `payment_status` enum('unpaid','paid','refunded') DEFAULT 'unpaid',
+--   `payment_method` varchar(255) DEFAULT NULL,
+--   `shipping_name` varchar(255) DEFAULT NULL,
+--   `shipping_phone` varchar(20) DEFAULT NULL,
+--   `shipping_address` text,
+--   `shipping_city` varchar(100) DEFAULT NULL,
+--   `shipping_district` varchar(100) DEFAULT NULL,
+--   `shipping_country` varchar(100) DEFAULT NULL,
+--   `note` text,
+--   `ordered_at` timestamp NULL DEFAULT NULL,
+--   `completed_at` timestamp NULL DEFAULT NULL,
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --
+-- -- Dumping data for table `orders`
+-- --
+
+-- INSERT INTO `orders` (`id`, `order_number`, `user_id`, `coupon_id`, `total_amount`, `shipping_fee`, `discount_amount`, `tax_amount`, `grand_total`, `status`, `payment_status`, `shipping_name`, `shipping_phone`, `shipping_address`, `shipping_city`, `shipping_district`, `shipping_country`, `note`, `ordered_at`, `completed_at`, `created_at`, `updated_at`) VALUES
+-- (2, 'ORD-20260313-001', 2, NULL, '3.00', '30000.00', '0.00', '0.00', '30003.00', 'completed', 'unpaid', 'Customer 1', '0123456781', 'Address 1', 'Hanoi', 'Quận 1', 'Vietnam', NULL, '2026-03-02 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (3, 'ORD-20260313-002', 6, 1, '23000001.00', '30000.00', '50.00', '0.00', '23029951.00', 'completed', 'unpaid', 'Customer 5', '0123456785', 'Address 5', 'Hanoi', 'Quận 1', 'Vietnam', NULL, '2026-02-23 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (4, 'ORD-20260313-003', 5, NULL, '0.00', '30000.00', '0.00', '0.00', '30000.00', 'pending', 'unpaid', 'Customer 4', '0123456784', 'Address 4', 'Hanoi', 'Quận 1', 'Vietnam', 'Giao hàng cẩn thận', '2026-03-10 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (5, 'ORD-20260313-004', 4, NULL, '67980002.00', '30000.00', '0.00', '0.00', '68010002.00', 'shipping', 'paid', 'Customer 3', '0123456783', 'Address 3', 'Hanoi', 'Quận 1', 'Vietnam', NULL, '2026-03-09 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (6, 'ORD-20260313-005', 4, NULL, '15.00', '30000.00', '0.00', '0.00', '30015.00', 'completed', 'unpaid', 'Customer 3', '0123456783', 'Address 3', 'Hanoi', 'Quận 1', 'Vietnam', NULL, '2026-03-06 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (7, 'ORD-20260313-006', 6, NULL, '23000000.00', '30000.00', '0.00', '0.00', '23030000.00', 'confirmed', 'paid', 'Customer 5', '0123456785', 'Address 5', 'Hanoi', 'Quận 1', 'Vietnam', NULL, '2026-02-15 03:18:54', '2026-03-08 03:18:54', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (8, 'ORD-20260313-007', 3, NULL, '90980000.00', '30000.00', '0.00', '0.00', '91010000.00', 'completed', 'paid', 'Customer 2', '0123456782', 'Address 2', 'Hanoi', 'Quận 1', 'Vietnam', 'Giao hàng cẩn thận', '2026-02-22 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (9, 'ORD-20260313-008', 2, NULL, '34500003.00', '30000.00', '0.00', '0.00', '34530003.00', 'shipping', 'paid', 'Customer 1', '0123456781', 'Address 1', 'Hanoi', 'Quận 1', 'Vietnam', NULL, '2026-03-13 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (10, 'ORD-20260313-009', 4, NULL, '33990010.00', '30000.00', '0.00', '0.00', '34020010.00', 'shipping', 'unpaid', 'Customer 3', '0123456783', 'Address 3', 'Hanoi', 'Quận 1', 'Vietnam', NULL, '2026-02-28 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (11, 'ORD-20260313-010', 3, NULL, '2.00', '30000.00', '0.00', '0.00', '30002.00', 'confirmed', 'paid', 'Customer 2', '0123456782', 'Address 2', 'Hanoi', 'Quận 1', 'Vietnam', NULL, '2026-02-16 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54');
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `shipper_orders`
+-- --
+
+-- CREATE TABLE `shipper_orders` (
+--   `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+--   `order_id` bigint UNSIGNED NOT NULL,
+--   `shipper_id` bigint UNSIGNED NOT NULL,
+--   `status` varchar(50) NOT NULL DEFAULT 'assigned' COMMENT 'assigned,picked_up,delivering,delivered,failed',
+--   `note` text DEFAULT NULL,
+--   `assigned_at` timestamp NULL DEFAULT NULL,
+--   `picked_up_at` timestamp NULL DEFAULT NULL,
+--   `delivered_at` timestamp NULL DEFAULT NULL,
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL,
+--   PRIMARY KEY (`id`),
+--   KEY `shipper_orders_order_id_foreign` (`order_id`),
+--   KEY `shipper_orders_shipper_id_foreign` (`shipper_id`),
+--   CONSTRAINT `shipper_orders_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+--   CONSTRAINT `shipper_orders_shipper_id_foreign` FOREIGN KEY (`shipper_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `order_items`
+-- --
+
+-- CREATE TABLE `order_items` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `order_id` bigint UNSIGNED NOT NULL,
+--   `product_id` bigint UNSIGNED NOT NULL,
+--   `product_variant_id` bigint UNSIGNED NOT NULL,
+--   `product_name` varchar(255) DEFAULT NULL,
+--   `sku` varchar(100) DEFAULT NULL,
+--   `price` decimal(15,2) NOT NULL,
+--   `quantity` int NOT NULL,
+--   `subtotal` decimal(15,2) NOT NULL,
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --
+-- -- Dumping data for table `order_items`
+-- --
+
+-- INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `product_variant_id`, `product_name`, `sku`, `price`, `quantity`, `subtotal`, `created_at`, `updated_at`) VALUES
+-- (2, 2, 11, 20, 'iPhone 16 Pro Max', 'IPHON-BLU-128-8', '1.00', 2, '2.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (3, 2, 11, 23, 'iPhone 16 Pro Max', 'IPHON-BLU-258-12', '1.00', 1, '1.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (4, 3, 4, 4, 'Xiaomi Pad 6', 'PAD6-128', '11500000.00', 2, '23000000.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (5, 3, 11, 23, 'iPhone 16 Pro Max', 'IPHON-BLU-258-12', '1.00', 1, '1.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (6, 4, 11, 33, 'iPhone 16 Pro Max', 'IPHON-WHI-128gb-12gb', '0.00', 1, '0.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (7, 5, 1, 1, 'iPhone 15 Pro Max', 'IP15PM-256', '33990000.00', 2, '67980000.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (8, 5, 11, 21, 'iPhone 16 Pro Max', 'IPHON-BLU-128-12', '1.00', 2, '2.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (9, 5, 11, 31, 'iPhone 16 Pro Max', 'IPHON-RED-128gb-12gb', '0.00', 1, '0.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (10, 6, 4, 29, 'Xiaomi Pad 6', 'XIAOM-BLU-512gb-12gb', '5.00', 3, '15.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (11, 7, 4, 4, 'Xiaomi Pad 6', 'PAD6-128', '11500000.00', 2, '23000000.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (12, 7, 11, 33, 'iPhone 16 Pro Max', 'IPHON-WHI-128gb-12gb', '0.00', 2, '0.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (13, 8, 1, 1, 'iPhone 15 Pro Max', 'IP15PM-256', '33990000.00', 2, '67980000.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (14, 8, 4, 4, 'Xiaomi Pad 6', 'PAD6-128', '11500000.00', 2, '23000000.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (15, 8, 11, 31, 'iPhone 16 Pro Max', 'IPHON-RED-128gb-12gb', '0.00', 1, '0.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (16, 9, 4, 4, 'Xiaomi Pad 6', 'PAD6-128', '11500000.00', 3, '34500000.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (17, 9, 11, 18, 'iPhone 16 Pro Max', 'IPHON-BLA-258-8', '1.00', 1, '1.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (18, 9, 11, 24, 'iPhone 16 Pro Max', 'IPHON-PIN-128-8', '1.00', 2, '2.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (19, 10, 1, 1, 'iPhone 15 Pro Max', 'IP15PM-256', '33990000.00', 1, '33990000.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (20, 10, 1, 28, 'iPhone 15 Pro Max', 'IPHON-BLA-128gb-8gb', '5.00', 2, '10.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
+-- (21, 11, 11, 20, 'iPhone 16 Pro Max', 'IPHON-BLU-128-8', '1.00', 2, '2.00', '2026-03-13 03:18:54', '2026-03-13 03:18:54');
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `password_reset_tokens`
+-- --
+
+-- CREATE TABLE `password_reset_tokens` (
+--   `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `created_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `payments`
+-- --
+
+-- CREATE TABLE `payments` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `order_id` bigint UNSIGNED NOT NULL,
+--   `payment_method` enum('cod','vnpay','momo','paypal','stripe','bank_transfer') NOT NULL,
+--   `transaction_id` varchar(255) DEFAULT NULL,
+--   `amount` decimal(15,2) NOT NULL,
+--   `currency` varchar(10) DEFAULT 'VND',
+--   `status` enum('pending','success','failed','refunded') DEFAULT 'pending',
+--   `paid_at` timestamp NULL DEFAULT NULL,
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `personal_access_tokens`
+-- --
+
+-- CREATE TABLE `personal_access_tokens` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `tokenable_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `tokenable_id` bigint UNSIGNED NOT NULL,
+--   `name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `abilities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+--   `last_used_at` timestamp NULL DEFAULT NULL,
+--   `expires_at` timestamp NULL DEFAULT NULL,
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `products`
+-- --
+
+-- CREATE TABLE `products` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `name` varchar(255) NOT NULL,
+--   `slug` varchar(255) NOT NULL,
+--   `short_description` text,
+--   `description` longtext,
+--   `category_id` bigint UNSIGNED NOT NULL,
+--   `brand_id` bigint UNSIGNED NOT NULL,
+--   `thumbnail` varchar(255) DEFAULT NULL,
+--   `warranty_months` int DEFAULT '12',
+--   `weight` decimal(10,2) DEFAULT NULL,
+--   `length` decimal(10,2) DEFAULT NULL,
+--   `width` decimal(10,2) DEFAULT NULL,
+--   `height` decimal(10,2) DEFAULT NULL,
+--   `is_featured` tinyint(1) DEFAULT '0',
+--   `is_new` tinyint(1) DEFAULT '0',
+--   `status` tinyint(1) DEFAULT '1',
+--   `view_count` int DEFAULT '0',
+--   `sold_count` int DEFAULT '0',
+--   `meta_title` varchar(255) DEFAULT NULL,
+--   `meta_description` text,
+--   `meta_keywords` text,
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL,
+--   `deleted_at` timestamp NULL DEFAULT NULL,
+--   `price` decimal(15,2) DEFAULT NULL,
+--   `sale_price` decimal(15,2) DEFAULT NULL,
+--   `stock` int DEFAULT '0',
+--   `has_variants` tinyint(1) DEFAULT '0'
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --
+-- -- Dumping data for table `products`
+-- --
+
+-- INSERT INTO `products` (`id`, `name`, `slug`, `short_description`, `description`, `category_id`, `brand_id`, `thumbnail`, `warranty_months`, `weight`, `length`, `width`, `height`, `is_featured`, `is_new`, `status`, `view_count`, `sold_count`, `meta_title`, `meta_description`, `meta_keywords`, `created_at`, `updated_at`, `deleted_at`, `price`, `sale_price`, `stock`, `has_variants`) VALUES
+-- (1, 'iPhone 15 Pro Max', 'iphone-15-pro-max', 'iPhone cao cấp', 'Chiếc smartphone mới nhất từ Samsung ra mắt vào tháng 03/2026 mang đến sự kết hợp hoàn hảo giữa hiệu năng mạnh mẽ, thiết kế cao cấp và công nghệ hiện đại, đáp ứng tốt mọi nhu cầu từ công việc đến giải trí.\r\n\r\nVề hiệu năng, máy được trang bị vi xử lý Exynos 1680 8 nhân với cấu trúc gồm 1 nhân xung nhịp 2.9 GHz, 3 nhân 2.6 GHz và 4 nhân 1.95 GHz, giúp xử lý mượt mà mọi tác vụ từ cơ bản đến nâng cao. Đi kèm là GPU Xclipse 550 mang lại khả năng đồ họa ấn tượng, hỗ trợ tốt chơi game và xử lý hình ảnh. Máy có RAM 8 GB và bộ nhớ trong 128 GB (khả dụng khoảng 113 GB), đủ không gian lưu trữ dữ liệu thoải mái.\r\n\r\nVề màn hình, thiết bị sở hữu tấm nền Super AMOLED Plus kích thước lớn 6.7 inch, độ phân giải Full HD+ (1080 x 2340 Pixels), tần số quét 120 Hz cho trải nghiệm hiển thị mượt mà. Độ sáng tối đa lên đến 1900 nits giúp hiển thị rõ ràng ngay cả dưới ánh sáng mạnh. Màn hình được bảo vệ bởi kính cường lực Corning Gorilla Glass Victus+, tăng độ bền và khả năng chống trầy xước.\r\n\r\nHệ thống camera là điểm nhấn nổi bật với cụm 3 camera sau gồm camera chính 50 MP, camera phụ 12 MP và 5 MP, hỗ trợ nhiều tính năng như chống rung quang học (OIS), chụp đêm, HDR, AI Camera, quay video 4K 30fps và quay siêu chậm. Camera trước 12 MP đáp ứng tốt nhu cầu selfie và gọi video với các tính năng làm đẹp, HDR và chụp chân dung AI.\r\n\r\nThiết bị chạy trên hệ điều hành Android 16 mới nhất, mang lại trải nghiệm mượt mà và nhiều tính năng thông minh. Ngoài ra, máy còn hỗ trợ đầy đủ các kết nối hiện đại như 5G, Wi-Fi 6E, Bluetooth 6.0, NFC và định vị đa hệ thống.\r\n\r\nVề pin, máy được trang bị viên pin dung lượng 5000 mAh, hỗ trợ sạc nhanh 45W với công nghệ Super Fast Charging 2.0, giúp rút ngắn thời gian sạc và kéo dài thời gian sử dụng.\r\n\r\nThiết kế của máy mang phong cách nguyên khối cao cấp với khung kim loại và mặt lưng kính Gorilla Glass Victus+, vừa sang trọng vừa bền bỉ. Máy có độ mỏng chỉ 6.9 mm và trọng lượng 179 g, tạo cảm giác cầm nắm thoải mái. Đồng thời, thiết bị đạt chuẩn kháng nước, bụi IP68, giúp yên tâm sử dụng trong nhiều điều kiện khác nhau.\r\n\r\nNgoài ra, máy còn tích hợp nhiều tiện ích như mở khóa vân tay dưới màn hình, nhận diện khuôn mặt, hỗ trợ 2 SIM (Nano SIM + eSIM), cùng khả năng giải trí đa phương tiện mạnh mẽ.', 1, 1, 'products/8j2DPeiDScq86c9UKsh9uHaknPGAZGRRR2tsRRN4.jpg', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-25 03:46:20', NULL, NULL, NULL, 0, 0),
+-- (2, 'Samsung Galaxy S24', 'galaxy-s24', 'Flagship Samsung', 'Mô tả S24', 1, 2, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-02 15:23:59', '2026-03-02 15:23:59', NULL, NULL, 0, 0),
+-- (3, 'Dell XPS 15', 'dell-xps-15', 'Laptop cao cấp', 'Mô tả XPS', 2, 3, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL, NULL, NULL, 0, 0),
+-- (4, 'Xiaomi Pad 6', 'xiaomi-pad-6', 'Tablet mạnh mẽ', 'Mô tả Pad 6', 3, 4, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL, NULL, NULL, 0, 0),
+-- (5, 'Asus ROG Phone 8', 'rog-phone-8', 'Gaming phone', 'Mô tả ROG', 1, 5, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-01 04:30:46', '2026-03-01 04:30:46', NULL, NULL, NULL, 0, 0),
+-- (6, '1', '1', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:02:25', '2026-03-02 21:31:20', '2026-03-02 21:31:20', NULL, NULL, 0, 0),
+-- (7, '2', '2', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:03:14', '2026-03-02 21:31:17', '2026-03-02 21:31:17', NULL, NULL, 0, 0),
+-- (8, '3', '3', NULL, NULL, 1, 1, 'products/htIjzqLhT9ZOiU0cB8SqAXN8hLrJFSd4HAC8j0SZ.png', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:08:31', '2026-03-02 21:31:11', '2026-03-02 21:31:11', NULL, NULL, 0, 0),
+-- (9, '4', '4', NULL, NULL, 1, 1, 'products/ZTxHqZApvm2Ecbzfbc1RYdfjj7d8hbc6JuJhTxDz.jpg', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:08:57', '2026-03-02 21:31:07', '2026-03-02 21:31:07', NULL, NULL, 0, 0),
+-- (11, 'iPhone 16 Pro Max', 'iphone-16-pro-max', NULL, NULL, 1, 1, 'products/r7xEFSsEh5mmUcQUxBR7Jf2mwhZgzXx8uGEnKp8v.png', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:30:57', '2026-03-13 02:44:25', NULL, NULL, NULL, 0, 0),
+-- (12, '5', '5', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:33:26', '2026-03-05 18:57:11', '2026-03-05 18:57:11', NULL, NULL, 0, 0),
+-- (13, '7', '7', NULL, NULL, 1, 1, 'products/zFKSX0lNDsfhxV6qOqTBSB4XjRwM6scVlhov6CcY.png', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:37:39', '2026-03-05 18:57:08', '2026-03-05 18:57:08', NULL, NULL, 0, 0),
+-- (14, '6', '6', NULL, NULL, 1, 1, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-02 21:53:47', '2026-03-05 17:34:24', '2026-03-05 17:34:24', NULL, NULL, 0, 0),
+-- (15, 'abc', 'abc', NULL, NULL, 1, 1, 'products/RhjbaAlCk17ESilYk6wlR5dskDLLEyvgBwLKXa0T.jpg', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-21 13:07:17', '2026-03-21 13:07:17', NULL, NULL, NULL, 0, 0),
+-- (16, '123', '123', NULL, NULL, 1, 2, 'products/y05X85f6zJJLJvVeI0IxoGovdT2R01usDt31Fp41.png', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-24 04:00:28', '2026-03-24 13:14:11', NULL, NULL, NULL, 0, 0),
+-- (17, 'abcd', 'abcd', NULL, NULL, 2, 2, NULL, 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-24 11:34:50', '2026-03-25 03:53:01', NULL, NULL, NULL, 0, 0),
+-- (19, '121323', '121323', NULL, NULL, 1, 1, 'products/SNkdLcDra3ytr644TTkD1cLuQhSLEmAwxwOP8tRr.jpg', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-24 13:35:21', '2026-03-25 03:53:03', NULL, NULL, NULL, 0, 0),
+-- (20, '4534656', '4534656', NULL, NULL, 1, 1, 'products/yCfMhSVtPzK3mMoK1CeBz618oYvL5wZ4SB9gIiaH.jpg', 12, NULL, NULL, NULL, NULL, 0, 0, 1, 0, 0, NULL, NULL, NULL, '2026-03-25 03:52:06', '2026-03-25 03:53:17', NULL, NULL, NULL, 0, 0);
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `product_attributes`
+-- --
+
+-- CREATE TABLE `product_attributes` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `type` enum('color','storage','ram') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `value` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `sort_order` int NOT NULL DEFAULT '0',
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --
+-- -- Dumping data for table `product_attributes`
+-- --
+
+-- INSERT INTO `product_attributes` (`id`, `type`, `value`, `sort_order`, `created_at`, `updated_at`) VALUES
+-- (9, 'storage', '64GB', 1, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
+-- (10, 'storage', '128GB', 2, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
+-- (11, 'storage', '256GB', 3, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
+-- (12, 'storage', '512GB', 4, '2026-03-13 02:51:39', '2026-03-13 02:51:39'),
+-- (13, 'storage', '1TB', 5, '2026-03-13 02:51:40', '2026-03-13 02:51:40'),
+-- (14, 'storage', '2TB', 6, '2026-03-13 02:51:40', '2026-03-13 02:51:40'),
+-- (15, 'ram', '4GB', 1, '2026-03-13 02:51:40', '2026-03-13 02:51:40'),
+-- (16, 'ram', '6GB', 2, '2026-03-13 02:51:40', '2026-03-13 02:51:40'),
+-- (17, 'ram', '8GB', 3, '2026-03-13 02:51:40', '2026-03-13 02:51:40'),
+-- (18, 'ram', '12GB', 4, '2026-03-13 02:51:40', '2026-03-13 02:51:40'),
+-- (19, 'ram', '16GB', 5, '2026-03-13 02:51:40', '2026-03-13 02:51:40'),
+-- (20, 'ram', '32GB', 6, '2026-03-13 02:51:40', '2026-03-13 02:51:40'),
+-- (21, 'storage', '32GB', 1, '2026-03-13 03:03:03', '2026-03-13 03:03:16'),
+-- (22, 'color', 'Red', 0, '2026-03-24 13:44:20', '2026-03-24 13:44:20'),
+-- (23, 'color', 'Black', 0, '2026-03-24 13:44:30', '2026-03-24 13:44:30');
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `product_images`
+-- --
+
+-- CREATE TABLE `product_images` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `product_id` bigint UNSIGNED NOT NULL,
+--   `image` varchar(255) NOT NULL,
+--   `alt_text` varchar(255) DEFAULT NULL,
+--   `is_main` tinyint(1) DEFAULT '0',
+--   `sort_order` int DEFAULT '0',
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `product_specifications`
+-- --
+
+-- CREATE TABLE `product_specifications` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `product_id` bigint UNSIGNED NOT NULL,
+--   `spec_group` varchar(255) DEFAULT NULL,
+--   `spec_key` varchar(255) NOT NULL,
+--   `spec_value` varchar(255) NOT NULL,
+--   `sort_order` int DEFAULT '0',
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NULL DEFAULT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `product_variants`
+-- --
+
+-- CREATE TABLE `product_variants` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `product_id` bigint UNSIGNED NOT NULL,
+--   `sku` varchar(100) NOT NULL,
+--   `barcode` varchar(100) DEFAULT NULL,
+--   `color` varchar(100) DEFAULT NULL,
+--   `storage` varchar(100) DEFAULT NULL,
+--   `ram` varchar(50) DEFAULT NULL,
+--   `cpu` varchar(100) DEFAULT NULL,
+--   `gpu` varchar(100) DEFAULT NULL,
+--   `screen_size` varchar(50) DEFAULT NULL,
+--   `operating_system` varchar(100) DEFAULT NULL,
+--   `battery` varchar(100) DEFAULT NULL,
+--   `camera` varchar(100) DEFAULT NULL,
+--   `price` decimal(15,2) NOT NULL,
+--   `sale_price` decimal(15,2) DEFAULT NULL,
+--   `cost_price` decimal(15,2) DEFAULT NULL,
+--   `stock` int DEFAULT '0',
+--   `min_stock` int DEFAULT '0',
+--   `max_stock` int DEFAULT '1000',
+--   `weight` decimal(10,2) DEFAULT NULL,
+--   `image` varchar(255) DEFAULT NULL,
+--   `status` tinyint(1) DEFAULT '1',
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `upda
