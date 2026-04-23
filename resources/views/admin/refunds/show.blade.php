@@ -189,12 +189,36 @@
                 <h3 class="text-white font-bold mb-4 flex items-center gap-2">
                     <span class="text-green-400">✅</span> Duyệt yêu cầu
                 </h3>
+
+                @if($refund->type === 'return')
+                {{-- Hiển thị shipper sẽ được tự động giao việc --}}
+                @if($refund->order->shipper)
+                <div class="flex items-center gap-3 bg-blue-500/10 border border-blue-500/30 rounded-lg px-4 py-3 mb-4">
+                    <span class="text-blue-400 text-xl">🚚</span>
+                    <div>
+                        <p class="text-blue-300 text-xs uppercase tracking-wide font-semibold mb-0.5">Shipper được tự động giao việc hoàn hàng</p>
+                        <p class="text-white font-bold">{{ $refund->order->shipper->name }}</p>
+                        @if($refund->order->shipper->phone)
+                        <p class="text-gray-400 text-xs">{{ $refund->order->shipper->phone }}</p>
+                        @endif
+                    </div>
+                </div>
+                @else
+                <div class="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 mb-4">
+                    <span class="text-red-400 text-xl">⚠️</span>
+                    <p class="text-red-300 text-sm">Đơn hàng này chưa có shipper phụ trách. Không thể duyệt hoàn hàng qua shipper.</p>
+                </div>
+                @endif
+                @endif
+
                 <form action="{{ route('admin.refunds.approve', $refund) }}" method="POST" class="relative z-50">
                     @csrf
-                    <textarea name="admin_note" rows="3" placeholder="Ghi chú thành công (tùy chọn)..."
+                    <textarea name="admin_note" rows="3" placeholder="Ghi chú cho shipper (tùy chọn)..."
                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:ring-2 focus:ring-green-500 outline-none mb-3 resize-none"></textarea>
-                    <input type="submit" value="XÁC NHẬN PHÊ DUYỆT"
-                          class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg cursor-pointer">
+                    <input type="submit"
+                          value="XÁC NHẬN PHÊ DUYỆT"
+                          {{ ($refund->type === 'return' && !$refund->order->shipper) ? 'disabled' : '' }}
+                          class="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-sm transition shadow-lg cursor-pointer">
                 </form>
             </div>
 
@@ -213,17 +237,52 @@
             </div>
 
             @elseif($refund->status === 'approved_return')
-            
-            {{-- Confirm Received Return Items --}}
-            <div class="bg-gray-900 rounded-xl p-5 border border-blue-500/30 relative z-50">
-                <h3 class="text-blue-400 font-bold mb-3 flex items-center gap-2">
-                    📦 Khách đang gửi hàng
+            {{-- Chờ shipper đi lấy hàng --}}
+            <div class="bg-gray-900 rounded-xl p-5 border border-blue-500/30">
+                <h3 class="text-blue-400 font-bold mb-3">📋 Chờ Shipper lấy hàng</h3>
+                @if($refund->returnShipper)
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-gray-400 text-sm">Shipper:</span>
+                    <span class="text-white font-bold">{{ $refund->returnShipper->name }}</span>
+                    @if($refund->returnShipper->phone)
+                    <span class="text-gray-400 text-xs">· {{ $refund->returnShipper->phone }}</span>
+                    @endif
+                </div>
+                @endif
+                <p class="text-gray-300 text-sm">Mã hoàn: <span class="bg-blue-900 text-blue-200 px-2 py-1 rounded font-mono font-bold">{{ $refund->return_code }}</span></p>
+                <p class="text-gray-500 text-xs mt-2">Shipper đang trên đường đến lấy hàng từ khách.</p>
+            </div>
+
+            @elseif(in_array($refund->status, ['shipper_picking', 'shipper_returning']))
+            {{-- Shipper đang vận chuyển --}}
+            <div class="bg-gray-900 rounded-xl p-5 border border-indigo-500/30">
+                <h3 class="text-indigo-400 font-bold mb-3">
+                    {{ $refund->status === 'shipper_picking' ? '🚚 Shipper đang lấy hàng' : '🔄 Shipper đang về shop' }}
                 </h3>
-                <p class="text-white text-sm mb-4">Mã gửi hàng: <span class="bg-blue-900 text-blue-200 px-2 py-1 rounded font-mono font-bold">{{ $refund->return_code }}</span></p>
+                @if($refund->returnShipper)
+                <p class="text-gray-300 text-sm mb-2">Shipper: <span class="text-white font-bold">{{ $refund->returnShipper->name }}</span></p>
+                @endif
+                @if($refund->picked_up_at)
+                <p class="text-gray-400 text-xs">Lấy hàng lúc: {{ $refund->picked_up_at->format('H:i, d/m/Y') }}</p>
+                @endif
+                <p class="text-gray-500 text-xs mt-2">Vui lòng chờ Shipper mang hàng về shop.</p>
+            </div>
+
+            @elseif($refund->status === 'goods_received')
+            {{-- Hàng đã về shop, chờ admin xác nhận --}}
+            <div class="bg-gray-900 rounded-xl p-5 border border-orange-500/30 relative z-50">
+                <h3 class="text-orange-400 font-bold mb-3">📦 Hàng đã về shop!</h3>
+                @if($refund->returnShipper)
+                <p class="text-gray-300 text-sm mb-1">Shipper: <span class="text-white font-bold">{{ $refund->returnShipper->name }}</span></p>
+                @endif
+                @if($refund->returned_at)
+                <p class="text-gray-400 text-xs mb-4">Về lúc: {{ $refund->returned_at->format('H:i, d/m/Y') }}</p>
+                @endif
+                <p class="text-gray-300 text-sm mb-4">Kiểm tra hàng và xác nhận hoàn tiền cho khách.</p>
                 <form action="{{ route('admin.refunds.confirm', $refund) }}" method="POST" class="relative z-50">
                     @csrf
-                    <input type="submit" value="XÁC NHẬN ĐÃ NHẬN HÀNG -> HOÀN HÀNG"
-                          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg cursor-pointer">
+                    <input type="submit" value="✅ XÁC NHẬN HOÀN TIỀN CHO KHÁCH"
+                          class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg cursor-pointer">
                 </form>
             </div>
 
@@ -236,7 +295,7 @@
                         <p class="text-gray-400 text-xs uppercase tracking-wide">Quyết định</p>
                         @php
                         $stLbl = [
-                            'refunded' => '✅ Đã hoàn hàng',
+                            'refunded' => '✅ Đã hoàn tiền',
                             'rejected' => '❌ Đã từ chối'
                         ];
                         @endphp
@@ -244,9 +303,15 @@
                             {{ $stLbl[$refund->status] ?? $refund->status }}
                         </span>
                     </div>
+                    @if($refund->returnShipper)
+                    <div>
+                        <p class="text-gray-400 text-xs uppercase tracking-wide mt-2">Shipper hoàn hàng</p>
+                        <p class="text-white font-bold text-sm">{{ $refund->returnShipper->name }}</p>
+                    </div>
+                    @endif
                     @if($refund->return_code)
                     <div>
-                        <p class="text-gray-400 text-xs uppercase tracking-wide mt-2">Mã gửi hàng</p>
+                        <p class="text-gray-400 text-xs uppercase tracking-wide mt-2">Mã hoàn hàng</p>
                         <p class="text-white font-mono font-bold text-sm bg-gray-800 inline-block px-2 py-1 rounded">{{ $refund->return_code }}</p>
                     </div>
                     @endif

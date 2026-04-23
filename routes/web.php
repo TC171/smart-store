@@ -43,6 +43,10 @@ use App\Http\Controllers\Frontend\ProfileController;
 use App\Http\Controllers\Frontend\RefundController;
 use App\Http\Controllers\Frontend\NewsletterController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
+use App\Http\Controllers\Admin\ShipperController;
+use App\Http\Controllers\Shipper\AuthController as ShipperAuthController;
+use App\Http\Controllers\Shipper\DeliveryController;
+use App\Http\Controllers\Shipper\ReturnController as ShipperReturnController;
 
 
 /*
@@ -58,6 +62,35 @@ use App\Http\Controllers\Frontend\AIController;
 Route::post('/chat-ai', [AIController::class, 'chat']);
 Route::get('/test-ai', [AIController::class, 'chat']);
 Route::get('/ai/history', [AIController::class, 'history']);
+
+// =================== SHIPPER PORTAL ROUTES ===================
+Route::prefix('shipper')->name('shipper.')->group(function () {
+
+    // Guest (chưa đăng nhập)
+    Route::middleware('guest:shipper')->group(function () {
+        Route::get('/login',  [ShipperAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [ShipperAuthController::class, 'login'])->name('login.post');
+    });
+
+    // Đã đăng nhập
+    Route::middleware(['auth:shipper', 'shipper'])->group(function () {
+        Route::get('/dashboard', [DeliveryController::class, 'dashboard'])->name('dashboard');
+
+        Route::get('/deliveries',                    [DeliveryController::class, 'index'])->name('deliveries.index');
+        Route::get('/deliveries/{delivery}',         [DeliveryController::class, 'show'])->name('deliveries.show');
+        Route::post('/deliveries/{delivery}/pickup', [DeliveryController::class, 'pickup'])->name('deliveries.pickup');
+        Route::post('/deliveries/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('deliveries.updateStatus');
+
+        // Hoàn hàng — Shipper có thể cập nhật trạng thái quá trình hoàn
+        Route::get('/returns',                          [ShipperReturnController::class, 'index'])->name('returns.index');
+        Route::get('/returns/{return}',                 [ShipperReturnController::class, 'show'])->name('returns.show');
+        Route::post('/returns/{return}/pickup',         [ShipperReturnController::class, 'confirmPickup'])->name('returns.pickup');
+        Route::post('/returns/{return}/returning',      [ShipperReturnController::class, 'confirmReturning'])->name('returns.returning');
+        Route::post('/returns/{return}/delivered',      [ShipperReturnController::class, 'confirmDelivered'])->name('returns.delivered');
+
+        Route::post('/logout', [ShipperAuthController::class, 'logout'])->name('logout');
+    });
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
 
@@ -108,6 +141,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('product-attributes', ProductAttributeController::class)->except(['show']);
         Route::resource('inventory-history', InventoryHistoryController::class)->except(['edit', 'update']);
         Route::resource('admins', AdminController::class);
+
+        // =================== SHIPPER MANAGEMENT ===================
+        Route::prefix('shippers')->name('shippers.')->group(function () {
+            Route::get('/',       [ShipperController::class, 'index'])->name('index');
+            Route::get('/create', [ShipperController::class, 'create'])->name('create');
+            Route::post('/',      [ShipperController::class, 'store'])->name('store');
+            Route::get('/{shipper}/edit', [ShipperController::class, 'edit'])->name('edit');
+            Route::put('/{shipper}',      [ShipperController::class, 'update'])->name('update');
+            Route::delete('/{shipper}',   [ShipperController::class, 'destroy'])->name('destroy');
+
+            Route::get('/deliveries',       [ShipperController::class, 'deliveries'])->name('deliveries');
+            Route::get('/assign',           [ShipperController::class, 'assign'])->name('assign');
+            Route::post('/assign',          [ShipperController::class, 'assignStore'])->name('assign.store');
+        });
         Route::view('profile', 'admin.profile')->name('profile');
         Route::view('password', 'admin.password')->name('password');
 

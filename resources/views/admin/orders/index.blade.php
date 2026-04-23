@@ -122,6 +122,7 @@
                         <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$order->status] ?? 'bg-gray-500/20 text-gray-400' }}">
                             {{ $statusLabels[$order->status] ?? $order->status }}
                         </span>
+                        
                     </td>
 
                     <td class="px-6 py-4">

@@ -10,5 +10,10 @@ trait AdminAccess
     {
         return in_array($user->role, ['admin', 'staff'], true);
     }
+
+    protected function isShipper(User $user): bool
+    {
+        return $user->role === 'shipper';
+    }
 }
 
