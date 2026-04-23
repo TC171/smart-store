@@ -54,3 +54,15 @@ class ShipperOrder extends Model
         ][$this->status] ?? 'bg-gray-500/20 text-gray-400';
     }
 }
+
+//    public function getStatusColorAttribute(): string
+//     {
+//         return [
+//             'assigned'   => 'bg-yellow-500/20 text-yellow-400',
+//             'picked_up'  => 'bg-blue-500/20 text-blue-400',
+//             'delivering' => 'bg-indigo-500/20 text-indigo-400',
+//             'delivered'  => 'bg-green-500/20 text-green-400',
+//             'failed'     => 'bg-red-500/20 text-red-400',
+//         ][$this->status] ?? 'bg-gray-500/20 text-gray-400';
+//     }
+// }

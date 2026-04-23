@@ -141,3 +141,26 @@
 </div>
 
 @endsection
+
+
+ {{-- <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Tên</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Email</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Điện thoại</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Vai trò</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Trạng thái</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Đăng nhập cuối</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($admins as $admin)
+                <tr class="border-b border-gray-800 hover:bg-gray-800 transition">
+                    <td class="px-6 py-4 text-white font-medium">{{ $admin->name }}</td>
+
+                    <td class="px-6 py-4 text-gray-300">{{ $admin->email }}</td>
+
+                    <td class="px-6 py-4 text-gray-300">{{ $admin->phone ?? '-' }}</td>
+
+                    <td class="px-6 py-4">
+                        @php
+                        $roleLabels = [ --}}

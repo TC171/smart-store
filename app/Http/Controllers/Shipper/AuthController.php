@@ -54,3 +54,32 @@ class AuthController extends Controller
         return redirect()->route('shipper.login');
     }
 }
+
+
+//      if (!$user || $user->status != 1) {
+//             return back()
+//                 ->withInput($request->only('email'))
+//                 ->withErrors(['email' => 'Tài khoản không tồn tại hoặc đã bị khóa.']);
+//         }
+
+//         if (Auth::guard('shipper')->attempt($credentials, $request->boolean('remember'))) {
+//             $request->session()->regenerate();
+//             return redirect()->intended(route('shipper.dashboard'));
+//         }
+
+//         return back()
+//             ->withInput($request->only('email'))
+//             ->withErrors(['email' => 'Email hoặc mật khẩu không đúng.']);
+//     }
+
+//     public function logout(Request $request)
+//     {
+//         // Chỉ logout guard shipper, KHÔNG invalidate toàn bộ session
+//         // để tránh mất CSRF token và conflict với các guard khác
+//         Auth::guard('shipper')->logout();
+//         $request->session()->regenerateToken();
+
+//         return redirect()->route('shipper.login');
+//     }
+// }
+

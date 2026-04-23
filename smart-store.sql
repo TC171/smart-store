@@ -1367,10 +1367,7 @@ COMMIT;
 --   `action` varchar(255) DEFAULT NULL,
 --   `model` varchar(255) DEFAULT NULL,
 --   `model_id` bigint UNSIGNED DEFAULT NULL,
---   `description` text,
---   `ip_address` varchar(45) DEFAULT NULL,
---   `created_at` timestamp NULL DEFAULT NULL
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 -- -- --------------------------------------------------------
 
@@ -1379,6 +1376,22 @@ COMMIT;
 -- --
 
 -- CREATE TABLE `banners` (
+-- CREATE TABLE `admin_logs` (
+--   `id` bigint UNSIGNED NOT NULL,
+--   `admin_id` bigint UNSIGNED DEFAULT NULL,
+--   `action` varchar(255) DEFAULT NULL,
+--   `model` varchar(255) DEFAULT NULL,
+--   `model_id` bigint UNSIGNED DEFAULT NULL,
+
+
+-- -- --------------------------------------------------------
+
+-- --
+-- -- Table structure for table `banners`
+-- --
+
+-- CREATE TABLE `banners` (
+--   `id` bigint UNSIGNED NOT NULL,
 --   `id` bigint UNSIGNED NOT NULL,
 --   `title` varchar(255) DEFAULT NULL,
 --   `image` varchar(255) DEFAULT NULL,

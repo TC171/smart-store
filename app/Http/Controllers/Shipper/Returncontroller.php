@@ -88,3 +88,34 @@ class ReturnController extends Controller
         return back()->with('success', '📦 Hàng đã về shop! Admin sẽ kiểm tra và xác nhận hoàn tiền cho khách.');
     }
 }
+
+
+
+//      */
+//     public function confirmReturning(RefundRequest $return)
+//     {
+//         abort_unless($return->return_shipper_id === $this->shipperId(), 403);
+//         abort_unless($return->status === 'shipper_picking', 422);
+
+//         $return->update(['status' => 'shipper_returning']);
+
+//         return back()->with('success', '🔄 Đã cập nhật: đang chuyển hàng về shop.');
+//     }
+
+//     /**
+//      * Shipper xác nhận đã giao hàng về đến shop.
+//      * Sau bước này Admin sẽ xác nhận và hoàn tiền cho khách.
+//      */
+//     public function confirmDelivered(RefundRequest $return)
+//     {
+//         abort_unless($return->return_shipper_id === $this->shipperId(), 403);
+//         abort_unless($return->status === 'shipper_returning', 422);
+
+//         $return->update([
+//             'status'      => 'goods_received',
+//             'returned_at' => now(),
+//         ]);
+
+//         return back()->with('success', '📦 Hàng đã về shop! Admin sẽ kiểm tra và xác nhận hoàn tiền cho khách.');
+//     }
+// }

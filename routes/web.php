@@ -547,3 +547,28 @@ Route::get('/api/search/suggestions', function () {
 
 // 🔥 CHI TIẾT SẢN PHẨM (LUÔN ĐỂ CUỐI CÙNG ĐỂ KHÔNG CHẶN CÁC ROUTE KHÁC)
 Route::get('/{categorySlug}/{productSlug}', [FrontProductController::class, 'show'])->name('products.show');
+
+
+
+
+
+//   $brands = \App\Models\Brand::where('status', 1)
+//         ->orderBy('name')
+//         ->get()
+//         ->map(function ($brand) {
+//             return [
+//                 'name' => $brand->name,
+//                 'slug' => $brand->slug,
+//                 'logo' => $brand->logo ? asset('storage/' . $brand->logo) : null,
+//             ];
+//         });
+
+//     return response()->json([
+//         'products' => $products,
+//         'categories' => $categories,
+//         'brands' => $brands,
+//     ]);
+// });
+
+// // 🔥 CHI TIẾT SẢN PHẨM (LUÔN ĐỂ CUỐI CÙNG ĐỂ KHÔNG CHẶN CÁC ROUTE KHÁC)
+// Route::get('/{categorySlug}/{productSlug}', [FrontProductController::class, 'show'])->name('products.show');

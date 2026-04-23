@@ -134,3 +134,17 @@
 </div>
 
 @endsection
+
+
+
+            {{-- <button type="submit"
+                    class="bg-cyan-500 hover:bg-cyan-600 text-black px-6 py-2 rounded-lg font-semibold">
+                Thêm Tài khoản
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+@endsection }}

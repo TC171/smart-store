@@ -154,3 +154,13 @@ class DeliveryController extends Controller
         return back()->with('success', $msg);
     }
 }
+
+
+
+//         $msg = $request->status === 'completed'
+//             ? '✅ Giao hàng thành công! Đơn hàng đã được đánh dấu Đã thanh toán.'
+//             : '❌ Đã ghi nhận giao hàng thất bại. Admin sẽ xử lý tiếp.';
+
+//         return back()->with('success', $msg);
+//     }
+// }
