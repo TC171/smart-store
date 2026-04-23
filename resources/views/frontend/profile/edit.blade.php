@@ -88,24 +88,35 @@
                 <section class="xl:col-span-8 space-y-6">
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
-                            <p class="text-sm text-slate-500">Tổng đơn hàng</p>
-                            <h3 class="text-3xl font-bold text-slate-900 mt-2">{{ $totalOrders ?? 0 }}</h3>
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 xl:p-5 transition-all hover:shadow-md">
+                            <p class="text-xs md:text-sm text-slate-500 font-medium">Tổng đơn hàng</p>
+                            <h3 class="text-2xl xl:text-3xl font-bold text-slate-900 mt-2">{{ $totalOrders ?? 0 }}</h3>
                         </div>
 
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
-                            <p class="text-sm text-slate-500">Đơn hoàn thành</p>
-                            <h3 class="text-3xl font-bold text-green-600 mt-2">{{ $completedOrders ?? 0 }}</h3>
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 xl:p-5 transition-all hover:shadow-md">
+                            <p class="text-xs md:text-sm text-slate-500 font-medium">Đơn hoàn thành</p>
+                            <h3 class="text-2xl xl:text-3xl font-bold text-green-600 mt-2">{{ $completedOrders ?? 0 }}</h3>
                         </div>
 
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
-                            <p class="text-sm text-slate-500">Tổng chi tiêu</p>
-                            <h3 class="text-3xl font-bold text-orange-500 mt-2">{{ number_format($totalSpent ?? 0) }}đ</h3>
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 xl:p-5 transition-all hover:shadow-md min-w-0">
+                            <p class="text-xs md:text-sm text-slate-500 font-medium">Tổng chi tiêu</p>
+                            <h3 class="text-2xl xl:text-3xl font-bold text-orange-500 mt-2" title="{{ number_format($totalSpent ?? 0) }}đ">
+                                @php
+                                    $spent = $totalSpent ?? 0;
+                                    if ($spent >= 1000000000) {
+                                        echo number_format($spent / 1000000000, 1, '.', '') . 'B';
+                                    } elseif ($spent >= 1000000) {
+                                        echo number_format($spent / 1000000, 1, '.', '') . 'M';
+                                    } else {
+                                        echo number_format($spent) . 'đ';
+                                    }
+                                @endphp
+                            </h3>
                         </div>
 
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
-                            <p class="text-sm text-slate-500">Đơn chờ xử lý</p>
-                            <h3 class="text-3xl font-bold text-amber-500 mt-2">{{ $pendingOrders ?? 0 }}</h3>
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 xl:p-5 transition-all hover:shadow-md">
+                            <p class="text-xs md:text-sm text-slate-500 font-medium">Đơn chờ xử lý</p>
+                            <h3 class="text-2xl xl:text-3xl font-bold text-amber-500 mt-2">{{ $pendingOrders ?? 0 }}</h3>
                         </div>
                     </div>
 
@@ -145,8 +156,11 @@
 
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Số điện thoại</label>
-                                <input type="text" name="phone" value="{{ old('phone', $user->phone) }}"
+                                <input type="text" name="phone" id="phone_profile" 
+                                    value="{{ old('phone', $user->phone) }}"
+                                    placeholder="Ví dụ: 0987 654 321"
                                     class="w-full rounded-2xl border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                                <p id="phone_profile_error" class="text-[11px] text-red-500 mt-1 hidden font-medium">Số điện thoại không hợp lệ (phải có 10 chữ số và bắt đầu bằng số 0).</p>
                                 @error('phone')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
@@ -260,7 +274,7 @@
                                 <div class="flex-1">
                                     <input type="file" name="avatar" accept=".jpg,.jpeg,.png"
                                         class="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-slate-700 hover:file:bg-slate-200">
-                                    <p class="text-xs text-slate-400 mt-2">Dung lượng tối đa 1MB. Định dạng JPG, JPEG, PNG.</p>
+                                    <p class="text-xs text-slate-400 mt-2">Dung lượng tối đa 10MB. Định dạng JPG, JPEG, PNG.</p>
                                 </div>
 
                                 <button type="submit"
@@ -340,25 +354,60 @@
                                             <th class="pb-3">Mã đơn</th>
                                             <th class="pb-3">Ngày đặt</th>
                                             <th class="pb-3">Tổng tiền</th>
+                                            <th class="pb-3">Thanh toán</th>
                                             <th class="pb-3">Trạng thái</th>
                                             <th class="pb-3 text-right">Thao tác</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach ($recentOrders as $order)
-                                            <tr class="border-b border-slate-100 last:border-0">
-                                                <td class="py-4 font-semibold text-slate-800">{{ $order->order_number }}</td>
-                                                <td class="py-4 text-slate-600">{{ $order->created_at?->format('d/m/Y') }}</td>
-                                                <td class="py-4 font-semibold text-slate-900">{{ number_format($order->grand_total) }}đ</td>
+                                            <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
+                                                <td class="py-4 font-semibold text-slate-800 tracking-tight">{{ $order->order_number }}</td>
+                                                <td class="py-4 text-slate-500">{{ $order->created_at?->format('d/m/Y') }}</td>
+                                                <td class="py-4 font-black text-slate-900">{{ number_format($order->grand_total) }}đ</td>
                                                 <td class="py-4">
-                                                    <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-600">
-                                                        {{ ucfirst($order->status) }}
+                                                    @if($order->payment_status === 'paid')
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 text-green-700 text-[10px] font-black uppercase tracking-wider border border-green-100">
+                                                            <span class="w-1 h-1 rounded-full bg-green-500"></span>
+                                                            Đã thanh toán
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-wider border border-slate-100">
+                                                            <span class="w-1 h-1 rounded-full bg-slate-400"></span>
+                                                            Chưa thanh toán
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td class="py-4">
+                                                    @php
+                                                        $statusLabels = [
+                                                            'pending' => 'Chờ xác nhận',
+                                                            'confirmed' => 'Đã xác nhận',
+                                                            'shipping' => 'Đang giao hàng',
+                                                            'completed' => 'Hoàn thành',
+                                                            'cancelled' => 'Đã huỷ',
+                                                            'refunded' => 'Đã hoàn hàng',
+                                                            'failed_delivery' => 'Giao không thành công'
+                                                        ];
+                                                        $statusColors = [
+                                                            'pending' => 'bg-amber-50 text-amber-600 border-amber-100',
+                                                            'confirmed' => 'bg-blue-50 text-blue-600 border-blue-100',
+                                                            'shipping' => 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                                                            'completed' => 'bg-green-50 text-green-600 border-green-100',
+                                                            'cancelled' => 'bg-red-50 text-red-600 border-red-100',
+                                                            'refunded' => 'bg-slate-50 text-slate-600 border-slate-100',
+                                                            'failed_delivery' => 'bg-rose-50 text-rose-600 border-rose-100'
+                                                        ];
+                                                    @endphp
+                                                    <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold border {{ $statusColors[$order->status] ?? 'bg-slate-50 text-slate-600 border-slate-100' }}">
+                                                        {{ $statusLabels[$order->status] ?? ucfirst($order->status) }}
                                                     </span>
                                                 </td>
                                                 <td class="py-4 text-right">
                                                     <a href="{{ route('customer.order.detail', $order->id) }}"
-                                                        class="text-orange-500 font-semibold hover:underline">
+                                                        class="inline-flex items-center gap-1 text-orange-500 font-bold hover:text-orange-600 transition tracking-tight">
                                                         Xem chi tiết
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                                     </a>
                                                 </td>
                                             </tr>
@@ -382,5 +431,31 @@
             document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
         }
+
+        // Logic Validate và Định dạng Số điện thoại cho Profile
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneInput = document.getElementById('phone_profile');
+            const phoneError = document.getElementById('phone_profile_error');
+
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function(e) {
+                    let x = e.target.value.replace(/\D/g, '').match(/(\d{0,4})(\d{0,3})(\d{0,3})/);
+                    if (x[1]) {
+                        e.target.value = x[1] + (x[2] ? ' ' + x[2] : '') + (x[3] ? ' ' + x[3] : '');
+                    }
+
+                    const rawValue = e.target.value.replace(/\s/g, '');
+                    const vnPhoneRegex = /^(0[3|5|7|8|9])[0-9]{8}$/;
+                    
+                    if (rawValue.length > 0 && !vnPhoneRegex.test(rawValue)) {
+                        phoneInput.classList.add('border-red-500', 'bg-red-50');
+                        phoneError.classList.remove('hidden');
+                    } else {
+                        phoneInput.classList.remove('border-red-500', 'bg-red-50');
+                        phoneError.classList.add('hidden');
+                    }
+                });
+            }
+        });
     </script>
 @endsection

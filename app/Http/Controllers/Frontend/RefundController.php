@@ -20,10 +20,10 @@ class RefundController extends Controller
             abort(403);
         }
 
-        // Chỉ cho phép với đơn đã giao hoặc hoàn thành
-        if (!in_array($order->status, ['completed', 'shipping'])) {
+        // Chỉ cho phép với đơn đã hoàn thành
+        if ($order->status !== 'completed') {
             return redirect()->route('customer.orders')
-                ->with('error', 'Chỉ có thể yêu cầu hoàn hàng/hoàn tiền cho đơn đang giao hoặc đã hoàn thành.');
+                ->with('error', 'Chỉ có thể yêu cầu hoàn hàng/hoàn tiền cho đơn đã hoàn thành.');
         }
 
         // Kiểm tra đã có yêu cầu đang chờ duyệt chưa
@@ -46,7 +46,7 @@ class RefundController extends Controller
             abort(403);
         }
 
-        if (!in_array($order->status, ['completed', 'shipping'])) {
+        if ($order->status !== 'completed') {
             return redirect()->route('customer.orders')
                 ->with('error', 'Không thể gửi yêu cầu hoàn hàng cho đơn này.');
         }

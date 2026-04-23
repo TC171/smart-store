@@ -260,14 +260,22 @@ class CartController extends Controller
 
     public function placeOrder(Request $request)
     {
+        // Làm sạch số điện thoại (xóa dấu cách) trước khi validate
+        if ($request->has('phone')) {
+            $request->merge([
+                'phone' => str_replace(' ', '', $request->phone)
+            ]);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => ['required', 'regex:/^[0-9]{10,11}$/'],
+            'phone' => ['required', 'regex:/^(0[3|5|7|8|9])[0-9]{8}$/'],
             'email' => 'required|email|max:255',
             'address' => 'required|string|max:500',
             'payment_method' => 'required|in:cod,vnpay',
         ], [
-            'phone.regex' => 'Số điện thoại không hợp lệ. Vui lòng chỉ nhập số (từ 10 đến 11 số).'
+            'phone.required' => 'Vui lòng nhập số điện thoại.',
+            'phone.regex' => 'Số điện thoại không hợp lệ (phải đủ 10 số và bắt đầu bằng đầu số nhà mạng VN).'
         ]);
 
         $checkoutItems = session('checkout_items', []);
@@ -299,6 +307,7 @@ class CartController extends Controller
                     'tax_amount' => 0,
                     'status' => 'pending',
                     'payment_status' => 'unpaid',
+                    'payment_method' => $request->payment_method,
                     'shipping_name' => $request->name,
                     'shipping_phone' => $request->phone,
                     'shipping_address' => $request->address,
@@ -404,7 +413,8 @@ class CartController extends Controller
         if ($secureHash == $request->vnp_SecureHash) {
             if ($request->vnp_ResponseCode == '00') {
                 if ($order && $order->payment_status !== 'paid') {
-                    $order->update(['payment_status' => 'paid', 'status' => 'confirmed']);
+                    // Thanh toán thành công qua VNPay, giữ trạng thái đơn hàng là 'pending' (Chờ xác nhận)
+                    $order->update(['payment_status' => 'paid', 'status' => 'pending']);
                     if ($order->coupon_id) Coupon::where('id', $order->coupon_id)->increment('used_count');
                 }
                 return view('frontend.checkout.success', compact('order', 'request'));

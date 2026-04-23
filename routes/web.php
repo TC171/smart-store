@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AIAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,11 +41,13 @@ use App\Http\Controllers\Frontend\BrandController as FrontBrandController;
 use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\ProfileController;
 use App\Http\Controllers\Frontend\RefundController;
+use App\Http\Controllers\Frontend\NewsletterController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ShipperController;
 use App\Http\Controllers\Shipper\AuthController as ShipperAuthController;
 use App\Http\Controllers\Shipper\DeliveryController;
 use App\Http\Controllers\Shipper\ReturnController as ShipperReturnController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +55,13 @@ use App\Http\Controllers\Shipper\ReturnController as ShipperReturnController;
 |--------------------------------------------------------------------------
 
 */
+use App\Http\Controllers\Frontend\AIController;
+
+ 
+
+Route::post('/chat-ai', [AIController::class, 'chat']);
+Route::get('/test-ai', [AIController::class, 'chat']);
+Route::get('/ai/history', [AIController::class, 'history']);
 
 // =================== SHIPPER PORTAL ROUTES ===================
 Route::prefix('shipper')->name('shipper.')->group(function () {
@@ -96,6 +106,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     )->name('upload.image');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+       Route::get('/revenue-chart', [DashboardController::class, 'revenueChart'])
+    ->name('revenue.chart');
 
         Route::resource('products', ProductController::class);
         Route::patch('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus');
@@ -147,6 +159,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::view('password', 'admin.password')->name('password');
 
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+        Route::prefix('ai')->name('ai.')->group(function () {
+
+    // ⚙️ settings
+    Route::get('/settings', [AIAdminController::class, 'settings'])->name('settings');
+    Route::post('/toggle', [AIAdminController::class, 'toggle'])->name('toggle');
+
+    // 👥 users chat
+    Route::get('/users', [AIAdminController::class, 'users'])->name('users');
+
+    // 💬 chat detail
+    Route::get('/users/{id}', [AIAdminController::class, 'detail'])->name('detail');
+
+});
     });
 });
 
@@ -271,7 +296,12 @@ Route::middleware('auth:web')->group(function () {
 Route::get('/ve-chung-toi', [PageController::class, 'about'])->name('page.about');
 Route::get('/chinh-sach-bao-hanh', [PageController::class, 'warranty'])->name('page.warranty');
 Route::get('/chinh-sach-doi-tra', [PageController::class, 'returnPolicy'])->name('page.return-policy');
+Route::get('/chinh-sach-bao-mat', [PageController::class, 'privacy'])->name('page.privacy');
+Route::get('/chinh-sach-van-chuyen', [PageController::class, 'shipping'])->name('page.shipping');
+Route::get('/dieu-khoan-dich-vu', [PageController::class, 'terms'])->name('page.terms');
 Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
+Route::post('/lien-he', [PageController::class, 'submitContact'])->name('page.contact.submit');
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 
 /*
 |--------------------------------------------------------------------------

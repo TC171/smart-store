@@ -99,7 +99,6 @@
                         @php
                         $statusLabels = [
                             'pending' => 'Chờ xác nhận',
-                            'waiting_payment' => 'Đang chờ thanh toán',
                             'confirmed' => 'Đã xác nhận',
                             'shipping' => 'Đang giao hàng',
                             'completed' => 'Hoàn thành',
