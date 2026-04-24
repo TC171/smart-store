@@ -176,8 +176,9 @@
                             $allowedNext = [
                                 'pending'         => ['confirmed'],
                                 'confirmed'       => ['shipping', 'cancelled'],
-                                'shipping'        => ['completed', 'failed_delivery'],
                                 'picked_up'       => ['completed', 'failed_delivery'],
+                                'shipping'        => ['completed', 'failed_delivery'],
+                                
                                 'completed'       => ['refunded'],
                                 'failed_delivery' => [],
                                 'cancelled'       => [],
@@ -189,8 +190,9 @@
                                 {{ empty($allowedNext) ? 'disabled' : '' }}>
                             <option value="pending"         {{ $order->status === 'pending'         ? 'selected' : '' }} {{ !in_array('pending',         $allowedNext) && $order->status !== 'pending'         ? 'disabled' : '' }}>Chờ xác nhận</option>
                             <option value="confirmed"       {{ $order->status === 'confirmed'       ? 'selected' : '' }} {{ !in_array('confirmed',       $allowedNext) && $order->status !== 'confirmed'       ? 'disabled' : '' }}>Đã xác nhận</option>
+                                       <option value="picked_up"       {{ $order->status === 'picked_up'       ? 'selected' : '' }} {{ !in_array('picked_up',       $allowedNext) && $order->status !== 'picked_up'       ? 'disabled' : '' }}>Đã nhận hàng</option>
                             <option value="shipping"        {{ $order->status === 'shipping'        ? 'selected' : '' }} {{ !in_array('shipping',        $allowedNext) && $order->status !== 'shipping'        ? 'disabled' : '' }}>Đang giao hàng</option>
-                            <option value="picked_up"       {{ $order->status === 'picked_up'       ? 'selected' : '' }} {{ !in_array('picked_up',       $allowedNext) && $order->status !== 'picked_up'       ? 'disabled' : '' }}>Shipper đã nhận hàng</option>
+                          
                             <option value="failed_delivery" {{ $order->status === 'failed_delivery' ? 'selected' : '' }} {{ !in_array('failed_delivery', $allowedNext) && $order->status !== 'failed_delivery' ? 'disabled' : '' }}>Giao không thành công</option>
                             <option value="completed"       {{ $order->status === 'completed'       ? 'selected' : '' }} {{ !in_array('completed',       $allowedNext) && $order->status !== 'completed'       ? 'disabled' : '' }}>Hoàn thành</option>
                             <option value="refunded"        {{ $order->status === 'refunded'        ? 'selected' : '' }} {{ !in_array('refunded',        $allowedNext) && $order->status !== 'refunded'        ? 'disabled' : '' }}>Đã hoàn hàng</option>

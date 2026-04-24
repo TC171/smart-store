@@ -154,7 +154,6 @@
             <form action="{{ route('shipper.deliveries.pickup', $order) }}" method="POST">
                 @csrf
                 <button type="submit"
-                    onclick="return confirm('Xác nhận đã nhận hàng từ kho?')"
                     class="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-xl font-bold transition text-sm">
                     📦 Xác nhận đã nhận hàng
                 </button>
@@ -173,7 +172,6 @@
                 <textarea name="note" rows="2" placeholder="Ghi chú (tuỳ chọn)..."
                     class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none resize-none mb-3"></textarea>
                 <button type="submit"
-                    onclick="return confirm('Xác nhận đã giao hàng thành công?')"
                     class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold transition text-sm">
                     ✅ Giao thành công
                     @if($order->payment_status === 'unpaid')
@@ -190,7 +188,6 @@
                     <textarea name="note" rows="2" placeholder="Lý do thất bại (vắng nhà, sai địa chỉ...)" required
                         class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none resize-none mb-3"></textarea>
                     <button type="submit"
-                        onclick="return confirm('Xác nhận giao hàng thất bại?')"
                         class="w-full bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 py-3 rounded-xl font-semibold transition text-sm">
                         ❌ Giao thất bại
                     </button>
@@ -215,6 +212,7 @@
             <div class="text-gray-400 text-sm mt-2">Admin đang xử lý đơn hàng này.</div>
         </div>
         @endif
+    
     </div>
 
 </div>

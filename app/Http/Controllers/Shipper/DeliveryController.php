@@ -153,6 +153,23 @@ class DeliveryController extends Controller
 
         return back()->with('success', $msg);
     }
+
+    public function updateLocation(Request $request)
+{
+    $request->validate([
+        'latitude'  => 'required|numeric|between:-90,90',
+        'longitude' => 'required|numeric|between:-180,180',
+    ]);
+
+    auth('shipper')->user()->update([
+        'latitude'             => $request->latitude,
+        'longitude'            => $request->longitude,
+        'location_updated_at'  => now(),
+    ]);
+
+    return response()->json(['ok' => true]);
+}
+
 }
 
 

@@ -100,6 +100,7 @@
                         $statusLabels = [
                             'pending' => 'Chờ xác nhận',
                             'confirmed' => 'Đã xác nhận',
+                            'picked_up'        => 'Đã nhận hàng',
                             'shipping' => 'Đang giao hàng',
                             'completed' => 'Hoàn thành',
                             'failed_delivery' => 'Giao không thành công',
@@ -111,6 +112,7 @@
                             'pending' => 'bg-yellow-500/20 text-yellow-400',
                             'waiting_payment' => 'bg-orange-500/20 text-orange-400',
                             'confirmed' => 'bg-blue-500/20 text-blue-400',
+                             'picked_up'        => 'bg-cyan-500/20 text-cyan-400',
                             'shipping' => 'bg-indigo-500/20 text-indigo-400',
                             'completed' => 'bg-green-500/20 text-green-400',
                             'failed_delivery' => 'bg-red-500/20 text-red-500',

@@ -63,6 +63,7 @@
                                 $statusColors = [
                                     'pending'   => 'bg-gray-100 text-gray-600',
                                     'confirmed' => 'bg-blue-100 text-blue-600',
+                                    'picked_up'        => 'bg-indigo-100 text-indigo-600',
                                     'shipping'  => 'bg-blue-100 text-blue-600',
                                     'completed' => 'bg-green-100 text-green-600',
                                     'failed_delivery' => 'bg-red-100 text-red-600',
@@ -73,6 +74,7 @@
                                 $statusLabels = [
                                     'pending'   => 'Chờ xử lý',
                                     'confirmed' => 'Đã xác nhận',
+                                    'picked_up'        => 'Đã lấy hàng',
                                     'shipping'  => 'Đang giao',
                                     'completed' => 'Hoàn thành',
                                     'failed_delivery' => 'Giao hàng không thành công',

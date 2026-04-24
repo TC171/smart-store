@@ -13,6 +13,7 @@
                 $statusLabels = [
                     'pending' => 'Chờ xác nhận',
                     'confirmed' => 'Đã xác nhận',
+                    'picked_up'        => 'Đã lấy hàng',
                     'shipping' => 'Đang giao hàng',
                     'failed_delivery' => 'Giao hàng không thành công',
                     'completed' => 'Hoàn thành',
@@ -22,6 +23,7 @@
                 $statusColors = [
                     'pending' => 'bg-yellow-100 text-yellow-800',
                     'confirmed' => 'bg-blue-100 text-blue-800',
+                      'picked_up'        => 'bg-indigo-100 text-indigo-800',
                     'shipping' => 'bg-indigo-100 text-indigo-800',
                     'failed_delivery' => 'bg-red-100 text-red-800',
                     'completed' => 'bg-green-100 text-green-800',
@@ -301,16 +303,25 @@
     @endif
     {{-- ===== /HOÀN HÀNG ===== --}}
 
-    <div class="flex justify-center flex-wrap gap-4 mt-6 mb-8 text-center">
+        <div class="flex justify-center flex-wrap gap-4 mt-6 mb-8 text-center">
         <a href="{{ route('customer.orders') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium inline-block shadow-sm">
             ← Quay lại danh sách đơn hàng
         </a>
-        
-    @if(!in_array($order->status, ['completed', 'cancelled', 'refunded', 'shipping', 'failed_delivery']))
+
+        @if(in_array($order->status, ['shipping', 'picked_up']) && $order->shipper_id)
+            <a href="{{ route('customer.orders.track', $order) }}"
+               class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium inline-block shadow-sm shadow-orange-200 transition">
+                🗺️ Theo dõi đơn hàng
+            </a>
+        @endif
+
+    @if(!in_array($order->status, ['completed', 'cancelled', 'refunded', 'shipping', 'picked_up', 'failed_delivery']))
         <button type="button" onclick="openCancelModal()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium inline-block transition-colors shadow-sm shadow-red-200">
             Hủy đơn hàng
         </button>
     @endif
+    </div>
+
     </div>
 
     @if(!in_array($order->status, ['completed', 'cancelled', 'refunded', 'shipping', 'failed_delivery']))

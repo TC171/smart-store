@@ -182,6 +182,34 @@ class OrderController extends Controller
         return back()->with('success', 'Cập nhật trạng thái đơn hàng thành công');
     }
 
+    public function map(Order $order)
+{
+    $order->load('user');
+    $shipper = $order->shipper_id ? \App\Models\User::find($order->shipper_id) : null;
+
+    return view('admin.orders.map', compact('order', 'shipper'));
+}
+
+public function shipperLocation(Order $order)
+{
+    $shipper = $order->shipper_id ? \App\Models\User::find($order->shipper_id) : null;
+
+    if (!$shipper || !$shipper->latitude) {
+        return response()->json(['available' => false]);
+    }
+
+    return response()->json([
+        'available'          => true,
+        'latitude'           => $shipper->latitude,
+        'longitude'          => $shipper->longitude,
+        'name'               => $shipper->name,
+        'location_updated_at' => $shipper->location_updated_at?->diffForHumans(),
+    ]);
+}
+
+
+
+
     public function updatePaymentStatus(UpdateOrderPaymentStatusRequest $request, Order $order)
     {
         $this->authorize('update', $order);

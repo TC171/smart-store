@@ -80,6 +80,8 @@ Route::prefix('shipper')->name('shipper.')->group(function () {
         Route::get('/deliveries/{delivery}',         [DeliveryController::class, 'show'])->name('deliveries.show');
         Route::post('/deliveries/{delivery}/pickup', [DeliveryController::class, 'pickup'])->name('deliveries.pickup');
         Route::post('/deliveries/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('deliveries.updateStatus');
+        Route::post('/location', [DeliveryController::class, 'updateLocation'])->name('location.update');
+
 
         // Hoàn hàng — Shipper có thể cập nhật trạng thái quá trình hoàn
         Route::get('/returns',                          [ShipperReturnController::class, 'index'])->name('returns.index');
@@ -124,6 +126,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
+        Route::get('orders/{order}/map',              [OrderController::class, 'map'])->name('orders.map');
+Route::get('orders/{order}/shipper-location', [OrderController::class, 'shipperLocation'])->name('orders.shipper-location');
+
 
         // Quản lý yêu cầu hoàn hàng
         Route::get('refunds', [AdminRefundController::class, 'index'])->name('refunds.index');
@@ -220,6 +225,9 @@ Route::middleware(['auth:web', 'customer'])
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
         Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
+        Route::get('/orders/{order}/track',      [CustomerOrderController::class, 'track'])->name('orders.track');
+Route::get('/orders/{order}/track-data', [CustomerOrderController::class, 'trackData'])->name('orders.track-data');
+
         Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
 
         // Hoàn hàng / Hoàn tiền

@@ -64,6 +64,41 @@ class CustomerOrderController extends Controller
         return back()->with('success', 'Đơn hàng #' . $order->order_number . ' đã được hủy thành công.');
     }
 
+    public function track(Order $order)
+{
+    $this->authorize('view', $order);
+
+    if (!in_array($order->status, ['picked_up', 'shipping'])) {
+        return redirect()->route('customer.order.detail', $order)
+            ->with('error', 'Chỉ có thể theo dõi đơn hàng đang được giao.');
+    }
+
+    $shipper = $order->shipper_id ? \App\Models\User::find($order->shipper_id) : null;
+
+    return view('customer.orders.track', compact('order', 'shipper'));
+}
+
+public function trackData(Order $order)
+{
+    $this->authorize('view', $order);
+
+    $shipper = $order->shipper_id ? \App\Models\User::find($order->shipper_id) : null;
+
+    if (!$shipper || !$shipper->latitude) {
+        return response()->json(['available' => false]);
+    }
+
+    return response()->json([
+        'available'           => true,
+        'latitude'            => $shipper->latitude,
+        'longitude'           => $shipper->longitude,
+        'location_updated_at' => $shipper->location_updated_at?->diffForHumans(),
+    ]);
+}
+
+
+
+
     public function storeReview(Request $request, Order $order)
     {
         $this->authorize('view', $order);

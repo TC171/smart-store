@@ -83,4 +83,40 @@
 </main>
 
 </body>
+{{-- GPS Tracking: chỉ chạy khi shipper đang đăng nhập --}}
+@auth('shipper')
+<script>
+(function () {
+    if (!navigator.geolocation) return;
+
+    const INTERVAL = 30000; // 30 giây
+    const endpoint = "{{ route('shipper.location.update') }}";
+    const token    = document.querySelector('meta[name="csrf-token"]').content;
+
+    function send(lat, lng) {
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+            },
+            body: JSON.stringify({ latitude: lat, longitude: lng }),
+        }).catch(() => {}); // bỏ qua lỗi mạng, không làm gián đoạn shipper
+    }
+
+    function ping() {
+        navigator.geolocation.getCurrentPosition(
+            pos => send(pos.coords.latitude, pos.coords.longitude),
+            ()  => {}, // lỗi GPS → bỏ qua
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    }
+
+    // Gửi ngay lần đầu, sau đó lặp mỗi 30 giây
+    ping();
+    setInterval(ping, INTERVAL);
+})();
+</script>
+@endauth
+
 </html>

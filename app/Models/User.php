@@ -31,6 +31,10 @@ class User extends Authenticatable
         'country',
         'postal_code',
         'status',
+            'latitude',       // thêm
+    'longitude',      // thêm
+    'location_updated_at', // thêm
+
     ];
 
     /**
@@ -53,6 +57,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'location_updated_at'  => 'datetime', // thêm
         ];
     }
 
