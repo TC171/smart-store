@@ -46,6 +46,7 @@
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Sản phẩm</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Đánh giá</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Bình luận</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Ảnh</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Trạng thái</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Ngày</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-300">Hành động</th>
@@ -82,6 +83,31 @@
                         <span class="text-sm line-clamp-2">
                             {{ Str::limit($review->comment, 100) }}
                         </span>
+                    </td>
+
+                    {{-- Images thumbnail --}}
+                    <td class="px-6 py-4">
+                        @php
+                            $revImageUrls = $review->getImageUrls();
+                        @endphp
+                        
+                        @if(!empty($revImageUrls))
+                            <div class="flex gap-2 items-center">
+                                @foreach(array_slice($revImageUrls, 0, 3) as $url)
+                                    <div class="block" onclick="openLightbox('{{ $url }}')">
+                                        <img src="{{ $url }}" 
+                                             class="w-12 h-12 object-cover rounded-lg border border-gray-700 cursor-zoom-in hover:scale-110 hover:border-blue-500 transition-all duration-200 shadow-md"
+                                             alt="Review Image"
+                                             onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Review+Img&background=333&color=fff';">
+                                    </div>
+                                @endforeach
+                                @if(count($revImageUrls) > 3)
+                                    <span class="text-xs text-gray-500 font-medium">+{{ count($revImageUrls) - 3 }}</span>
+                                @endif
+                            </div>
+                        @else
+                            <span class="text-gray-600">—</span>
+                        @endif
                     </td>
 
                     <td class="px-6 py-4">
@@ -155,5 +181,42 @@
     @endif
 
 </div>
+
+{{-- 📸 LIGHTBOX MODAL --}}
+<div id="imageLightbox" 
+     class="fixed inset-0 z-[9999] hidden bg-black/90 flex items-center justify-center p-4 cursor-zoom-out"
+     onclick="closeLightbox()">
+    <div class="relative max-w-5xl max-h-[90vh] bg-transparent cursor-default" onclick="event.stopPropagation()">
+        <img id="lightboxImg" src="" alt="Enlarged review image" 
+             class="max-w-full max-h-[85vh] rounded-lg shadow-2xl border-2 border-gray-800 object-contain">
+        <button onclick="closeLightbox()" 
+                class="absolute -top-4 -right-4 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-700 shadow-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    function openLightbox(url) {
+        const modal = document.getElementById('imageLightbox');
+        const img = document.getElementById('lightboxImg');
+        img.src = url;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Chặn cuộn trang
+    }
+
+    function closeLightbox() {
+        const modal = document.getElementById('imageLightbox');
+        modal.classList.add('hidden');
+        document.body.style.overflow = ''; // Cho phép cuộn lại
+    }
+
+    // Đóng bằng phím Esc
+    document.addEventListener('keydown', function(e) {
+        if (e.key === "Escape") closeLightbox();
+    });
+</script>
 
 @endsection

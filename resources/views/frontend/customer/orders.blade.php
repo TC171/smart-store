@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between mb-8">
             <div>
                 <h1 class="text-3xl font-black text-gray-800 uppercase italic">Đơn hàng <span class="text-orange-500">của tôi</span></h1>
-                <p class="text-gray-500 text-sm">Chào Nghĩa, bạn có thể quản lý và theo dõi đơn hàng tại đây</p>
+                <p class="text-gray-500 text-sm">Chào {{ Auth::user()->name }}, bạn có thể quản lý và theo dõi đơn hàng tại đây</p>
             </div>
             <a href="/" class="text-orange-600 font-bold hover:underline">← Tiếp tục mua sắm</a>
         </div>
@@ -50,6 +50,8 @@
                             <div class="flex flex-col">
                                 @if($order->payment_status == 'paid')
                                     <span class="text-green-600 text-sm font-bold">● Đã thanh toán</span>
+                                @elseif($order->payment_status == 'refunded')
+                                    <span class="text-orange-500 text-sm font-bold">● Đã hoàn tiền</span>
                                 @else
                                     <span class="text-gray-400 text-sm font-medium italic">○ Chưa thanh toán</span>
                                 @endif
@@ -59,18 +61,24 @@
                         <td class="px-6 py-4">
                             @php
                                 $statusColors = [
-                                    'pending' => 'bg-gray-100 text-gray-600',
+                                    'pending'   => 'bg-gray-100 text-gray-600',
                                     'confirmed' => 'bg-blue-100 text-blue-600',
-                                    'shipping' => 'bg-orange-100 text-orange-600',
+                                    'shipping'  => 'bg-blue-100 text-blue-600',
                                     'completed' => 'bg-green-100 text-green-600',
-                                    'cancelled' => 'bg-red-100 text-red-600'
+                                    'failed_delivery' => 'bg-red-100 text-red-600',
+                                    'returned'  => 'bg-orange-100 text-orange-600',
+                                    'cancelled' => 'bg-red-100 text-red-600',
+                                    'refunded'  => 'bg-orange-100 text-orange-600',
                                 ];
                                 $statusLabels = [
-                                    'pending' => 'Chờ xử lý',
+                                    'pending'   => 'Chờ xử lý',
                                     'confirmed' => 'Đã xác nhận',
-                                    'shipping' => 'Đang giao',
+                                    'shipping'  => 'Đang giao',
                                     'completed' => 'Hoàn thành',
-                                    'cancelled' => 'Đã hủy'
+                                    'failed_delivery' => 'Giao hàng không thành công',
+                                    'returned'  => 'Đã hoàn hàng',
+                                    'cancelled' => 'Đã hủy',
+                                    'refunded'  => 'Đã hoàn hàng',
                                 ];
                             @endphp
                             <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase {{ $statusColors[$order->status] ?? 'bg-gray-100' }}">
@@ -78,29 +86,42 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center gap-4">
-                                <a href="#" title="Xem chi tiết" class="text-gray-400 hover:text-orange-500 transition-colors">
+                            <div class="flex items-center justify-center gap-2 flex-wrap">
+                                 <a href="{{ route('customer.order.detail', $order) }}" title="Xem chi tiết" class="text-gray-400 hover:text-orange-500 transition-colors">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                </a>
+                                 </a>
 
-                                @if($order->status === 'pending')
-                                    <form action="{{ route('customer.orders.cancel', $order->id) }}" method="POST" 
-                                          onsubmit="return confirm('Nghĩa ơi, bạn chắc chắn muốn xác nhận hủy đơn hàng #{{ $order->order_number }} chứ?')">
-                                        @csrf
-                                        <button type="submit" title="Xác nhận hủy đơn" class="text-orange-600 hover:text-red-700 transition-all transform hover:scale-110">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        </button>
-                                    </form>
-                                @elseif(!in_array($order->status, ['cancelled', 'refunded']))
-                                    <a href="{{ route('customer.order.detail', $order) }}" title="Yêu cầu hủy đơn" class="text-yellow-400 hover:text-yellow-300 transition-all transform hover:scale-110">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    </a>
-                                @else
-                                    <div class="text-gray-200 cursor-not-allowed" title="Không thể hủy đơn hàng này">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    </div>
-                                @endif
-                            </div>
+                                 @if($order->status === 'pending')
+                                     <form action="{{ route('customer.orders.cancel', $order->id) }}" method="POST" 
+                                           onsubmit="return confirm('{{ Auth::user()->name }} ơi, bạn chắc chắn muốn xác nhận hủy đơn hàng #{{ $order->order_number }} chứ?')">
+                                         @csrf
+                                         <button type="submit" title="Xác nhận hủy đơn" class="text-orange-600 hover:text-red-700 transition-all transform hover:scale-110">
+                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                         </button>
+                                     </form>
+                                 @else
+                                     @php
+                                         $pendingRefund = $order->refundRequests->where('status', 'pending')->first();
+                                         $approvedRefund = $order->refundRequests->where('status', 'approved_return')->first();
+                                     @endphp
+                                     
+                                     @if($pendingRefund)
+                                         <span title="Đang chờ duyệt hoàn hàng" class="text-yellow-500">
+                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                         </span>
+                                     @elseif($approvedRefund)
+                                         <span title="Đã duyệt, chờ trả hàng" class="text-blue-500">
+                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                         </span>
+                                     @elseif($order->status === 'completed')
+                                         <a href="{{ route('customer.orders.refund.create', $order) }}" 
+                                            title="Yêu cầu hoàn hàng"
+                                            class="text-orange-500 hover:text-orange-700 transition-all transform hover:scale-110">
+                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                         </a>
+                                     @endif
+                                 @endif
+                             </div>
                         </td>
                     </tr>
                     @empty
@@ -110,7 +131,7 @@
                                 <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                                     <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                                 </div>
-                                <p class="text-gray-400 font-medium italic">Nghĩa chưa có đơn hàng nào cả.</p>
+                                <p class="text-gray-400 font-medium italic">{{ Auth::user()->name }} chưa có đơn hàng nào cả.</p>
                                 <a href="/" class="mt-4 bg-orange-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-orange-700 transition-all shadow-lg shadow-orange-200 uppercase text-xs tracking-widest">Mua sắm ngay</a>
                             </div>
                         </td>

@@ -95,6 +95,7 @@
                 <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Quản trị viên</option>
                 <option value="staff" {{ old('role') === 'staff' ? 'selected' : '' }}>Nhân viên</option>
                 <option value="customer" {{ old('role') === 'customer' ? 'selected' : '' }}>Khách hàng</option>
+                <option value="shipper" {{ old('role') === 'shipper' ? 'selected' : '' }}>Nhân viên giao hàng</option>
             </select>
             @error('role')
             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>

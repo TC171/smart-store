@@ -56,6 +56,16 @@ class User extends Authenticatable
         ];
     }
 
+    public function shipperOrders()
+    {
+        return $this->hasMany(\App\Models\ShipperOrder::class, 'shipper_id');
+    }
+
+    public function assignedOrders()
+    {
+        return $this->hasMany(\App\Models\Order::class, 'shipper_id');
+    }
+
     public function inventoryHistories()
     {
         return $this->hasMany(InventoryHistory::class);

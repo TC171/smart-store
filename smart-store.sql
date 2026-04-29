@@ -343,6 +343,7 @@ CREATE TABLE `orders` (
   `id` bigint UNSIGNED NOT NULL,
   `order_number` varchar(100) NOT NULL,
   `user_id` bigint UNSIGNED NOT NULL,
+  `email` varchar(255) DEFAULT NULL,
   `coupon_id` bigint UNSIGNED DEFAULT NULL,
   `total_amount` decimal(15,2) NOT NULL,
   `shipping_fee` decimal(15,2) DEFAULT '0.00',
@@ -351,6 +352,7 @@ CREATE TABLE `orders` (
   `grand_total` decimal(15,2) NOT NULL,
   `status` enum('pending','confirmed','shipping','completed','cancelled','refunded') DEFAULT 'pending',
   `payment_status` enum('unpaid','paid','refunded') DEFAULT 'unpaid',
+  `payment_method` varchar(255) DEFAULT NULL,
   `shipping_name` varchar(255) DEFAULT NULL,
   `shipping_phone` varchar(20) DEFAULT NULL,
   `shipping_address` text,
@@ -379,6 +381,30 @@ INSERT INTO `orders` (`id`, `order_number`, `user_id`, `coupon_id`, `total_amoun
 (9, 'ORD-20260313-008', 2, NULL, '34500003.00', '30000.00', '0.00', '0.00', '34530003.00', 'shipping', 'paid', 'Customer 1', '0123456781', 'Address 1', 'Hanoi', 'Quận 1', 'Vietnam', NULL, '2026-03-13 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
 (10, 'ORD-20260313-009', 4, NULL, '33990010.00', '30000.00', '0.00', '0.00', '34020010.00', 'shipping', 'unpaid', 'Customer 3', '0123456783', 'Address 3', 'Hanoi', 'Quận 1', 'Vietnam', NULL, '2026-02-28 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54'),
 (11, 'ORD-20260313-010', 3, NULL, '2.00', '30000.00', '0.00', '0.00', '30002.00', 'confirmed', 'paid', 'Customer 2', '0123456782', 'Address 2', 'Hanoi', 'Quận 1', 'Vietnam', NULL, '2026-02-16 03:18:54', NULL, '2026-03-13 03:18:54', '2026-03-13 03:18:54');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `shipper_orders`
+--
+
+CREATE TABLE `shipper_orders` (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `order_id` bigint UNSIGNED NOT NULL,
+  `shipper_id` bigint UNSIGNED NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'assigned' COMMENT 'assigned,picked_up,delivering,delivered,failed',
+  `note` text DEFAULT NULL,
+  `assigned_at` timestamp NULL DEFAULT NULL,
+  `picked_up_at` timestamp NULL DEFAULT NULL,
+  `delivered_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `shipper_orders_order_id_foreign` (`order_id`),
+  KEY `shipper_orders_shipper_id_foreign` (`shipper_id`),
+  CONSTRAINT `shipper_orders_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `shipper_orders_shipper_id_foreign` FOREIGN KEY (`shipper_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -755,7 +781,7 @@ CREATE TABLE `users` (
   `email` varchar(255) NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('admin','staff','customer') DEFAULT 'customer',
+  `role` enum('admin','staff','customer','shipper') DEFAULT 'customer',
   `phone` varchar(20) DEFAULT NULL,
   `avatar` varchar(255) DEFAULT NULL,
   `gender` enum('male','female','other') DEFAULT NULL,

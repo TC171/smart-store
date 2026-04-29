@@ -220,4 +220,5 @@ $relatedProducts = Product::with([
 
         return view('frontend.products.featured', compact('products', 'categories', 'brands'));
     }
+    
 }

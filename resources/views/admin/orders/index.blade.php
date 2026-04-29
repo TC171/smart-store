@@ -28,9 +28,10 @@
                     <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Chờ xác nhận</option>
                     <option value="confirmed" {{ request('status') === 'confirmed' ? 'selected' : '' }}>Đã xác nhận</option>
                     <option value="shipping" {{ request('status') === 'shipping' ? 'selected' : '' }}>Đang giao hàng</option>
+                    <option value="failed_delivery" {{ request('status') === 'failed_delivery' ? 'selected' : '' }}>Giao hàng không thành công</option>
                     <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Hoàn thành</option>
                     <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Đã huỷ</option>
-                    <option value="refunded" {{ request('status') === 'refunded' ? 'selected' : '' }}>Đã hoàn tiền</option>
+                    <option value="refunded" {{ request('status') === 'refunded' ? 'selected' : '' }}>Đã hoàn hàng</option>
                 </select>
             </div>
 
@@ -43,10 +44,25 @@
                 </select>
             </div>
 
-            <button type="submit"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
-                Lọc
-            </button>
+            <div class="flex gap-2">
+                <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+                    Lọc
+                </button>
+
+                @php
+                    $pendingRefunds = \App\Models\RefundRequest::where('status', 'pending')->count();
+                @endphp
+                <a href="{{ route('admin.refunds.index') }}"
+                   class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 relative transition">
+                    <span>Danh sách yêu cầu</span>
+                    @if($pendingRefunds > 0)
+                        <span class="bg-red-600 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
+                            {{ $pendingRefunds > 99 ? '99+' : $pendingRefunds }}
+                        </span>
+                    @endif
+                </a>
+            </div>
         </form>
     </div>
 
@@ -86,14 +102,19 @@
                             'confirmed' => 'Đã xác nhận',
                             'shipping' => 'Đang giao hàng',
                             'completed' => 'Hoàn thành',
+                            'failed_delivery' => 'Giao không thành công',
+                            'returned' => 'Đã hoàn hàng',
                             'cancelled' => 'Đã huỷ',
-                            'refunded' => 'Đã hoàn tiền'
+                            'refunded' => 'Đã hoàn hàng' 
                         ];
                         $statusColors = [
                             'pending' => 'bg-yellow-500/20 text-yellow-400',
+                            'waiting_payment' => 'bg-orange-500/20 text-orange-400',
                             'confirmed' => 'bg-blue-500/20 text-blue-400',
                             'shipping' => 'bg-indigo-500/20 text-indigo-400',
                             'completed' => 'bg-green-500/20 text-green-400',
+                            'failed_delivery' => 'bg-red-500/20 text-red-500',
+                            'returned' => 'bg-orange-500/20 text-orange-400',
                             'cancelled' => 'bg-red-500/20 text-red-400',
                             'refunded' => 'bg-orange-500/20 text-orange-400'
                         ];
@@ -101,6 +122,7 @@
                         <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$order->status] ?? 'bg-gray-500/20 text-gray-400' }}">
                             {{ $statusLabels[$order->status] ?? $order->status }}
                         </span>
+                        
                     </td>
 
                     <td class="px-6 py-4">

@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AIAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +40,13 @@ use App\Http\Controllers\Frontend\CategoryController as FrontCategoryController;
 use App\Http\Controllers\Frontend\BrandController as FrontBrandController;
 use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\ProfileController;
+use App\Http\Controllers\Frontend\RefundController;
+use App\Http\Controllers\Frontend\NewsletterController;
+use App\Http\Controllers\Admin\RefundController as AdminRefundController;
+use App\Http\Controllers\Admin\ShipperController;
+use App\Http\Controllers\Shipper\AuthController as ShipperAuthController;
+use App\Http\Controllers\Shipper\DeliveryController;
+use App\Http\Controllers\Shipper\ReturnController as ShipperReturnController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,7 +54,43 @@ use App\Http\Controllers\Frontend\ProfileController;
 |--------------------------------------------------------------------------
 
 */
-Route::post('/customer/orders/{id}/cancel', [App\Http\Controllers\Frontend\CartController::class, 'cancelOrder'])->name('customer.orders.cancel');
+use App\Http\Controllers\Frontend\AIController;
+
+ 
+
+Route::post('/chat-ai', [AIController::class, 'chat']);
+Route::get('/test-ai', [AIController::class, 'chat']);
+Route::get('/ai/history', [AIController::class, 'history']);
+
+// =================== SHIPPER PORTAL ROUTES ===================
+Route::prefix('shipper')->name('shipper.')->group(function () {
+
+    // Guest (chưa đăng nhập)
+    Route::middleware('guest:shipper')->group(function () {
+        Route::get('/login',  [ShipperAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [ShipperAuthController::class, 'login'])->name('login.post');
+    });
+
+    // Đã đăng nhập
+    Route::middleware(['auth:shipper', 'shipper'])->group(function () {
+        Route::get('/dashboard', [DeliveryController::class, 'dashboard'])->name('dashboard');
+
+        Route::get('/deliveries',                    [DeliveryController::class, 'index'])->name('deliveries.index');
+        Route::get('/deliveries/{delivery}',         [DeliveryController::class, 'show'])->name('deliveries.show');
+        Route::post('/deliveries/{delivery}/pickup', [DeliveryController::class, 'pickup'])->name('deliveries.pickup');
+        Route::post('/deliveries/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('deliveries.updateStatus');
+
+        // Hoàn hàng — Shipper có thể cập nhật trạng thái quá trình hoàn
+        Route::get('/returns',                          [ShipperReturnController::class, 'index'])->name('returns.index');
+        Route::get('/returns/{return}',                 [ShipperReturnController::class, 'show'])->name('returns.show');
+        Route::post('/returns/{return}/pickup',         [ShipperReturnController::class, 'confirmPickup'])->name('returns.pickup');
+        Route::post('/returns/{return}/returning',      [ShipperReturnController::class, 'confirmReturning'])->name('returns.returning');
+        Route::post('/returns/{return}/delivered',      [ShipperReturnController::class, 'confirmDelivered'])->name('returns.delivered');
+
+        Route::post('/logout', [ShipperAuthController::class, 'logout'])->name('logout');
+    });
+});
+
 Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware('guest:admin')->group(function () {
@@ -55,8 +99,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 
     Route::middleware(['auth:admin', 'admin'])->group(function () {
+        Route::post(
+        'upload-image',
+        [ProductController::class, 'uploadImage']
+    )->name('upload.image');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+       Route::get('/revenue-chart', [DashboardController::class, 'revenueChart'])
+    ->name('revenue.chart');
 
         Route::resource('products', ProductController::class);
         Route::patch('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus');
@@ -71,11 +121,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('posts', App\Http\Controllers\Admin\PostController::class);
 
         Route::resource('coupons', CouponController::class)->except(['show']);
-        
+
         // Cấu hình Route Order Admin chuẩn
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
+
+        // Quản lý yêu cầu hoàn hàng
+        Route::get('refunds', [AdminRefundController::class, 'index'])->name('refunds.index');
+        Route::get('refunds/{refund}', [AdminRefundController::class, 'show'])->name('refunds.show');
+        Route::post('refunds/{refund}/approve', [AdminRefundController::class, 'approve'])->name('refunds.approve');
+        Route::post('refunds/{refund}/confirm', [AdminRefundController::class, 'confirmReceived'])->name('refunds.confirm');
+        Route::post('refunds/{refund}/reject', [AdminRefundController::class, 'reject'])->name('refunds.reject');
 
         Route::resource('users', UserController::class)->except(['show']);
         Route::resource('customers', CustomerController::class);
@@ -86,10 +143,37 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('product-attributes', ProductAttributeController::class)->except(['show']);
         Route::resource('inventory-history', InventoryHistoryController::class)->except(['edit', 'update']);
         Route::resource('admins', AdminController::class);
+
+        // =================== SHIPPER MANAGEMENT ===================
+        Route::prefix('shippers')->name('shippers.')->group(function () {
+            Route::get('/',       [ShipperController::class, 'index'])->name('index');
+            Route::get('/create', [ShipperController::class, 'create'])->name('create');
+            Route::post('/',      [ShipperController::class, 'store'])->name('store');
+            Route::get('/{shipper}/edit', [ShipperController::class, 'edit'])->name('edit');
+            Route::put('/{shipper}',      [ShipperController::class, 'update'])->name('update');
+            Route::delete('/{shipper}',   [ShipperController::class, 'destroy'])->name('destroy');
+
+            Route::get('/deliveries',       [ShipperController::class, 'deliveries'])->name('deliveries');
+            Route::get('/assign',           [ShipperController::class, 'assign'])->name('assign');
+            Route::post('/assign',          [ShipperController::class, 'assignStore'])->name('assign.store');
+        });
         Route::view('profile', 'admin.profile')->name('profile');
         Route::view('password', 'admin.password')->name('password');
 
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+        Route::prefix('ai')->name('ai.')->group(function () {
+
+    // ⚙️ settings
+    Route::get('/settings', [AIAdminController::class, 'settings'])->name('settings');
+    Route::post('/toggle', [AIAdminController::class, 'toggle'])->name('toggle');
+
+    // 👥 users chat
+    Route::get('/users', [AIAdminController::class, 'users'])->name('users');
+
+    // 💬 chat detail
+    Route::get('/users/{id}', [AIAdminController::class, 'detail'])->name('detail');
+
+});
     });
 });
 
@@ -103,8 +187,22 @@ Route::middleware('guest:web')->group(function () {
     Route::post('/login', [FrontAuthController::class, 'login'])->name('login.post');
     Route::get('/register', [FrontAuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [FrontAuthController::class, 'register'])->name('register.post');
+    Route::get('/forgot-password', [FrontAuthController::class, 'showForgotPassword'])->name('forgot-password');
+    Route::post('/forgot-password', [FrontAuthController::class, 'processForgotPassword'])->name('forgot-password.post');
 });
+Route::middleware(['auth:web', 'customer'])
+    ->prefix('customer')
+    ->name('customer.')
+    ->group(function () {
 
+        Route::get('/dashboard', fn () => view('customer.dashboard'))->name('dashboard');
+
+        Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
+        Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
+        Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
+
+        Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
+    });
 /*
 |--------------------------------------------------------------------------
 | CUSTOMER ROUTES
@@ -123,8 +221,42 @@ Route::middleware(['auth:web', 'customer'])
 
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
+        Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
+
+        // Hoàn hàng / Hoàn tiền
+        Route::get('/orders/{order}/refund', [RefundController::class, 'create'])->name('orders.refund.create');
+        Route::post('/orders/{order}/refund', [RefundController::class, 'store'])->name('orders.refund.store');
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
+
+        // 🔔 Notification API routes
+        Route::get('/notifications', function () {
+            $notifications = auth('web')->user()->notifications()->latest()->take(20)->get()->map(function ($n) {
+                return [
+                    'id'        => $n->id,
+                    'read'      => !is_null($n->read_at),
+                    'icon'      => $n->data['icon'] ?? '🔔',
+                    'title'     => $n->data['title'] ?? '',
+                    'body'      => $n->data['body'] ?? '',
+                    'url'       => $n->data['url'] ?? '#',
+                    'color'     => $n->data['color'] ?? 'gray',
+                    'time'      => $n->created_at->diffForHumans(),
+                ];
+            });
+            $unread = auth('web')->user()->unreadNotifications()->count();
+            return response()->json(['notifications' => $notifications, 'unread' => $unread]);
+        })->name('notifications.index');
+
+        Route::post('/notifications/read-all', function () {
+            auth('web')->user()->unreadNotifications->markAsRead();
+            return response()->json(['success' => true]);
+        })->name('notifications.read-all');
+
+        Route::post('/notifications/{id}/read', function ($id) {
+            $n = auth('web')->user()->notifications()->where('id', $id)->first();
+            if ($n) $n->markAsRead();
+            return response()->json(['success' => true]);
+        })->name('notifications.read');
     });
     
 /*
@@ -132,6 +264,8 @@ Route::middleware(['auth:web', 'customer'])
 | FRONTEND PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
+
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
 Route::get('/tim-kiem', [HomeController::class, 'search'])->name('search');
@@ -146,11 +280,11 @@ Route::get('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.r
 Route::middleware('auth:web')->group(function () {
     Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
     Route::post('/checkout', [CartController::class, 'placeOrder'])->name('checkout.store');
-    
+
     // 🔥 Coupon API Routes
     Route::get('/api/coupons', [CartController::class, 'getAvailableCoupons'])->name('coupon.list');
     Route::post('/api/apply-coupon', [CartController::class, 'applyCoupon'])->name('coupon.apply');
-    
+
     // Route nhận kết quả VNPAY trả về
     Route::get('/vnpay/return', [CartController::class, 'vnpayReturn'])->name('vnpay.return');
 });
@@ -163,7 +297,12 @@ Route::middleware('auth:web')->group(function () {
 Route::get('/ve-chung-toi', [PageController::class, 'about'])->name('page.about');
 Route::get('/chinh-sach-bao-hanh', [PageController::class, 'warranty'])->name('page.warranty');
 Route::get('/chinh-sach-doi-tra', [PageController::class, 'returnPolicy'])->name('page.return-policy');
+Route::get('/chinh-sach-bao-mat', [PageController::class, 'privacy'])->name('page.privacy');
+Route::get('/chinh-sach-van-chuyen', [PageController::class, 'shipping'])->name('page.shipping');
+Route::get('/dieu-khoan-dich-vu', [PageController::class, 'terms'])->name('page.terms');
 Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
+Route::post('/lien-he', [PageController::class, 'submitContact'])->name('page.contact.submit');
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 
 /*
 |--------------------------------------------------------------------------
@@ -278,14 +417,14 @@ Route::get('/api/search', function (Request $request) use ($searchAliasMap) {
             foreach ($expandedTerms as $term) {
                 // Tìm theo tên/slug sản phẩm
                 $query->orWhere('name', 'like', "%{$term}%")
-                      ->orWhere('slug', 'like', "%{$term}%");
+                    ->orWhere('slug', 'like', "%{$term}%");
             }
             // Tìm theo danh mục
             $query->orWhereHas('category', function ($catQ) use ($expandedTerms) {
                 $catQ->where(function ($q) use ($expandedTerms) {
                     foreach ($expandedTerms as $term) {
                         $q->orWhere('name', 'like', "%{$term}%")
-                          ->orWhere('slug', 'like', "%{$term}%");
+                            ->orWhere('slug', 'like', "%{$term}%");
                     }
                 });
             });
@@ -294,7 +433,7 @@ Route::get('/api/search', function (Request $request) use ($searchAliasMap) {
                 $brandQ->where(function ($q) use ($expandedTerms) {
                     foreach ($expandedTerms as $term) {
                         $q->orWhere('name', 'like', "%{$term}%")
-                          ->orWhere('slug', 'like', "%{$term}%");
+                            ->orWhere('slug', 'like', "%{$term}%");
                     }
                 });
             });
@@ -307,7 +446,7 @@ Route::get('/api/search', function (Request $request) use ($searchAliasMap) {
         ->where(function ($query) use ($expandedTerms) {
             foreach ($expandedTerms as $term) {
                 $query->orWhere('name', 'like', "%{$term}%")
-                      ->orWhere('slug', 'like', "%{$term}%");
+                    ->orWhere('slug', 'like', "%{$term}%");
             }
         })
         ->limit(3)->get();
@@ -317,7 +456,7 @@ Route::get('/api/search', function (Request $request) use ($searchAliasMap) {
         ->where(function ($query) use ($expandedTerms) {
             foreach ($expandedTerms as $term) {
                 $query->orWhere('name', 'like', "%{$term}%")
-                      ->orWhere('slug', 'like', "%{$term}%");
+                    ->orWhere('slug', 'like', "%{$term}%");
             }
         })
         ->limit(3)->get();
@@ -327,7 +466,7 @@ Route::get('/api/search', function (Request $request) use ($searchAliasMap) {
             $activeVariants = $product->variants->where('status', 1);
             $salePrice = $activeVariants->min('sale_price');
             $basePrice = $activeVariants->min('price');
-            
+
             return [
                 'id' => $product->id,
                 'name' => $product->name,
