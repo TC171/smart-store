@@ -237,6 +237,9 @@
         @endforelse
     </section>
 
+    {{-- ================= TIN TỨC (NEW SECTION) ================= --}}
+    @include('frontend.components.home-news')
+
     {{-- ================= NEWSLETTER ================= --}}
     <section data-aos="fade-up">
         <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-10 rounded-3xl text-center">

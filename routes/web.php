@@ -38,6 +38,7 @@ use App\Http\Controllers\Frontend\ProductController as FrontProductController;
 use App\Http\Controllers\Frontend\CategoryController as FrontCategoryController;
 use App\Http\Controllers\Frontend\BrandController as FrontBrandController;
 use App\Http\Controllers\Frontend\PageController;
+use App\Http\Controllers\Frontend\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,6 +66,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('brands', BrandController::class);
         Route::resource('banners', BannerController::class);
         Route::delete('banners/{banner}/image', [BannerController::class, 'deleteImage'])->name('banners.image-delete');
+
+        Route::resource('post-categories', App\Http\Controllers\Admin\PostCategoryController::class);
+        Route::resource('posts', App\Http\Controllers\Admin\PostController::class);
 
         Route::resource('coupons', CouponController::class)->except(['show']);
         
@@ -111,14 +115,18 @@ Route::middleware(['auth:web', 'customer'])
     ->name('customer.')
     ->group(function () {
 
-        Route::get('/dashboard', fn () => view('customer.dashboard'))->name('dashboard');
+        Route::get('/dashboard', [ProfileController::class, 'edit'])->name('dashboard');
+
+        Route::put('/dashboard', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/dashboard/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+        Route::post('/dashboard/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
 
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('order.detail');
-
+        Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReview'])->name('orders.reviews.store');
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
     });
-
+    
 /*
 |--------------------------------------------------------------------------
 | FRONTEND PUBLIC ROUTES
@@ -156,6 +164,14 @@ Route::get('/ve-chung-toi', [PageController::class, 'about'])->name('page.about'
 Route::get('/chinh-sach-bao-hanh', [PageController::class, 'warranty'])->name('page.warranty');
 Route::get('/chinh-sach-doi-tra', [PageController::class, 'returnPolicy'])->name('page.return-policy');
 Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
+
+/*
+|--------------------------------------------------------------------------
+| NEWS ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::get('/tin-tuc', [\App\Http\Controllers\Frontend\NewsController::class, 'index'])->name('news.index');
+Route::get('/tin-tuc/{slug}', [\App\Http\Controllers\Frontend\NewsController::class, 'show'])->name('news.show');
 
 /*
 |--------------------------------------------------------------------------
