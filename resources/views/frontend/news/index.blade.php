@@ -92,7 +92,7 @@
                     <a href="{{ route('news.show', $post->slug) }}">
                         <h3 class="text-gray-900 font-bold text-[17px] leading-snug mb-2 group-hover:text-orange-500 transition-colors line-clamp-2">{{ $post->title }}</h3>
                     </a>
-                    <p class="text-gray-600 text-sm line-clamp-2 mb-4">{{ $post->summary ?? str_limit(strip_tags($post->content), 100) }}</p>
+                    <p class="text-gray-600 text-sm line-clamp-2 mb-4">{{ $post->summary ?? Str::limit(strip_tags($post->content), 100) }}</p>
                     
                     <div class="mt-auto flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-3">
                         <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> {{ $post->published_at ? $post->published_at->format('d/m/Y') : $post->created_at->format('d/m/Y') }}</span>
