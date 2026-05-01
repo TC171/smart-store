@@ -139,6 +139,11 @@ class OrderController extends Controller
         if ($request->filled('payment_status')) {
             $updateData['payment_status'] = $request->payment_status;
         }
+        if ($request->status === 'cancelled' && $oldStatus !== 'cancelled') {
+            $updateData['cancellation_reason'] = $request->filled('cancellation_reason')
+                ? trim($request->cancellation_reason)
+                : null;
+        }
 
         $order->update($updateData);
 

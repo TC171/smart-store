@@ -19,17 +19,18 @@
                 <h2 class="font-semibold text-white">Trạng thái đơn hàng</h2>
                 @php
                     $statusColors = [
-                        'shipping'        => 'bg-indigo-500/20 text-indigo-400',
-                        'picked_up'       => 'bg-cyan-500/20 text-cyan-400',
-                        'completed'       => 'bg-green-500/20 text-green-400',
-                        'failed_delivery' => 'bg-red-500/20 text-red-400',
-                    ];
-                    $statusLabels = [
-                        'shipping'        => '📋 Chờ nhận hàng từ kho',
-                        'picked_up'       => '🚴 Đang trên đường giao',
-                        'completed'       => '✅ Giao thành công',
-                        'failed_delivery' => '❌ Giao thất bại',
-                    ];
+    'shipping'        => 'bg-indigo-500/20 text-indigo-400',
+    'picked_up'       => 'bg-cyan-500/20 text-cyan-400',
+    'completed'       => 'bg-green-500/20 text-green-400',
+    'failed_delivery' => 'bg-red-500/20 text-red-400',
+];
+$statusLabels = [
+    'shipping'        => '📋 Chờ lấy hàng',
+    'picked_up'       => '🚴 Đang giao hàng',
+    'completed'       => '✅ Giao thành công',
+    'failed_delivery' => '❌ Giao thất bại',
+];
+
                 @endphp
                 <span class="inline-block px-3 py-1 rounded-full text-sm font-bold {{ $statusColors[$order->status] ?? 'bg-gray-500/20 text-gray-400' }}">
                     {{ $statusLabels[$order->status] ?? $order->status }}

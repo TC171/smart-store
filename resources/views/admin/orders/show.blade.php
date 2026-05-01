@@ -160,6 +160,22 @@
         </div>
     </div>
 
+    {{-- Lý do hủy đơn --}}
+    @if($order->status === 'cancelled')
+    <div class="bg-red-900/30 border border-red-500/40 p-5 rounded-xl shadow-lg mb-6">
+        <h3 class="text-base font-semibold text-red-400 mb-2">Lý do hủy đơn</h3>
+        @if($order->cancellation_reason)
+            <p class="text-gray-300 text-sm whitespace-pre-line">{{ $order->cancellation_reason }}</p>
+        @else
+            <p class="text-gray-500 text-sm italic">Không có lý do được ghi nhận.</p>
+        @endif
+    </div>
+    @endif
+
+  
+
+
+
     {{-- Trạng thái --}}
     <div class="grid grid-cols-1 gap-6 mb-6">
         <div class="bg-gray-900 p-6 rounded-xl shadow-lg">
@@ -226,12 +242,31 @@
                         </select>
                     </div>
                 </div>
+                 @if($order->status !== 'cancelled')
+                <div id="cancel-reason-wrap" class="hidden">
+                    <label class="block text-sm font-medium text-red-400 mb-1">Lý do hủy đơn <span class="text-gray-500">(tùy chọn)</span></label>
+                    <textarea name="cancellation_reason" rows="3" maxlength="500"
+                              placeholder="Nhập lý do hủy đơn..."
+                              class="w-full bg-gray-800 text-white border border-red-500/50 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 resize-none text-sm"></textarea>
+                </div>
+                @endif
 
                 <button type="submit"
                         class="w-full md:w-auto bg-cyan-500 hover:bg-cyan-600 text-black px-6 py-3 rounded-lg font-semibold transition">
                     Cập nhật đơn hàng
                 </button>
             </form>
+
+            <script>
+            (function(){
+                var sel  = document.querySelector('select[name="status"]');
+                var wrap = document.getElementById('cancel-reason-wrap');
+                if (!sel || !wrap) return;
+                function toggle(){ wrap.classList.toggle('hidden', sel.value !== 'cancelled'); }
+                sel.addEventListener('change', toggle);
+                toggle();
+            })();
+            </script>
 
             {{-- Yêu cầu hoàn hàng --}}
             @if($order->refundRequests && $order->refundRequests->isNotEmpty())
@@ -288,17 +323,18 @@
                         </div>
                         @php
                             $shipColors = [
-                                'shipping'        => 'bg-indigo-500/20 text-indigo-400',
-                                'picked_up'       => 'bg-cyan-500/20 text-cyan-400',
-                                'completed'       => 'bg-green-500/20 text-green-400',
-                                'failed_delivery' => 'bg-red-500/20 text-red-400',
-                            ];
-                            $shipLabels = [
-                                'shipping'        => '📋 Chờ nhận hàng',
-                                'picked_up'       => '🚴 Đang giao hàng',
-                                'completed'       => '✅ Giao thành công',
-                                'failed_delivery' => '❌ Giao thất bại',
-                            ];
+    'shipping'        => 'bg-indigo-500/20 text-indigo-400',
+    'picked_up'       => 'bg-cyan-500/20 text-cyan-400',
+    'completed'       => 'bg-green-500/20 text-green-400',
+    'failed_delivery' => 'bg-red-500/20 text-red-400',
+];
+$shipLabels = [
+    'shipping'        => '📦 Đã nhận hàng',
+    'picked_up'       => '🚴 Đang giao hàng',
+    'completed'       => '✅ Giao thành công',
+    'failed_delivery' => '❌ Giao thất bại',
+];
+
                         @endphp
                         <span class="inline-block px-3 py-1 rounded-full text-xs font-bold {{ $shipColors[$order->status] ?? 'bg-gray-500/20 text-gray-400' }}">
                             {{ $shipLabels[$order->status] ?? $order->status }}
@@ -312,6 +348,12 @@
                            class="text-cyan-400 hover:text-cyan-300 text-sm transition">
                             Xem trong trang theo dõi →
                         </a>
+                        @if(in_array($order->status, ['shipping', 'picked_up']))
+                        <a href="{{ route('admin.orders.map', $order) }}"
+                           class="inline-flex items-center gap-1 bg-cyan-500 hover:bg-cyan-600 text-black text-sm font-semibold px-4 py-1.5 rounded-lg transition">
+                            🗺️ Xem bản đồ
+                        </a>
+                        @endif
                     </div>
                 </div>
 

@@ -36,7 +36,9 @@ class AuthController extends Controller
 
         if (Auth::guard('shipper')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended(route('shipper.dashboard'));
+           // Thành:
+return redirect()->route('shipper.dashboard');
+
         }
 
         return back()

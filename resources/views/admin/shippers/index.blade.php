@@ -10,10 +10,7 @@
                class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
                 📦 Phân công đơn hàng
             </a>
-            <a href="{{ route('admin.shippers.deliveries') }}"
-               class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
-                🗺️ Theo dõi giao hàng
-            </a>
+           
             <a href="{{ route('admin.shippers.create') }}"
                class="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
                 ➕ Thêm Shipper

@@ -50,19 +50,30 @@ class CustomerOrderController extends Controller
 
         return view('customer.order-detail', compact('order', 'reviewCounts', 'completedOrderCounts'));
     }
+public function cancel(Request $request, Order $order)
+{
+    $this->authorize('view', $order);
 
-    public function cancel(Request $request, Order $order)
-    {
-        $this->authorize('view', $order);
-
-        if (in_array($order->status, ['shipping', 'completed', 'failed_delivery', 'refunded', 'cancelled'])) {
-            return back()->with('error', 'Đơn hàng đã được vận chuyển hoặc xử lý, không thể hủy.');
-        }
-
-        $order->update(['status' => 'cancelled']);
-
-        return back()->with('success', 'Đơn hàng #' . $order->order_number . ' đã được hủy thành công.');
+    if (in_array($order->status, ['shipping', 'completed', 'failed_delivery', 'refunded', 'cancelled'])) {
+        return back()->with('error', 'Đơn hàng đã được vận chuyển hoặc xử lý, không thể hủy.');
     }
+
+   $cancelReason = trim($request->cancel_reason ?? '');
+
+$paymentStatus = ($order->payment_method === 'vnpay' && $order->payment_status === 'paid')
+    ? 'refunded'
+    : $order->payment_status;
+
+$order->update([
+    'status'              => 'cancelled',
+    'cancellation_reason' => $cancelReason ?: null,
+    'payment_status'      => $paymentStatus,
+]);
+
+
+    return back()->with('success', 'Đơn hàng #' . $order->order_number . ' đã được hủy thành công.');
+}
+
 
     public function track(Order $order)
 {

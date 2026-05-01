@@ -12,13 +12,14 @@
 {{-- Stats --}}
 <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
     <div class="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-5 text-center">
-        <div class="text-3xl font-bold text-indigo-400">{{ $stats['shipping'] }}</div>
-        <div class="text-gray-400 text-sm mt-1">📋 Chờ nhận hàng</div>
-    </div>
-    <div class="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-5 text-center">
-        <div class="text-3xl font-bold text-cyan-400">{{ $stats['picked_up'] }}</div>
-        <div class="text-gray-400 text-sm mt-1">🚴 Đang đi giao</div>
-    </div>
+    <div class="text-3xl font-bold text-indigo-400">{{ $stats['shipping'] }}</div>
+    <div class="text-gray-400 text-sm mt-1">📋 Chờ lấy hàng</div>
+</div>
+<div class="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-5 text-center">
+    <div class="text-3xl font-bold text-cyan-400">{{ $stats['picked_up'] }}</div>
+    <div class="text-gray-400 text-sm mt-1">🚴 Đang giao hàng</div>
+</div>
+
     <div class="bg-green-500/10 border border-green-500/30 rounded-xl p-5 text-center">
         <div class="text-3xl font-bold text-green-400">{{ $stats['completed'] }}</div>
         <div class="text-gray-400 text-sm mt-1">✅ Đã giao</div>

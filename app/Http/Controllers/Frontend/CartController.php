@@ -489,7 +489,8 @@ class CartController extends Controller
                 $paymentStatus = $order->payment_status;
                 if ($paymentStatus === 'paid') $paymentStatus = 'refunded'; 
 
-                $order->update(['status' => 'cancelled', 'payment_status' => $paymentStatus]);
+                                $order->update(['status' => 'cancelled', 'payment_status' => $paymentStatus, 'cancellation_reason' => $cancelReason]);
+
 
                 foreach ($order->items as $item) {
                     $variant = ProductVariant::find($item->product_variant_id);

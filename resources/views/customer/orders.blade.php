@@ -34,30 +34,29 @@
                         </td>
                         <td class="px-4 py-3">
                             @php
-                            $statusLabels = [
-                                'pending' => 'Chờ xác nhận',
-                                'waiting_payment' => 'Đang chờ thanh toán',
-                                'confirmed' => 'Đã xác nhận',
-                                 'picked_up'        => 'Đã lấy hàng',
-                                'shipping' => 'Đang giao hàng',
-                                
-                                'completed' => 'Hoàn thành',
-                                'failed_delivery' => 'Giao không thành công',
-                                'cancelled' => 'Đã huỷ',
-                                'refunded' => 'Đã hoàn hàng'
-                            ];
                             $statusColors = [
-                                'pending' => 'bg-yellow-100 text-yellow-800',
-                                'waiting_payment' => 'bg-orange-100 text-orange-800',
-                                'confirmed' => 'bg-blue-100 text-blue-800',
-                                'picked_up'        => 'bg-indigo-100 text-indigo-800',
-                                'shipping' => 'bg-indigo-100 text-indigo-800',
-                              
-                                'completed' => 'bg-green-100 text-green-800',
-                                'failed_delivery' => 'bg-red-100 text-red-800',
-                                'cancelled' => 'bg-red-100 text-red-800',
-                                'refunded' => 'bg-orange-100 text-orange-800'
-                            ];
+    'pending' => 'bg-yellow-100 text-yellow-800',
+    'confirmed'        => 'bg-blue-100 text-blue-600',
+    'shipping'         => 'bg-indigo-100 text-indigo-600',
+    'picked_up'        => 'bg-cyan-100 text-cyan-600',
+    'completed'        => 'bg-green-100 text-green-600',
+    'failed_delivery'  => 'bg-red-100 text-red-600',
+    'returned'         => 'bg-orange-100 text-orange-600',
+    'cancelled'        => 'bg-red-100 text-red-600',
+    'refunded'         => 'bg-orange-100 text-orange-600',
+];
+$statusLabels = [
+    'pending'          => 'Chờ xác nhận',
+    'confirmed'        => 'Đã xác nhận',
+    'shipping'         => 'Đã nhận hàng',
+    'picked_up'        => 'Đang giao hàng',
+    'completed'        => 'Hoàn thành',
+    'failed_delivery'  => 'Giao hàng không thành công',
+    'returned'         => 'Đã hoàn hàng',
+    'cancelled'        => 'Đã hủy',
+    'refunded'         => 'Đã hoàn hàng',
+];
+
                             @endphp
                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusColors[$order->status] ?? 'bg-gray-100 text-gray-800' }}">
                                 {{ $statusLabels[$order->status] ?? $order->status }}

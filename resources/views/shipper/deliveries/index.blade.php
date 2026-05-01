@@ -25,17 +25,18 @@
 
 @php
     $statusColors = [
-        'shipping'        => 'bg-indigo-500/20 text-indigo-400',
-        'picked_up'       => 'bg-cyan-500/20 text-cyan-400',
-        'completed'       => 'bg-green-500/20 text-green-400',
-        'failed_delivery' => 'bg-red-500/20 text-red-400',
-    ];
-    $statusLabels = [
-        'shipping'        => '📋 Chờ nhận hàng',
-        'picked_up'       => '🚴 Đang đi giao',
-        'completed'       => '✅ Đã giao thành công',
-        'failed_delivery' => '❌ Giao thất bại',
-    ];
+    'shipping'        => 'bg-indigo-500/20 text-indigo-400',
+    'picked_up'       => 'bg-cyan-500/20 text-cyan-400',
+    'completed'       => 'bg-green-500/20 text-green-400',
+    'failed_delivery' => 'bg-red-500/20 text-red-400',
+];
+$statusLabels = [
+    'shipping'        => '📋 Chờ lấy hàng',
+    'picked_up'       => '🚴 Đang giao hàng',
+    'completed'       => '✅ Đã giao thành công',
+    'failed_delivery' => '❌ Giao thất bại',
+];
+
 @endphp
 
 @if($orders->count() > 0)

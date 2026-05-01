@@ -11,25 +11,26 @@
             <div class="text-right">
                 @php
                 $statusLabels = [
-                    'pending' => 'Chờ xác nhận',
-                    'confirmed' => 'Đã xác nhận',
-                    'picked_up'        => 'Đã lấy hàng',
-                    'shipping' => 'Đang giao hàng',
-                    'failed_delivery' => 'Giao hàng không thành công',
-                    'completed' => 'Hoàn thành',
-                    'cancelled' => 'Đã huỷ',
-                    'refunded' => 'Đã hoàn hàng'
-                ];
-                $statusColors = [
-                    'pending' => 'bg-yellow-100 text-yellow-800',
-                    'confirmed' => 'bg-blue-100 text-blue-800',
-                      'picked_up'        => 'bg-indigo-100 text-indigo-800',
-                    'shipping' => 'bg-indigo-100 text-indigo-800',
-                    'failed_delivery' => 'bg-red-100 text-red-800',
-                    'completed' => 'bg-green-100 text-green-800',
-                    'cancelled' => 'bg-red-100 text-red-800',
-                    'refunded' => 'bg-orange-100 text-orange-800'
-                ];
+    'pending'          => 'Chờ xác nhận',
+    'confirmed'        => 'Đã xác nhận',
+    'shipping'         => 'Đã nhận hàng',
+    'picked_up'        => 'Đang giao hàng',
+    'failed_delivery'  => 'Giao hàng không thành công',
+    'completed'        => 'Hoàn thành',
+    'cancelled'        => 'Đã huỷ',
+    'refunded'         => 'Đã hoàn hàng',
+];
+$statusColors = [
+    'pending'          => 'bg-yellow-100 text-yellow-800',
+    'confirmed'        => 'bg-blue-100 text-blue-800',
+    'shipping'         => 'bg-indigo-100 text-indigo-800',
+    'picked_up'        => 'bg-cyan-100 text-cyan-800',
+    'failed_delivery'  => 'bg-red-100 text-red-800',
+    'completed'        => 'bg-green-100 text-green-800',
+    'cancelled'        => 'bg-red-100 text-red-800',
+    'refunded'         => 'bg-orange-100 text-orange-800',
+];
+
                 @endphp
                 <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full {{ $statusColors[$order->status] ?? 'bg-gray-100 text-gray-800' }}">
                     {{ $statusLabels[$order->status] ?? $order->status }}
@@ -213,6 +214,18 @@
         </div>
         @endif
     </div>
+
+    @if($order->status === 'cancelled')
+<div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+    <h4 class="font-medium text-red-700 mb-1">Lý do hủy đơn:</h4>
+    @if($order->cancellation_reason)
+        <p class="text-red-600 text-sm whitespace-pre-line">{{ $order->cancellation_reason }}</p>
+    @else
+        <p class="text-gray-400 text-sm italic">Không có lý do được ghi nhận.</p>
+    @endif
+</div>
+@endif
+
 
     {{-- ===== HOÀN HÀNG ===== --}}
     @if($order->status === 'completed')
