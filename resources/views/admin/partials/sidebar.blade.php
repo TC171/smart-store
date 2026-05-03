@@ -27,6 +27,8 @@
                 ['route' => 'admin.users.index', 'label' => 'Tài khoản', 'icon' => '👥'],
                 ['route' => 'admin.admins.index', 'label' => 'Quản trị viên', 'icon' => '👑'],
                 ['route' => 'admin.customers.index', 'label' => 'Khách hàng', 'icon' => '👤'],
+                ['route' => 'admin.post-categories.index', 'label' => 'Danh mục Tin', 'icon' => '📂'],
+                ['route' => 'admin.posts.index', 'label' => 'Quản lý Tin tức', 'icon' => '📰'],
             ];
 
             $pendingReviews = \App\Models\Review::where('is_approved', false)->count();
