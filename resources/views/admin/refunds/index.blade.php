@@ -20,10 +20,13 @@
         <form method="GET" class="flex flex-wrap gap-4">
             <select name="status" class="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500">
                 <option value="">-- Tất cả trạng thái --</option>
-                <option value="pending"  {{ request('status') === 'pending'  ? 'selected' : '' }}>🕐 Chờ xét duyệt</option>
-                <option value="approved_return" {{ request('status') === 'approved_return' ? 'selected' : '' }}>📦 Chờ gửi hàng</option>
-                <option value="refunded" {{ request('status') === 'refunded' ? 'selected' : '' }}>✅ Đã hoàn hàng</option>
-                <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>❌ Đã từ chối</option>
+                <option value="pending"           {{ request('status') === 'pending'           ? 'selected' : '' }}>⏳ Chờ xét duyệt</option>
+                <option value="approved_return"   {{ request('status') === 'approved_return'   ? 'selected' : '' }}>📋 Chờ shipper lấy hàng</option>
+                <option value="shipper_picking"   {{ request('status') === 'shipper_picking'   ? 'selected' : '' }}>🚚 Shipper đang lấy hàng</option>
+                <option value="shipper_returning" {{ request('status') === 'shipper_returning' ? 'selected' : '' }}>🔄 Đang chuyển về shop</option>
+                <option value="goods_received"    {{ request('status') === 'goods_received'    ? 'selected' : '' }}>📦 Hàng đã về shop</option>
+                <option value="refunded"          {{ request('status') === 'refunded'          ? 'selected' : '' }}>✅ Đã hoàn tiền</option>
+                <option value="rejected"          {{ request('status') === 'rejected'          ? 'selected' : '' }}>❌ Đã từ chối</option>
             </select>
             <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Lọc</button>
         </form>
@@ -73,10 +76,13 @@
                     <td class="px-5 py-4">
                         @php
                         $statusMap = [
-                            'pending'         => ['bg-yellow-500/20 text-yellow-400', '🕐 Chờ duyệt'],
-                            'approved_return' => ['bg-blue-500/20 text-blue-400',     '📦 Chờ gửi hàng'],
-                            'refunded'        => ['bg-green-500/20 text-green-400',   '✅ Đã hoàn hàng'],
-                            'rejected'        => ['bg-red-500/20 text-red-400',       '❌ Từ chối'],
+                            'pending'           => ['bg-yellow-500/20 text-yellow-400', '⏳ Chờ duyệt'],
+                            'approved_return'   => ['bg-blue-500/20 text-blue-400',     '📋 Chờ shipper'],
+                            'shipper_picking'   => ['bg-cyan-500/20 text-cyan-400',     '🚚 Đang lấy hàng'],
+                            'shipper_returning' => ['bg-indigo-500/20 text-indigo-400', '🔄 Đang về shop'],
+                            'goods_received'    => ['bg-orange-500/20 text-orange-400', '📦 Hàng về shop'],
+                            'refunded'          => ['bg-green-500/20 text-green-400',   '✅ Đã hoàn tiền'],
+                            'rejected'          => ['bg-red-500/20 text-red-400',       '❌ Từ chối'],
                         ];
                         @endphp
                         <span class="px-2 py-1 rounded-full text-xs font-bold {{ $statusMap[$refund->status][0] ?? 'bg-gray-500/20 text-gray-400' }}">

@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Product;
+use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +24,18 @@ class HomeController extends Controller
             'coupons' => $this->getCoupons(),
             'newProducts' => $this->getNewProducts(),
             'categoryProducts' => $this->getCategoryProducts(),
+            'latestPosts' => $this->getLatestPosts(),
         ]);
+    }
+
+    protected function getLatestPosts()
+    {
+        return Post::where('status', 1)
+            ->where('published_at', '<=', now())
+            ->orderBy('published_at', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
     }
 
     protected function getBanners()

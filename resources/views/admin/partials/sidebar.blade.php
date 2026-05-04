@@ -22,14 +22,21 @@
                 ['route' => 'admin.banners.index', 'label' => 'Banner', 'icon' => '🎬'],
                 ['route' => 'admin.coupons.index', 'label' => 'Mã giảm giá', 'icon' => '🏷️'],
                 ['route' => 'admin.orders.index', 'label' => 'Đơn hàng', 'icon' => '📦'],
+                ['route' => 'admin.shippers.index', 'label' => 'Shipper', 'icon' => '🚴'],
                 ['route' => 'admin.inventory-history.index', 'label' => 'Lịch sử kho', 'icon' => '📊'],
                 ['route' => 'admin.users.index', 'label' => 'Tài khoản', 'icon' => '👥'],
                 ['route' => 'admin.admins.index', 'label' => 'Quản trị viên', 'icon' => '👑'],
                 ['route' => 'admin.customers.index', 'label' => 'Khách hàng', 'icon' => '👤'],
+                ['route' => 'admin.post-categories.index', 'label' => 'Danh mục Tin', 'icon' => '📂'],
+                ['route' => 'admin.posts.index', 'label' => 'Quản lý Tin tức', 'icon' => '📰'],
             ];
 
             $pendingReviews = \App\Models\Review::where('is_approved', false)->count();
             $pendingRefunds = \App\Models\RefundRequest::where('status', 'pending')->count();
+
+            // Đơn confirmed chưa được phân công shipper
+            // Đơn confirmed chưa được phân công shipper
+            $unassignedOrders = \App\Models\Order::where('status', 'confirmed')->whereNull('shipper_id')->count();
         @endphp
 
         @foreach($menu as $item)
@@ -63,6 +70,19 @@
             @if($pendingRefunds > 0)
                 <span class="bg-red-500 text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
                     {{ $pendingRefunds > 99 ? '99+' : $pendingRefunds }}
+                </span>
+            @endif
+        </a>
+
+        {{-- Phân công Shipper với badge đơn chưa có shipper --}}
+        <a href="{{ route('admin.shippers.assign') }}"
+            class="flex items-center gap-3 px-4 py-2 rounded-xl transition-all duration-200
+            {{ request()->routeIs('admin.shippers.assign') ? 'bg-cyan-500/20 text-cyan-300 shadow-md' : 'hover:bg-white/10' }}">
+            <span class="text-lg">📦</span>
+            <span class="font-medium flex-1">Phân công shipper</span>
+            @if($unassignedOrders > 0)
+                <span class="bg-orange-500 text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
+                    {{ $unassignedOrders > 99 ? '99+' : $unassignedOrders }}
                 </span>
             @endif
         </a>

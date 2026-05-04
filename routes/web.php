@@ -43,7 +43,10 @@ use App\Http\Controllers\Frontend\ProfileController;
 use App\Http\Controllers\Frontend\RefundController;
 use App\Http\Controllers\Frontend\NewsletterController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
-
+use App\Http\Controllers\Admin\ShipperController;
+use App\Http\Controllers\Shipper\AuthController as ShipperAuthController;
+use App\Http\Controllers\Shipper\DeliveryController;
+use App\Http\Controllers\Shipper\ReturnController as ShipperReturnController;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,6 +61,35 @@ use App\Http\Controllers\Frontend\AIController;
 Route::post('/chat-ai', [AIController::class, 'chat']);
 Route::get('/test-ai', [AIController::class, 'chat']);
 Route::get('/ai/history', [AIController::class, 'history']);
+
+// =================== SHIPPER PORTAL ROUTES ===================
+Route::prefix('shipper')->name('shipper.')->group(function () {
+
+    // Guest (chưa đăng nhập)
+    Route::middleware('guest:shipper')->group(function () {
+        Route::get('/login',  [ShipperAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [ShipperAuthController::class, 'login'])->name('login.post');
+    });
+
+    // Đã đăng nhập
+    Route::middleware(['auth:shipper', 'shipper'])->group(function () {
+        Route::get('/dashboard', [DeliveryController::class, 'dashboard'])->name('dashboard');
+
+        Route::get('/deliveries',                    [DeliveryController::class, 'index'])->name('deliveries.index');
+        Route::get('/deliveries/{delivery}',         [DeliveryController::class, 'show'])->name('deliveries.show');
+        Route::post('/deliveries/{delivery}/pickup', [DeliveryController::class, 'pickup'])->name('deliveries.pickup');
+        Route::post('/deliveries/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('deliveries.updateStatus');
+
+        // Hoàn hàng — Shipper có thể cập nhật trạng thái quá trình hoàn
+        Route::get('/returns',                          [ShipperReturnController::class, 'index'])->name('returns.index');
+        Route::get('/returns/{return}',                 [ShipperReturnController::class, 'show'])->name('returns.show');
+        Route::post('/returns/{return}/pickup',         [ShipperReturnController::class, 'confirmPickup'])->name('returns.pickup');
+        Route::post('/returns/{return}/returning',      [ShipperReturnController::class, 'confirmReturning'])->name('returns.returning');
+        Route::post('/returns/{return}/delivered',      [ShipperReturnController::class, 'confirmDelivered'])->name('returns.delivered');
+
+        Route::post('/logout', [ShipperAuthController::class, 'logout'])->name('logout');
+    });
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
 
@@ -85,6 +117,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('banners', BannerController::class);
         Route::delete('banners/{banner}/image', [BannerController::class, 'deleteImage'])->name('banners.image-delete');
 
+        Route::resource('post-categories', App\Http\Controllers\Admin\PostCategoryController::class);
+        Route::resource('posts', App\Http\Controllers\Admin\PostController::class);
+
         Route::resource('coupons', CouponController::class)->except(['show']);
 
         // Cấu hình Route Order Admin chuẩn
@@ -108,6 +143,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('product-attributes', ProductAttributeController::class)->except(['show']);
         Route::resource('inventory-history', InventoryHistoryController::class)->except(['edit', 'update']);
         Route::resource('admins', AdminController::class);
+
+        // =================== SHIPPER MANAGEMENT ===================
+        Route::prefix('shippers')->name('shippers.')->group(function () {
+            Route::get('/',       [ShipperController::class, 'index'])->name('index');
+            Route::get('/create', [ShipperController::class, 'create'])->name('create');
+            Route::post('/',      [ShipperController::class, 'store'])->name('store');
+            Route::get('/{shipper}/edit', [ShipperController::class, 'edit'])->name('edit');
+            Route::put('/{shipper}',      [ShipperController::class, 'update'])->name('update');
+            Route::delete('/{shipper}',   [ShipperController::class, 'destroy'])->name('destroy');
+
+            Route::get('/deliveries',       [ShipperController::class, 'deliveries'])->name('deliveries');
+            Route::get('/assign',           [ShipperController::class, 'assign'])->name('assign');
+            Route::post('/assign',          [ShipperController::class, 'assignStore'])->name('assign.store');
+        });
         Route::view('profile', 'admin.profile')->name('profile');
         Route::view('password', 'admin.password')->name('password');
 
@@ -178,7 +227,6 @@ Route::middleware(['auth:web', 'customer'])
         // Hoàn hàng / Hoàn tiền
         Route::get('/orders/{order}/refund', [RefundController::class, 'create'])->name('orders.refund.create');
         Route::post('/orders/{order}/refund', [RefundController::class, 'store'])->name('orders.refund.store');
-
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
 
         // 🔔 Notification API routes
@@ -210,7 +258,7 @@ Route::middleware(['auth:web', 'customer'])
             return response()->json(['success' => true]);
         })->name('notifications.read');
     });
-
+    
 /*
 |--------------------------------------------------------------------------
 | FRONTEND PUBLIC ROUTES
@@ -255,6 +303,14 @@ Route::get('/dieu-khoan-dich-vu', [PageController::class, 'terms'])->name('page.
 Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
 Route::post('/lien-he', [PageController::class, 'submitContact'])->name('page.contact.submit');
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+
+/*
+|--------------------------------------------------------------------------
+| NEWS ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::get('/tin-tuc', [\App\Http\Controllers\Frontend\NewsController::class, 'index'])->name('news.index');
+Route::get('/tin-tuc/{slug}', [\App\Http\Controllers\Frontend\NewsController::class, 'show'])->name('news.show');
 
 /*
 |--------------------------------------------------------------------------
