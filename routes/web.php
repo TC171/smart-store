@@ -119,6 +119,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('post-categories', App\Http\Controllers\Admin\PostCategoryController::class);
         Route::resource('posts', App\Http\Controllers\Admin\PostController::class);
+        Route::post('posts/upload-image', [App\Http\Controllers\Admin\PostController::class, 'uploadImage'])->name('posts.upload.image');
 
         Route::resource('coupons', CouponController::class)->except(['show']);
 

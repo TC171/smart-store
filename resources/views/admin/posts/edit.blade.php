@@ -37,7 +37,7 @@
 
         <div class="mb-4">
             <label class="block text-gray-400 mb-2">Nội dung chi tiết (HTML) (*)</label>
-            <textarea name="content" class="w-full bg-gray-800 text-white rounded p-3 h-64" required>{{ $post->content }}</textarea>
+            <textarea id="content" name="content" class="w-full bg-gray-800 text-white rounded p-3 h-64">{{ $post->content }}</textarea>
         </div>
 
         <div class="grid grid-cols-2 gap-6 mb-6">
@@ -57,4 +57,57 @@
         <button type="submit" class="bg-cyan-500 hover:bg-cyan-600 text-black px-6 py-2 rounded font-bold">Cập nhật Bài</button>
     </form>
 </div>
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+<script>
+class UploadAdapter {
+    constructor(loader) {
+        this.loader = loader;
+    }
+
+    upload() {
+        return this.loader.file.then(file => new Promise((resolve, reject) => {
+            const data = new FormData();
+            data.append('upload', file);
+
+            fetch("{{ route('admin.posts.upload.image') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(result => {
+                resolve({
+                    default: result.url
+                });
+            })
+            .catch(error => reject(error));
+        }));
+    }
+
+    abort() {}
+}
+
+function MyCustomUploadAdapterPlugin(editor) {
+    editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+        return new UploadAdapter(loader);
+    };
+}
+
+ClassicEditor
+    .create(document.querySelector('#content'), {
+        extraPlugins: [MyCustomUploadAdapterPlugin],
+    })
+    .catch(error => {
+        console.error(error);
+    });
+</script>
+<style>
+    /* Chỉnh màu CKEditor phù hợp với giao diện tối */
+    .ck-editor__editable {
+        min-height: 400px;
+        color: #000;
+    }
+</style>
 @endsection
