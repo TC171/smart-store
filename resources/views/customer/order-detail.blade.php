@@ -210,6 +210,13 @@
             <p class="text-gray-600">{{ $order->note }}</p>
         </div>
         @endif
+        @if($order->status === 'cancelled' && $order->cancel_reason)
+        <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <h4 class="font-bold text-red-800 mb-1">Lý do hủy đơn:</h4>
+            <p class="text-sm text-red-700 whitespace-pre-line">{{ $order->cancel_reason }}</p>
+        </div>
+        @endif
+
     </div>
 
     {{-- ===== HOÀN HÀNG ===== --}}
@@ -310,6 +317,12 @@
         <button type="button" onclick="openCancelModal()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium inline-block transition-colors shadow-sm shadow-red-200">
             Hủy đơn hàng
         </button>
+    @endif
+    
+    @if($order->status === 'completed' && !$order->refundRequests->whereIn('status', ['pending', 'approved_return', 'refunded'])->count())
+        <a href="{{ route('customer.orders.refund.create', $order) }}" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium inline-block transition-colors shadow-sm shadow-orange-200">
+            Yêu cầu hoàn hàng
+        </a>
     @endif
     </div>
 

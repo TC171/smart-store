@@ -121,7 +121,7 @@
                 <ul class="text-amber-600 space-y-1 text-xs">
                     <li>• Video phải quay từ lúc <strong>chưa bóc kiện hàng</strong> cho đến khi phát hiện vấn đề</li>
                     <li>• Video phải rõ nét, thấy được mã vận đơn trên kiện hàng</li>
-                    <li>• Định dạng: MP4, AVI, MOV, WebM — Tối đa 200MB</li>
+                    <li>• Định dạng: MP4, AVI, MOV, WebM — Tối đa 20MB</li>
                     <li>• Yêu cầu sẽ được xem xét trong 1–3 ngày làm việc</li>
                 </ul>
             </div>
@@ -173,7 +173,7 @@
                                     </svg>
                                 </div>
                                 <p class="font-bold text-gray-700 mb-1">Chọn video bóc hàng</p>
-                                <p class="text-xs text-gray-400">MP4, AVI, MOV, WebM — Tối đa 200MB</p>
+                                <p class="text-xs text-gray-400">MP4, AVI, MOV, WebM — Tối đa 20MB</p>
                             </div>
                         </template>
 
@@ -241,9 +241,9 @@ function refundForm() {
             const file = event.target.files[0];
             if (!file) return;
 
-            const maxSize = 200 * 1024 * 1024; // 200MB
+            const maxSize = 20 * 1024 * 1024; // 20MB
             if (file.size > maxSize) {
-                this.sizeError = 'Video vượt quá 200MB. Vui lòng chọn file nhỏ hơn.';
+                this.sizeError = 'Video vượt quá 20MB. Vui lòng chọn file nhỏ hơn.';
                 this.videoFile = null;
                 event.target.value = '';
                 return;

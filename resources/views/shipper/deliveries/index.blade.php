@@ -45,7 +45,7 @@
         <div class="flex flex-col md:flex-row md:items-center gap-4">
             <div class="flex-1">
                 <div class="flex items-center gap-3 mb-2 flex-wrap">
-                    <span class="text-white font-bold">{{ $order->order_number }}</span>
+                    <span class="text-white font-bold">{{ $order->order_number ? $order->order_number : '#' . $order->id }}</span>
                     <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $statusColors[$order->status] ?? 'bg-gray-500/20 text-gray-400' }}">
                         {{ $statusLabels[$order->status] ?? $order->status }}
                     </span>

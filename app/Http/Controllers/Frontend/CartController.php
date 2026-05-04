@@ -487,9 +487,9 @@ class CartController extends Controller
         if ($order->status === 'pending') {
             DB::transaction(function () use ($order, $request, $cancelReason) {
                 $paymentStatus = $order->payment_status;
-                if ($paymentStatus === 'paid') $paymentStatus = 'refunded'; 
+                // Removed auto refund: if ($paymentStatus === 'paid') $paymentStatus = 'refunded';
 
-                $order->update(['status' => 'cancelled', 'payment_status' => $paymentStatus]);
+                $order->update(['status' => 'cancelled', 'payment_status' => $paymentStatus, 'cancel_reason' => $cancelReason]);
 
                 foreach ($order->items as $item) {
                     $variant = ProductVariant::find($item->product_variant_id);

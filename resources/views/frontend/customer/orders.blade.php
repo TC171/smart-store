@@ -100,26 +100,7 @@
                                          </button>
                                      </form>
                                  @else
-                                     @php
-                                         $pendingRefund = $order->refundRequests->where('status', 'pending')->first();
-                                         $approvedRefund = $order->refundRequests->where('status', 'approved_return')->first();
-                                     @endphp
-                                     
-                                     @if($pendingRefund)
-                                         <span title="Đang chờ duyệt hoàn hàng" class="text-yellow-500">
-                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                         </span>
-                                     @elseif($approvedRefund)
-                                         <span title="Đã duyệt, chờ trả hàng" class="text-blue-500">
-                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                         </span>
-                                     @elseif($order->status === 'completed')
-                                         <a href="{{ route('customer.orders.refund.create', $order) }}" 
-                                            title="Yêu cầu hoàn hàng"
-                                            class="text-orange-500 hover:text-orange-700 transition-all transform hover:scale-110">
-                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                         </a>
-                                     @endif
+
                                  @endif
                              </div>
                         </td>

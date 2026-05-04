@@ -13,8 +13,8 @@
 
         @php
             $menu = [
-                ['route' => 'admin.dashboard', 'label' => 'Dashboard', 'icon' => '📊'],
-                ['route' => 'admin.products.index', 'label' => 'Products', 'icon' => '📱'],
+                ['route' => 'admin.dashboard', 'label' => 'Thống kê', 'icon' => '📊'],
+                ['route' => 'admin.products.index', 'label' => 'Sản phẩm', 'icon' => '📱'],
                 ['route' => 'admin.categories.index', 'label' => 'Danh mục', 'icon' => '🗂'],
                 ['route' => 'admin.brands.index', 'label' => 'Thương hiệu', 'icon' => '🏷'],
                 ['route' => 'admin.variants.index', 'label' => 'Biến thể', 'icon' => '🔧'],
@@ -22,7 +22,7 @@
                 ['route' => 'admin.banners.index', 'label' => 'Banner', 'icon' => '🎬'],
                 ['route' => 'admin.coupons.index', 'label' => 'Mã giảm giá', 'icon' => '🏷️'],
                 ['route' => 'admin.orders.index', 'label' => 'Đơn hàng', 'icon' => '📦'],
-                ['route' => 'admin.shippers.index', 'label' => 'Shipper', 'icon' => '🚴'],
+                ['route' => 'admin.shippers.index', 'label' => 'Nhân viên giao hàng', 'icon' => '🚴'],
                 ['route' => 'admin.inventory-history.index', 'label' => 'Lịch sử kho', 'icon' => '📊'],
                 ['route' => 'admin.users.index', 'label' => 'Tài khoản', 'icon' => '👥'],
                 ['route' => 'admin.admins.index', 'label' => 'Quản trị viên', 'icon' => '👑'],

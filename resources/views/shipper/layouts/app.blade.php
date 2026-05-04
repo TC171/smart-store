@@ -68,19 +68,96 @@
 </div>
 
 <main class="max-w-6xl mx-auto px-4 py-6">
-    @if(session('success'))
-        <div class="mb-4 bg-green-500/20 border border-green-500 text-green-400 px-4 py-3 rounded-lg text-sm">
-            ✅ {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="mb-4 bg-red-500/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg text-sm">
-            ❌ {{ session('error') }}
-        </div>
-    @endif
-
     @yield('content')
 </main>
+
+{{-- ===== TOAST NOTIFICATIONS ===== --}}
+@if(session('success') || session('error'))
+<div id="toastContainer" class="fixed top-5 right-5 z-[9999] space-y-3 w-80 pointer-events-none">
+
+    @if(session('success'))
+    <div id="toastSuccess"
+         class="pointer-events-auto relative flex items-start gap-4 bg-gray-900 border border-green-500/40 rounded-2xl px-5 py-4 shadow-2xl shadow-green-900/40 overflow-hidden
+                transition-all duration-500 translate-x-0 opacity-100">
+        <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+        </div>
+        <div class="flex-1 min-w-0 pt-0.5">
+            <p class="text-xs font-bold text-green-400 uppercase tracking-widest mb-0.5">Thành công ✓</p>
+            <p class="text-sm text-gray-200 leading-snug">{{ session('success') }}</p>
+        </div>
+        <button onclick="dismissToast('toastSuccess')" class="flex-shrink-0 text-gray-600 hover:text-gray-400 transition mt-0.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        <div class="absolute bottom-0 left-0 h-[3px] bg-gradient-to-r from-green-500 to-cyan-400 toast-progress-bar"></div>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div id="toastError"
+         class="pointer-events-auto relative flex items-start gap-4 bg-gray-900 border border-red-500/40 rounded-2xl px-5 py-4 shadow-2xl shadow-red-900/40 overflow-hidden
+                transition-all duration-500 translate-x-0 opacity-100">
+        <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        <div class="flex-1 min-w-0 pt-0.5">
+            <p class="text-xs font-bold text-red-400 uppercase tracking-widest mb-0.5">Có lỗi xảy ra ✗</p>
+            <p class="text-sm text-gray-200 leading-snug">{{ session('error') }}</p>
+        </div>
+        <button onclick="dismissToast('toastError')" class="flex-shrink-0 text-gray-600 hover:text-gray-400 transition mt-0.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        <div class="absolute bottom-0 left-0 h-[3px] bg-gradient-to-r from-red-500 to-orange-400 toast-progress-bar"></div>
+    </div>
+    @endif
+
+</div>
+
+<style>
+    .toast-progress-bar {
+        animation: toastShrink 4s linear forwards;
+    }
+    @keyframes toastShrink {
+        from { width: 100%; }
+        to   { width: 0%; }
+    }
+</style>
+
+<script>
+    function dismissToast(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(115%)';
+        setTimeout(() => el.remove(), 450);
+    }
+    // Slide in on load
+    document.addEventListener('DOMContentLoaded', function () {
+        ['toastSuccess', 'toastError'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.transform = 'translateX(115%)';
+            el.style.opacity = '0';
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    el.style.transform = 'translateX(0)';
+                    el.style.opacity = '1';
+                }, 50);
+            });
+            // Auto dismiss
+            setTimeout(() => dismissToast(id), 4500);
+        });
+    });
+</script>
+@endif
 
 </body>
 </html>
