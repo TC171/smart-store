@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Shipper;
 
 use App\Http\Controllers\Controller;
 use App\Models\RefundRequest;
+use Illuminate\Http\Request;
 
 class ReturnController extends Controller
 {
@@ -12,19 +13,15 @@ class ReturnController extends Controller
         return auth('shipper')->id();
     }
 
-    /**
-     * Danh sách đơn hoàn hàng mà admin đã chỉ định cho shipper này.
-     */
     public function index()
     {
         $returns = RefundRequest::with(['order', 'user'])
             ->where('return_shipper_id', $this->shipperId())
             ->whereIn('status', [
-                'approved_return',
-                'shipper_picking',
-                'shipper_returning',
-                'goods_received',
-                'refunded',
+                'approved_return',   // Chờ shipper đi lấy
+                'shipper_returning', // Shipper đang giữ hàng mang về
+                'goods_received',    // Đã trả hàng cho shop
+                'refunded',          // Đã hoàn tiền xong
             ])
             ->latest()
             ->paginate(15);
@@ -32,9 +29,6 @@ class ReturnController extends Controller
         return view('shipper.returns.index', compact('returns'));
     }
 
-    /**
-     * Chi tiết đơn hoàn hàng.
-     */
     public function show(RefundRequest $return)
     {
         abort_unless($return->return_shipper_id === $this->shipperId(), 403);
@@ -43,41 +37,29 @@ class ReturnController extends Controller
     }
 
     /**
-     * Shipper xác nhận đã đến lấy hàng từ tay khách.
+     * GỘP BƯỚC: Xác nhận lấy hàng từ khách -> Chuyển thẳng sang "Đang về shop"
      */
     public function confirmPickup(RefundRequest $return)
     {
         abort_unless($return->return_shipper_id === $this->shipperId(), 403);
+        // Chỉ cho phép nếu Admin đã duyệt đơn hoàn (approved_return)
         abort_unless($return->status === 'approved_return', 422);
 
         $return->update([
-            'status'       => 'shipper_picking',
+            'status'       => 'shipper_returning', // Bỏ qua bước shipper_picking rườm rà
             'picked_up_at' => now(),
         ]);
 
-        return back()->with('success', '🚚 Đã xác nhận lấy hàng từ khách. Vui lòng chuyển hàng về shop.');
+        return back()->with('success', '🚚 Đã xác nhận lấy hàng từ khách. Đơn hàng hiện trong trạng thái "Đang chuyển về shop".');
     }
 
     /**
-     * Shipper xác nhận đang trên đường về shop.
-     */
-    public function confirmReturning(RefundRequest $return)
-    {
-        abort_unless($return->return_shipper_id === $this->shipperId(), 403);
-        abort_unless($return->status === 'shipper_picking', 422);
-
-        $return->update(['status' => 'shipper_returning']);
-
-        return back()->with('success', '🔄 Đã cập nhật: đang chuyển hàng về shop.');
-    }
-
-    /**
-     * Shipper xác nhận đã giao hàng về đến shop.
-     * Sau bước này Admin sẽ xác nhận và hoàn tiền cho khách.
+     * GỘP BƯỚC: Xác nhận giao hàng cho kho -> Chuyển sang "Chờ Admin hoàn tiền"
      */
     public function confirmDelivered(RefundRequest $return)
     {
         abort_unless($return->return_shipper_id === $this->shipperId(), 403);
+        // Phải đang giữ hàng (shipper_returning) mới được bấm bàn giao
         abort_unless($return->status === 'shipper_returning', 422);
 
         $return->update([
@@ -85,6 +67,10 @@ class ReturnController extends Controller
             'returned_at' => now(),
         ]);
 
-        return back()->with('success', '📦 Hàng đã về shop! Admin sẽ kiểm tra và xác nhận hoàn tiền cho khách.');
+        $return->order->update([
+            'status' => 'refunded' // Cập nhật trạng thái đơn hàng thành Đã hoàn hàng, nhưng chưa hoàn tiền
+        ]);
+
+        return back()->with('success', '📦 Đã bàn giao hàng về shop thành công! Chờ Admin kiểm hàng và hoàn tiền.');
     }
 }

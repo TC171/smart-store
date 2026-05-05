@@ -42,6 +42,7 @@ use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\ProfileController;
 use App\Http\Controllers\Frontend\RefundController;
 use App\Http\Controllers\Frontend\NewsletterController;
+use App\Http\Controllers\Frontend\WishlistController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ShipperController;
 use App\Http\Controllers\Shipper\AuthController as ShipperAuthController;
@@ -228,6 +229,11 @@ Route::middleware(['auth:web', 'customer'])
         // Hoàn hàng / Hoàn tiền
         Route::get('/orders/{order}/refund', [RefundController::class, 'create'])->name('orders.refund.create');
         Route::post('/orders/{order}/refund', [RefundController::class, 'store'])->name('orders.refund.store');
+
+        // ❤️ Wishlist
+        Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+        Route::post('/wishlist/{product}/remove', [WishlistController::class, 'remove'])->name('wishlist.remove');
+
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
 
         // 🔔 Notification API routes
@@ -304,6 +310,9 @@ Route::get('/dieu-khoan-dich-vu', [PageController::class, 'terms'])->name('page.
 Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
 Route::post('/lien-he', [PageController::class, 'submitContact'])->name('page.contact.submit');
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+
+// ❤️ Wishlist toggle (AJAX, yêu cầu đăng nhập)
+Route::middleware(['auth:web'])->post('/wishlist/{product}/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
 
 /*
 |--------------------------------------------------------------------------

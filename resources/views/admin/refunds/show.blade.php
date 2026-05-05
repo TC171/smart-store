@@ -135,6 +135,8 @@
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $refund->type === 'return' ? 'bg-orange-500/20 text-orange-400' : 'bg-green-500/20 text-green-400' }}">
                                 {{ $refund->type_label }}
                             </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -157,17 +159,13 @@
                         Video minh chứng
                     </p>
                     <div class="rounded-lg overflow-hidden border border-gray-700 aspect-video bg-black">
-                        <video controls class="w-full h-full" preload="metadata">
-                            <source src="{{ asset('storage/' . $refund->video_path) }}" type="video/mp4">
+                        <video controls class="w-full h-full object-contain" preload="metadata">
+                            <source src="{{ asset('storage/' . $refund->video_path) }}">
                             Trình duyệt không hỗ trợ video.
                         </video>
                     </div>
                     <div class="flex justify-between items-center mt-2">
-                        <span class="text-gray-500 text-[10px] truncate max-w-[150px]">{{ $refund->video_original_name }}</span>
-                        <a href="{{ asset('storage/' . $refund->video_path) }}" download
-                           class="text-cyan-400 hover:text-cyan-300 text-[10px] font-bold uppercase tracking-tighter">
-                            Tải xuống ↓
-                        </a>
+                        <span class="text-gray-500 text-[10px] truncate max-w-[200px]">{{ $refund->video_original_name }}</span>
                     </div>
                 </div>
                 @else

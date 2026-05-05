@@ -69,12 +69,34 @@
                     </div>
 
                     @if(session('success'))
-                        <div class="mb-8 p-6 bg-green-50 border border-green-100 rounded-3xl flex items-center gap-4 animate-bounce-short">
-                            <div class="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center flex-shrink-0">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                            </div>
-                            <p class="text-green-800 font-bold tracking-tight">{{ session('success') }}</p>
+                    {{-- Toast Notification --}}
+                    <div id="successToast"
+                        class="fixed top-6 right-6 z-[9999] flex items-center gap-4 bg-white border border-green-200 shadow-2xl shadow-green-100 rounded-2xl px-6 py-4 max-w-sm transition-all duration-500 translate-x-0 opacity-100">
+                        <div class="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
                         </div>
+                        <div class="flex-1">
+                            <p class="font-black text-slate-900 text-sm tracking-tight">Gửi thành công! 🎉</p>
+                            <p class="text-slate-500 text-xs mt-0.5">{{ session('success') }}</p>
+                        </div>
+                        <button onclick="document.getElementById('successToast').remove()" class="text-slate-400 hover:text-slate-600 ml-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <script>
+                        setTimeout(function() {
+                            const toast = document.getElementById('successToast');
+                            if (toast) {
+                                toast.style.opacity = '0';
+                                toast.style.transform = 'translateX(120%)';
+                                setTimeout(() => toast.remove(), 500);
+                            }
+                        }, 4000);
+                    </script>
                     @endif
 
                     <form action="{{ route('page.contact.submit') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">

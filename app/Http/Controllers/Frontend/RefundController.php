@@ -63,11 +63,11 @@ class RefundController extends Controller
         $request->validate([
             'type'   => 'required|in:refund,return',
             'reason' => 'required|string|min:10|max:1000',
-            'video'  => 'required|file|mimetypes:video/mp4,video/avi,video/quicktime,video/x-msvideo,video/webm|max:204800',
+            'video'  => 'required|file|mimetypes:video/mp4,video/avi,video/quicktime,video/x-msvideo,video/webm|max:20480',
         ], [
             'video.required'   => 'Video bóc hàng là bắt buộc.',
             'video.mimetypes'  => 'Video phải có định dạng MP4, AVI, MOV hoặc WebM.',
-            'video.max'        => 'Video không được vượt quá 200MB.',
+            'video.max'        => 'Video không được vượt quá 20MB.',
             'reason.required'  => 'Vui lòng nhập lý do hoàn hàng.',
             'reason.min'       => 'Lý do hoàn hàng phải có ít nhất 10 ký tự.',
         ]);

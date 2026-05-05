@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('posts', function (Blueprint $table) {
+        if (!Schema::hasTable('posts')) {
+            Schema::create('posts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('category_id')->nullable()->constrained('post_categories')->nullOnDelete();
             $table->string('title');
@@ -27,6 +28,7 @@ return new class extends Migration
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
         });
+        }
     }
 
     /**

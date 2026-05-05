@@ -10,7 +10,9 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
+{
+    // Kiểm tra nếu bảng chưa tồn tại thì mới tạo
+    if (!Schema::hasTable('notifications')) {
         Schema::create('notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('type');
@@ -20,7 +22,7 @@ return new class extends Migration
             $table->timestamps();
         });
     }
-
+}
     /**
      * Reverse the migrations.
      */

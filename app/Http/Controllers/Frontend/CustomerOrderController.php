@@ -59,7 +59,16 @@ class CustomerOrderController extends Controller
             return back()->with('error', 'Đơn hàng đã được vận chuyển hoặc xử lý, không thể hủy.');
         }
 
-        $order->update(['status' => 'cancelled']);
+        $request->validate([
+            'cancel_reason' => 'required|string|max:500'
+        ], [
+            'cancel_reason.required' => 'Vui lòng nhập lý do hủy đơn.'
+        ]);
+
+        $order->update([
+            'status' => 'cancelled',
+            'cancel_reason' => $request->cancel_reason
+        ]);
 
         return back()->with('success', 'Đơn hàng #' . $order->order_number . ' đã được hủy thành công.');
     }

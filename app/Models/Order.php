@@ -31,6 +31,7 @@ class Order extends Model
         'shipping_postal_code',
         'shipping_country',
         'note',
+        'cancel_reason',
         'ordered_at',
         'completed_at',
     ];

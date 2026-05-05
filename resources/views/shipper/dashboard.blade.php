@@ -48,7 +48,7 @@
             <div class="flex items-start justify-between gap-4">
                 <div class="flex-1">
                     <div class="flex items-center gap-3 mb-2">
-                        <span class="text-white font-bold">{{ $order->order_number }}</span>
+                        <span class="text-white font-bold">{{ $order->order_number ? $order->order_number : '#' . $order->id }}</span>
                         @if($order->status === 'picked_up')
                             <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-400">🚴 Đang đi giao</span>
                         @else
