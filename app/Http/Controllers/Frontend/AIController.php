@@ -114,6 +114,12 @@ DB::table('chats')->insert([
                         ->orderBy('id', 'asc')
                         ->value('image');
 
+                    if (!$image) {
+                        $image = DB::table('products')
+                            ->where('id', $item->product_id)
+                            ->value('thumbnail');
+                    }
+
                     if ($image) {
 
     $image = trim($image);
@@ -238,7 +244,7 @@ if (!$isOrderQuestion) {
     // Get filtered products
     $products = $query
         ->with('variants')
-        ->select('id','name','slug','category_id')
+        ->select('id','name','slug','category_id', 'thumbnail', 'price')
         ->orderBy('id', 'desc')
         ->limit(10)
         ->get();
@@ -246,27 +252,40 @@ if (!$isOrderQuestion) {
     foreach ($products as $p) {
 
 
-$images = DB::table('product_images')
-    ->where('product_id', $p->id)
-    ->orderBy('is_main', 'desc')
-    ->orderBy('id', 'asc')
-    ->pluck('image');
-
 $imageUrl = asset('images/no-image.png');
 
-foreach ($images as $img) {
-
-    $img = trim($img);
+if ($p->thumbnail) {
+    $img = trim($p->thumbnail);
     $img = str_replace('\\', '/', $img);
     $img = preg_replace('#^/?storage/#', '', $img);
     $img = ltrim($img, '/');
-
     $fullPath = public_path('storage/' . $img);
 
-    // ✅ lấy ảnh đầu tiên hợp lệ
     if (file_exists($fullPath)) {
         $imageUrl = asset('storage/' . $img);
-        break;
+    }
+}
+
+if ($imageUrl == asset('images/no-image.png')) {
+    $images = DB::table('product_images')
+        ->where('product_id', $p->id)
+        ->orderBy('is_main', 'desc')
+        ->orderBy('id', 'asc')
+        ->pluck('image');
+
+    foreach ($images as $img) {
+        $img = trim($img);
+        $img = str_replace('\\', '/', $img);
+        $img = preg_replace('#^/?storage/#', '', $img);
+        $img = ltrim($img, '/');
+
+        $fullPath = public_path('storage/' . $img);
+
+        // ✅ lấy ảnh đầu tiên hợp lệ
+        if (file_exists($fullPath)) {
+            $imageUrl = asset('storage/' . $img);
+            break;
+        }
     }
 }
 
