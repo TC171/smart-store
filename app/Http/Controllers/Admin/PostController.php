@@ -25,6 +25,7 @@ class PostController extends Controller
 
     public function store(Request $request)
     {
+
         $request->validate([
             'title' => 'required|string|max:255',
             'category_id' => 'nullable|exists:post_categories,id',
@@ -41,7 +42,12 @@ class PostController extends Controller
         $data['is_featured'] = $request->has('is_featured') ? 1 : 0;
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('posts', 'public');
+            $path = $request->file('image')->store('posts', 'public');
+            $data['image'] = $path;
+            
+            $publicPath = public_path('storage/' . $path);
+            if (!file_exists(dirname($publicPath))) mkdir(dirname($publicPath), 0755, true);
+            copy(storage_path('app/public/' . $path), $publicPath);
         }
 
         Post::create($data);
@@ -71,8 +77,17 @@ class PostController extends Controller
         $data['is_featured'] = $request->has('is_featured') ? 1 : 0;
 
         if ($request->hasFile('image')) {
-            if ($post->image) Storage::disk('public')->delete($post->image);
-            $data['image'] = $request->file('image')->store('posts', 'public');
+            if ($post->image) {
+                Storage::disk('public')->delete($post->image);
+                $oldPublicPath = public_path('storage/' . $post->image);
+                if (file_exists($oldPublicPath)) unlink($oldPublicPath);
+            }
+            $path = $request->file('image')->store('posts', 'public');
+            $data['image'] = $path;
+            
+            $publicPath = public_path('storage/' . $path);
+            if (!file_exists(dirname($publicPath))) mkdir(dirname($publicPath), 0755, true);
+            copy(storage_path('app/public/' . $path), $publicPath);
         }
 
         $post->update($data);
@@ -81,8 +96,28 @@ class PostController extends Controller
 
     public function destroy(Post $post)
     {
-        if ($post->image) Storage::disk('public')->delete($post->image);
+        if ($post->image) {
+            Storage::disk('public')->delete($post->image);
+            $oldPublicPath = public_path('storage/' . $post->image);
+            if (file_exists($oldPublicPath)) unlink($oldPublicPath);
+        }
         $post->delete();
         return back()->with('success', 'Xóa bài viết thành công');
+    }
+
+    public function uploadImage(Request $request)
+    {
+        if ($request->hasFile('upload')) {
+            $path = $request->file('upload')->store('posts/editor', 'public');
+            
+            $publicPath = public_path('storage/' . $path);
+            if (!file_exists(dirname($publicPath))) mkdir(dirname($publicPath), 0755, true);
+            copy(storage_path('app/public/' . $path), $publicPath);
+
+            return response()->json([
+                'url' => asset('storage/' . $path)
+            ]);
+        }
+        return response()->json(['error' => 'Upload failed'], 400);
     }
 }
