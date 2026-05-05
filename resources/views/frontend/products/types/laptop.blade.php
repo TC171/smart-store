@@ -13,19 +13,31 @@
         <div class="md:col-span-7 bg-white rounded-3xl shadow-lg p-6 flex flex-col items-center h-full">
 
             {{-- MAIN IMAGE --}}
-            <img id="mainImage"
-                 src="{{ asset('storage/'.$product->thumbnail) }}"
-                 class="w-full h-[600px] md:h-[650px] object-contain rounded-2xl border border-gray-200 shadow-sm">
+            
+         <div class="w-full aspect-square flex items-center justify-center bg-gray-50 rounded-xl overflow-hidden">
+    <img id="mainImage"
+         src="{{ $product->thumbnail ? asset('storage/'.$product->thumbnail) : 'https://via.placeholder.com/500' }}"
+         class="w-full h-full object-contain transition-all duration-300">
+</div>
 
             {{-- GALLERY --}}
+            
             <div class="flex gap-3 mt-4 overflow-x-auto snap-x snap-mandatory py-2 w-full justify-start">
+                {{-- THUMBNAIL --}}
+@if($product->thumbnail)
+    <img src="{{ asset('storage/'.$product->thumbnail) }}"
+         class="w-24 h-24 object-cover rounded-lg cursor-pointer border hover:border-black snap-start transition-all"
+         onclick="changeMainImage('{{ asset('storage/'.$product->thumbnail) }}')">
+@endif
                 @foreach($product->images as $img)
+                
                     <img src="{{ asset('storage/'.$img->image) }}"
                          class="w-24 h-24 object-cover rounded-lg cursor-pointer border hover:border-black snap-start transition-all"
                          onclick="changeMainImage('{{ asset('storage/'.$img->image) }}')">
                 @endforeach
+                
 
-                @foreach($product->variants as $variant)
+                @foreach($product->variants->unique('color') as $variant)
                     @if($variant->image)
                         <img src="{{ asset('storage/'.$variant->image) }}"
                              class="w-24 h-24 object-cover rounded-lg cursor-pointer border hover:border-blue-500 snap-start transition-all"
@@ -72,7 +84,12 @@
                     <div class="bg-gray-50 p-4 rounded-xl space-y-2">
                         <h3 class="font-semibold mb-2 text-gray-700">Phiên bản</h3>
                         <div class="flex gap-2 flex-wrap" id="variant-options">
-                            @foreach($product->variants as $variant)
+                            @foreach(
+    $product->variants
+        ->unique(function($v){
+            return ($v->ram ?? '') . '-' . ($v->storage ?? '');
+        }) as $variant
+)
                                 @php
                                     $label = $variant->ram ? "{$variant->ram} / {$variant->storage}" : $variant->storage;
                                 @endphp
@@ -507,9 +524,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             updateStockUI(variant.stock);
 
-            if(variant.image){
-                mainImage.src = '/storage/' + variant.image;
-            }
+            if(variant.image && selected.color){
+    mainImage.src = '/storage/' + variant.image;
+}
         } else {
             document.getElementById('variant_id').value = '';
             document.getElementById('price').innerText = '{{ number_format($minPrice) }} ₫';

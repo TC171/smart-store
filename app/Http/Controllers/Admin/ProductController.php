@@ -256,8 +256,12 @@ if ($request->deleted_images) {
         $product = Product::with(['category', 'brand', 'variants', 'specs'])->findOrFail($id);
         $this->authorize('view', $product);
 
-        $minPrice = $product->variants->min('price') ?? 0;
-        $maxPrice = $product->variants->max('sale_price') ?? $minPrice;
+      $prices = $product->variants->map(function($v){
+    return $v->sale_price ?? $v->price;
+});
+
+$minPrice = $prices->min() ?? 0;
+$maxPrice = $prices->max() ?? 0;
         $totalStock = $product->variants->sum('stock') ?? 0;
 
         return view('admin.products.show', compact('product', 'minPrice', 'maxPrice', 'totalStock'));

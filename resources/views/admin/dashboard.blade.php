@@ -416,7 +416,7 @@ const fixedYAxisPlugin = {
         label: function(ctx) {
             const value = ctx.raw;
             const index = ctx.dataIndex;
-            const prev = prevValues[index];
+            const prev = values[index - 1];
 
             const mainLabel = currentMetric === 'revenue'
                 ? 'Doanh thu: ' + formatMoney(value)
@@ -447,7 +447,7 @@ const fixedYAxisPlugin = {
     labelColor: function(ctx) {
         const index = ctx.dataIndex;
         const value = ctx.raw;
-        const prev = prevValues[index];
+        const prev = values[index - 1];
 
         if (value > prev) {
             return { borderColor: '#22c55e', backgroundColor: '#22c55e' };

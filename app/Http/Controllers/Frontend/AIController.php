@@ -115,8 +115,14 @@ DB::table('chats')->insert([
                         ->value('image');
 
                     if ($image) {
-                        $imageUrl = asset('storage/' . $image);
-                    }
+
+    $image = trim($image);
+    $image = str_replace('\\', '/', $image);
+    $image = preg_replace('#^/?storage/#', '', $image);
+    $image = ltrim($image, '/');
+
+    $imageUrl = asset('storage/' . $image);
+}
                 }
 
                 $buttons[] = [
@@ -206,59 +212,9 @@ DB::table('chats')->insert([
         // =========================
         // 🔥 AI NHẬN DIỆN YÊU CẦU (pin, RAM, màn hình)
         // =========================
-        $aiFilters = [
-            'pin_min' => null,
-            'ram_min' => null,
-            'screen_min' => null,
-            'storage_min' => null
-        ];
 
-        if (!$isOrderQuestion) {
-            try {
 
-                $intentPrompt = "
-Trích xuất yêu cầu sản phẩm từ câu sau:
-
-\"$userMessage\"
-
-Quy đổi về số:
-- pin trâu = >= 4000mAh
-- RAM cao = >= 8GB
-- màn hình lớn = >= 6.5 inch
-- dung lượng cao = >= 128GB
-
-Trả về JSON với cấu trúc như sau:
-{
-  pin_min: number|null,         // Yêu cầu pin tối thiểu (mAh)
-  ram_min: number|null,         // Yêu cầu RAM tối thiểu (GB)
-  screen_min: number|null,      // Yêu cầu màn hình tối thiểu (inch)
-  storage_min: number|null      // Yêu cầu bộ nhớ tối thiểu (GB)
-}
-";
-
-                $intentRes = Http::timeout(10)->withHeaders([
-                    'Authorization' => 'Bearer ' . env('GROQ_API_KEY'),
-                    'Content-Type' => 'application/json'
-                ])->post('https://api.groq.com/openai/v1/chat/completions', [
-                    "model" => "llama-3.1-8b-instant",
-                    "messages" => [
-                        ["role" => "user", "content" => $intentPrompt]
-                    ]
-                ]);
-
-                $intentData = $intentRes->json();
-                $intentText = $intentData['choices'][0]['message']['content'] ?? '{}';
-
-                $intentJson = json_decode($intentText, true);
-
-                if (is_array($intentJson)) {
-                    $aiFilters = array_merge($aiFilters, $intentJson);
-                }
-
-            } catch (\Exception $e) {
-                // fail silently
-            }
-        }
+  
 
         // =========================
         // 🔥 QUERY SẢN PHẨM DỰA TRÊN SPEC (AI filters)
@@ -277,78 +233,42 @@ if (!$isOrderQuestion) {
     }
 
     // Apply AI filters for specs
-   if ($aiFilters['pin_min']) {
-    $query->whereExists(function ($q) use ($aiFilters) {
-        $q->select(DB::raw(1))
-          ->from('product_specs')
-          ->whereColumn('product_specs.product_id', 'products.id')
-          ->where('name', 'Pin')
-          ->whereRaw('CAST(value AS UNSIGNED) >= ?', [$aiFilters['pin_min']]);
-    });
-}
-
-if ($aiFilters['ram_min']) {
-    $query->whereExists(function ($q) use ($aiFilters) {
-        $q->select(DB::raw(1))
-          ->from('product_specs')
-          ->whereColumn('product_specs.product_id', 'products.id')
-          ->where('name', 'RAM')
-          ->whereRaw('CAST(value AS UNSIGNED) >= ?', [$aiFilters['ram_min']]);
-    });
-}
-
-if ($aiFilters['screen_min']) {
-    $query->whereExists(function ($q) use ($aiFilters) {
-        $q->select(DB::raw(1))
-          ->from('product_specs')
-          ->whereColumn('product_specs.product_id', 'products.id')
-          ->where('name', 'Màn hình')
-          ->whereRaw('CAST(value AS DECIMAL(5,2)) >= ?', [$aiFilters['screen_min']]);
-    });
-}
-
-if ($aiFilters['storage_min']) {
-    $query->whereExists(function ($q) use ($aiFilters) {
-        $q->select(DB::raw(1))
-          ->from('product_specs')
-          ->whereColumn('product_specs.product_id', 'products.id')
-          ->where('name', 'Bộ nhớ')
-          ->whereRaw('CAST(value AS UNSIGNED) >= ?', [$aiFilters['storage_min']]);
-    });
-}
+  
 
     // Get filtered products
     $products = $query
         ->with('variants')
         ->select('id','name','slug','category_id')
         ->orderBy('id', 'desc')
-        ->limit(100)
+        ->limit(10)
         ->get();
 
     foreach ($products as $p) {
-        // ✅ LẤY THÔNG SỐ THẬT
-$specs = DB::table('product_specs')
+
+
+$images = DB::table('product_images')
     ->where('product_id', $p->id)
-    ->pluck('value', 'name');
+    ->orderBy('is_main', 'desc')
+    ->orderBy('id', 'asc')
+    ->pluck('image');
 
-// ✅ BUILD CHUỖI THÔNG SỐ
-$realSpecs = "";
+$imageUrl = asset('images/no-image.png');
 
-foreach ($specs as $name => $value) {
-    $realSpecs .= "$name: $value | ";
+foreach ($images as $img) {
+
+    $img = trim($img);
+    $img = str_replace('\\', '/', $img);
+    $img = preg_replace('#^/?storage/#', '', $img);
+    $img = ltrim($img, '/');
+
+    $fullPath = public_path('storage/' . $img);
+
+    // ✅ lấy ảnh đầu tiên hợp lệ
+    if (file_exists($fullPath)) {
+        $imageUrl = asset('storage/' . $img);
+        break;
+    }
 }
-
-$realSpecs = rtrim($realSpecs, " | ");
-
-        $image = DB::table('product_images')
-            ->where('product_id', $p->id)
-            ->orderBy('is_main', 'desc')
-            ->orderBy('id', 'asc')
-            ->value('image');
-
-        $imageUrl = $image
-            ? asset('storage/' . $image)
-            : asset('images/no-image.png');
 
         $categorySlug = DB::table('categories')
             ->where('id', $p->category_id)
@@ -356,7 +276,8 @@ $realSpecs = rtrim($realSpecs, " | ");
 
         $link = url("/{$categorySlug}/{$p->slug}");
 
-        $minPrice = $p->variants->min('price');
+       $minPrice = $p->variants->min('price') ?? $p->price ?? 0;
+$maxPriceVar = $p->variants->max('price') ?? $minPrice;
         $maxPriceVar = $p->variants->max('price');
 
         if ($minPrice && $maxPriceVar && $minPrice != $maxPriceVar) {
@@ -366,29 +287,12 @@ $realSpecs = rtrim($realSpecs, " | ");
         }
 
         // Thêm phần nhắc lại thông số yêu cầu
-        $specText = "";
-        if ($aiFilters['pin_min']) {
-            $specText .= "Pin >= {$aiFilters['pin_min']}mAh | ";
-        }
-        if ($aiFilters['ram_min']) {
-            $specText .= "RAM >= {$aiFilters['ram_min']}GB | ";
-        }
-        if ($aiFilters['screen_min']) {
-            $specText .= "Màn hình >= {$aiFilters['screen_min']} inch | ";
-        }
-        if ($aiFilters['storage_min']) {
-            $specText .= "Bộ nhớ >= {$aiFilters['storage_min']}GB | ";
-        }
+      
 
         // Loại bỏ dấu | dư thừa
-        $specText = rtrim($specText, " | ");
+   
 
-        $productList .= "{$p->name} | "
-            . $priceText . " | "
-            . $link . " | "
-            . $imageUrl . "\n"
-              . "Thông số: {$realSpecs}\n"
-    . "Yêu cầu: {$specText}\n";
+        $productList .= "{$p->name}|{$priceText}|{$link}|{$imageUrl}\n";
             
     }
 }
@@ -473,12 +377,10 @@ HƯỚNG DẪN:
   + Nếu 'Đang giao' → nói sắp nhận
   + Nếu 'Chờ xác nhận' → nói shop đang xử lý
   + Nếu 'Đã giao' → xác nhận đã hoàn tất
-- Nếu khách hỏi thông số:
-  + BẮT BUỘC liệt kê thông số từ dữ liệu 'Thông số:'
-  + Không được trả lời chung chung
-- Nếu là sản phẩm → format:
-Tên | Giá | Link | Ảnh
-+ Thông số: ...
+- Nếu là sản phẩm → format CHÍNH XÁC:
+Tên|Giá|Link|Ảnh
+- Không thêm gì khác
+- Không xuống dòng giữa các field
 
 Câu hỏi:
 $userMessage
