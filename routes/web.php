@@ -48,7 +48,6 @@ use App\Http\Controllers\Shipper\AuthController as ShipperAuthController;
 use App\Http\Controllers\Shipper\DeliveryController;
 use App\Http\Controllers\Shipper\ReturnController as ShipperReturnController;
 
-
 /*
 |--------------------------------------------------------------------------
 | ADMIN ROUTES
@@ -119,6 +118,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('brands', BrandController::class);
         Route::resource('banners', BannerController::class);
         Route::delete('banners/{banner}/image', [BannerController::class, 'deleteImage'])->name('banners.image-delete');
+
+        Route::resource('post-categories', App\Http\Controllers\Admin\PostCategoryController::class);
+        Route::resource('posts', App\Http\Controllers\Admin\PostController::class);
 
         Route::resource('coupons', CouponController::class)->except(['show']);
 
@@ -233,7 +235,6 @@ Route::get('/orders/{order}/track-data', [CustomerOrderController::class, 'track
         // Hoàn hàng / Hoàn tiền
         Route::get('/orders/{order}/refund', [RefundController::class, 'create'])->name('orders.refund.create');
         Route::post('/orders/{order}/refund', [RefundController::class, 'store'])->name('orders.refund.store');
-
         Route::post('/logout', [FrontAuthController::class, 'logout'])->name('logout');
 
         // 🔔 Notification API routes
@@ -265,7 +266,7 @@ Route::get('/orders/{order}/track-data', [CustomerOrderController::class, 'track
             return response()->json(['success' => true]);
         })->name('notifications.read');
     });
-
+    
 /*
 |--------------------------------------------------------------------------
 | FRONTEND PUBLIC ROUTES
@@ -310,6 +311,14 @@ Route::get('/dieu-khoan-dich-vu', [PageController::class, 'terms'])->name('page.
 Route::get('/lien-he', [PageController::class, 'contact'])->name('page.contact');
 Route::post('/lien-he', [PageController::class, 'submitContact'])->name('page.contact.submit');
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+
+/*
+|--------------------------------------------------------------------------
+| NEWS ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::get('/tin-tuc', [\App\Http\Controllers\Frontend\NewsController::class, 'index'])->name('news.index');
+Route::get('/tin-tuc/{slug}', [\App\Http\Controllers\Frontend\NewsController::class, 'show'])->name('news.show');
 
 /*
 |--------------------------------------------------------------------------
