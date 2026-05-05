@@ -54,32 +54,45 @@
 
 
 <!-- CHAT BUTTON -->
+<!-- CHAT BUTTON -->
 <div id="chat-toggle" 
-class="fixed bottom-6 right-6 bg-black text-white w-14 h-14 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition z-[9999]">
+class="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center cursor-pointer shadow-xl transition z-[9999]
+bg-gradient-to-r from-indigo-500 to-purple-500 hover:scale-110 hover:shadow-indigo-400/40">
     💬
 </div>
 
 <!-- CHAT BOX -->
 <div id="chat-box" 
-class="hidden fixed bottom-24 right-6 w-96 h-[500px] bg-gray-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-800 z-[9999]">
+class="hidden fixed bottom-24 right-6 w-[380px] h-[560px]
+bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden
+border border-gray-200 z-[9999]">
 
     <!-- Header -->
-    <div class="bg-black text-white px-4 py-3 flex justify-between items-center border-b border-gray-800">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold">AI</div>
-            <span class="font-semibold">Smart AI</span>
+    <div class="bg-white px-4 py-3 flex justify-between items-center border-b">
+    
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full flex items-center justify-center font-bold shadow">
+                AI
+            </div>
+            <div>
+                <p class="font-semibold text-gray-800 leading-none">Smart AI</p>
+                <span class="text-xs text-green-500">● Online</span>
+            </div>
         </div>
-        <button onclick="toggleChat()" class="text-gray-400 hover:text-white">✕</button>
+
+        <button onclick="toggleChat()" class="text-gray-400 hover:text-gray-700 text-lg">✕</button>
     </div>
 
     <!-- Messages -->
     <div id="chat-messages" 
-    class="flex-1 p-4 space-y-4 overflow-y-auto text-sm">
+    class="flex-1 p-4 space-y-4 overflow-y-auto text-sm bg-gray-50">
 
         <!-- welcome -->
         <div class="flex items-start gap-2">
-            <div class="w-7 h-7 bg-white text-black rounded-full flex items-center justify-center text-xs font-bold">AI</div>
-            <div class="bg-gray-800 text-white px-4 py-2 rounded-2xl max-w-[75%]">
+            <div class="w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow">
+                AI
+            </div>
+            <div class="bg-white text-gray-800 px-4 py-2 rounded-2xl shadow-sm max-w-[75%]">
                 Xin chào 👋 Tôi có thể giúp gì cho bạn?
             </div>
         </div>
@@ -87,17 +100,22 @@ class="hidden fixed bottom-24 right-6 w-96 h-[500px] bg-gray-900 rounded-2xl sha
     </div>
 
     <!-- Input -->
-    <div class="p-3 border-t border-gray-800 flex gap-2 bg-gray-900">
+    <div class="p-3 border-t bg-white flex gap-2 items-center">
+    
         <input 
             id="chat-input"
-            class="flex-1 bg-gray-800 text-white px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-white"
+            class="flex-1 bg-gray-100 text-gray-800 px-4 py-2 rounded-full outline-none focus:ring-2 focus:ring-indigo-400 placeholder-gray-400"
             placeholder="Nhập tin nhắn..."
         />
+
         <button onclick="sendMessage()" 
-        class="bg-white text-black px-4 py-2 rounded-xl font-semibold hover:bg-gray-200">
-            Gửi
+        class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-full font-semibold hover:opacity-90 transition">
+            ➤
         </button>
+
     </div>
+
+</div>
     
 
 </div>
@@ -109,7 +127,6 @@ function toggleChat() {
     const chatBox = document.getElementById('chat-box');
     chatBox.classList.toggle('hidden');
 
-    // 👉 THÊM ĐOẠN NÀY
     if (!chatBox.classList.contains('hidden') && !loaded) {
         loadChatHistory();
         loaded = true;
@@ -118,32 +135,111 @@ function toggleChat() {
 
 document.getElementById('chat-toggle').onclick = toggleChat;
 
-function appendMessage(text, type = 'bot') {
+// =======================
+// ✅ UI MESSAGE
+// =======================
+function appendMessage(text, type = 'bot', isHTML = false) {
     const box = document.getElementById('chat-messages');
     const div = document.createElement('div');
 
     if (type === 'user') {
         div.innerHTML = `
         <div class="flex justify-end">
-            <div class="bg-white text-black px-4 py-2 rounded-2xl max-w-[75%]">
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-2xl rounded-br-sm max-w-[75%] shadow-md">
                 ${text}
             </div>
         </div>`;
     } else {
-        div.innerHTML = `
-        <div class="flex items-start gap-2">
-            <div class="w-7 h-7 bg-white text-black rounded-full flex items-center justify-center text-xs font-bold">AI</div>
-            <div class="bg-gray-800 text-white px-4 py-2 rounded-2xl max-w-[75%]">
-                ${text}
-            </div>
-        </div>`;
+        if (isHTML) {
+            div.innerHTML = text;
+        } else {
+            div.innerHTML = `
+            <div class="flex items-start gap-2">
+                <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow">
+                    AI
+                </div>
+                <div class="bg-white text-gray-800 px-4 py-2 rounded-2xl rounded-bl-sm max-w-[75%] shadow-md border border-gray-100">
+                    ${text}
+                </div>
+            </div>`;
+        }
     }
 
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
 }
 
-// 👉 render button chọn đơn
+// =======================
+// ✅ RENDER PRODUCT (FIX LỖI CHÍNH)
+// =======================
+function renderBotMessage(message) {
+    let lines = message.split("\n");
+
+    let textPart = '';
+    let productHTML = `<div class="flex flex-col gap-3 mt-2">`;
+    let hasProduct = false;
+
+    lines.forEach(line => {
+        if (line.includes("|")) {
+            let parts = line.split("|");
+
+            if (parts.length === 4) {
+                let name = parts[0]?.trim();
+                let price = parts[1]?.trim();
+                let link = parts[2]?.trim();
+                let image = parts[3]?.trim() || '';
+
+                // ✅ FIX IMAGE
+                if (!image || image === 'null') {
+                    image = 'https://via.placeholder.com/80?text=No+Image';
+                }
+
+                if (!image.startsWith('http')) {
+                    image = window.location.origin + image;
+                }
+
+                hasProduct = true;
+
+                productHTML += `
+                <a href="${link}" target="_blank"
+                class="flex gap-3 bg-white border border-gray-100 p-3 rounded-2xl hover:shadow-lg hover:-translate-y-0.5 transition">
+
+                    <div class="w-16 h-16 flex-shrink-0">
+                        <img src="${image}" 
+                            class="w-full h-full object-cover rounded-xl bg-gray-100"
+                            onerror="this.onerror=null;this.src='https://via.placeholder.com/80?text=No+Image';" />
+                    </div>
+
+                    <div class="flex-1">
+                        <div class="text-gray-800 font-semibold text-sm line-clamp-2">
+                            ${name}
+                        </div>
+                        <div class="text-indigo-600 font-bold text-sm">
+                            ${price}
+                        </div>
+                    </div>
+
+                </a>`;
+            }
+        } else {
+            textPart += line + "<br>";
+        }
+    });
+
+    productHTML += `</div>`;
+
+    if (textPart.trim()) {
+        appendMessage(textPart, 'bot');
+    }
+
+    if (hasProduct) {
+        appendMessage(productHTML, 'bot', true);
+    }
+}
+
+// =======================
+// ✅ CHỌN ĐƠN (UI FIX)
+// =======================
 function appendOrderButtons(orders) {
     const box = document.getElementById('chat-messages');
     const div = document.createElement('div');
@@ -154,14 +250,14 @@ function appendOrderButtons(orders) {
         html += `
         <button 
             onclick="selectOrder('${o.order_number}')"
-            class="flex items-center gap-3 bg-gray-800 p-3 rounded-xl hover:bg-gray-700 transition text-left"
+            class="flex items-center gap-3 bg-white border border-gray-100 p-3 rounded-xl hover:shadow-md transition text-left"
         >
             <img src="${o.image}" 
-                class="w-12 h-12 object-cover rounded bg-gray-700"
-                onerror="this.src='https://via.placeholder.com/48'" />
+                class="w-12 h-12 object-cover rounded bg-gray-100"
+                onerror="this.onerror=null;this.src='https://via.placeholder.com/48'" />
 
             <div class="flex-1">
-                <div class="text-white text-sm font-semibold line-clamp-2">
+                <div class="text-gray-800 text-sm font-semibold line-clamp-2">
                     ${o.product_name || 'Sản phẩm'}
                 </div>
                 <div class="text-gray-400 text-xs">
@@ -176,8 +272,8 @@ function appendOrderButtons(orders) {
 
     div.innerHTML = `
     <div class="flex items-start gap-2">
-        <div class="w-7 h-7 bg-white text-black rounded-full flex items-center justify-center text-xs font-bold">AI</div>
-        <div class="bg-gray-800 text-white px-4 py-2 rounded-2xl max-w-[75%]">
+        <div class="w-7 h-7 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold">AI</div>
+        <div class="bg-white text-gray-800 px-4 py-3 rounded-2xl max-w-[75%] shadow-md border border-gray-100">
             ${html}
         </div>
     </div>`;
@@ -186,12 +282,14 @@ function appendOrderButtons(orders) {
     box.scrollTop = box.scrollHeight;
 }
 
-// 👉 khi click đơn
 function selectOrder(orderNumber) {
     appendMessage(orderNumber, 'user');
     sendMessage(orderNumber);
 }
 
+// =======================
+// ✅ SEND MESSAGE (GIỮ NGUYÊN LOGIC)
+// =======================
 function sendMessage(customMessage = null) {
     let input = document.getElementById('chat-input');
     let message = customMessage ?? input.value.trim();
@@ -203,7 +301,6 @@ function sendMessage(customMessage = null) {
         input.value = '';
     }
 
-    // loading
     const box = document.getElementById('chat-messages');
     const loading = document.createElement('div');
     loading.innerHTML = `<div class="text-gray-400 text-sm">AI đang trả lời...</div>`;
@@ -221,83 +318,26 @@ function sendMessage(customMessage = null) {
     .then(data => {
         loading.remove();
 
-        // =========================
-        // 🔥 CASE CHỌN ĐƠN (QUAN TRỌNG)
-        // =========================
         if (data.type === 'choose_order') {
             appendMessage(data.reply, 'bot');
             appendOrderButtons(data.orders);
             return;
         }
 
-        let reply = data.reply || '';
-        let lines = reply.split("\n");
-
-        let textPart = '';
-        let productHTML = `<div class="flex flex-col gap-3 mt-2">`;
-        let hasProduct = false;
-
-        lines.forEach(line => {
-            if (line.includes("|")) {
-
-                let parts = line.split("|");
-
-                let name = parts[0]?.trim();
-                let price = parts[1]?.trim();
-                let link = parts[2]?.trim();
-                let image = parts[3]?.trim();
-
-                hasProduct = true;
-
-                productHTML += `
-                <a href="${link}" target="_blank"
-                class="flex gap-3 bg-gray-800 p-3 rounded-xl hover:bg-gray-700 transition">
-
-                    <img src="${image}" 
-                        class="w-16 h-16 object-cover rounded bg-gray-700"
-                        onerror="this.src='https://via.placeholder.com/64'" />
-
-                    <div class="flex-1">
-                        <div class="text-white font-semibold text-sm line-clamp-2">
-                            ${name}
-                        </div>
-                        <div class="text-red-400 font-bold">
-                            ${price}
-                        </div>
-                    </div>
-
-                </a>
-                `;
-            } else {
-                textPart += line + "<br>";
-            }
-        });
-
-        productHTML += `</div>`;
-
-        if (textPart.trim()) {
-            appendMessage(textPart, 'bot');
-        }
-
-        if (hasProduct) {
-            appendMessage(productHTML, 'bot');
-        }
+        renderBotMessage(data.reply || '');
     });
 }
 
-// enter để gửi
-document.getElementById("chat-input").addEventListener("keypress", function(e) {
-    if (e.key === "Enter") {
-        sendMessage();
-    }
-});
+// =======================
+// ✅ LOAD HISTORY (FIX LỖI CHÍNH)
+// =======================
 async function loadChatHistory() {
     try {
         const res = await fetch('/ai/history');
         const data = await res.json();
 
         const box = document.getElementById('chat-messages');
-        box.innerHTML = ""; // xoá welcome cũ
+        box.innerHTML = "";
 
         if (data.length === 0) {
             appendMessage("Xin chào 👋 Tôi có thể giúp gì cho bạn?", 'bot');
@@ -308,7 +348,7 @@ async function loadChatHistory() {
             if (msg.sender === 'user') {
                 appendMessage(msg.message, 'user');
             } else {
-                appendMessage(msg.message, 'bot');
+                renderBotMessage(msg.message); // ✅ FIX Ở ĐÂY
             }
         });
 
@@ -318,4 +358,11 @@ async function loadChatHistory() {
         console.error("Lỗi load history", e);
     }
 }
+
+// ENTER gửi
+document.getElementById("chat-input").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        sendMessage();
+    }
+});
 </script>
