@@ -67,7 +67,7 @@ class CustomerOrderController extends Controller
 
         $order->update([
             'status' => 'cancelled',
-            'cancel_reason' => $request->cancel_reason
+            'cancellation_reason' => $request->cancel_reason
         ]);
 
         return back()->with('success', 'Đơn hàng #' . $order->order_number . ' đã được hủy thành công.');
